@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="MainTree">
+  <BehaviorTree ID="GetEnemyInfo">
+    <Sequence>
+      <IsGameInBattle/>
+      <Fallback>
+        <Sequence _description="Tactics made when belonging to the Red team">
+          <ScriptCondition code="robot_id &lt; 100"/>
+        </Sequence>
+      </Fallback>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="MainTree">
+    <Parallel failure_count="1"
+              success_count="-1">
+      <Sequence>
+        <ChassisMode chassis_mode=""/>
+        <RemainHP remain_hp=""/>
+        <ScriptCondition name="IsSentryHpUrgent"
+                         code="remain_hp &lt;&#10;(&#10;    defence_buff &lt; 30 ?&#10;        trigger_hp_without_buff :&#10;        trigger_hp_with_buff&#10;)"/>
+        <ScriptCondition name="IsSentryHpReturnMax"
+                         code="remain_hp &gt;= max_hp"/>
+        <IsInOwnHalfArea/>
+        <ChassisSlowGyro still_gyro_vel="{slow_gyro_vel}"/>
+      </Sequence>
+      <Sequence>
+        <StartMainControllers/>
+        <Switch2 case_1="6"
+                 case_2="8"
+                 variable="track_id">
+          <AlwaysFailure/>
+          <AlwaysFailure/>
+          <AlwaysSuccess/>
+        </Switch2>
+      </Sequence>
+    </Parallel>
+  </BehaviorTree>
+
+  <BehaviorTree ID="SendManualCmd">
+    <Sequence>
+      <StopAutoController/>
+      <SendManualCommand/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="SetIdle">
+    <Sequence>
+      <StartMainControllers/>
+      <Calibrate/>
+      <VisionCalibrate/>
+      <SetGyro/>
+      <SetChassisMode/>
+      <SetChassisCommandSourceFrame/>
+      <SendChassisCommand/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="manual">
+    <Sequence>
+      <ManualSendChassisCmd/>
+      <ManualSendGimbalCmd/>
+      <ManualSendShooterCmd/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="Calibrate"
+            editable="true"/>
+    <Condition ID="ChassisMode"
+               editable="true">
+      <inout_port name="chassis_mode"
+                  type="int"/>
+    </Condition>
+    <Action ID="ChassisSlowGyro"
+            editable="true">
+      <input_port name="still_gyro_vel"
+                  default="{slow_gyro_vel}"
+                  type="double"/>
+    </Action>
+    <Condition ID="IsGameInBattle"
+               editable="true"/>
+    <Condition ID="IsInOwnHalfArea"
+               editable="true"/>
+    <Action ID="ManualSendChassisCmd"
+            editable="true"/>
+    <Action ID="ManualSendGimbalCmd"
+            editable="true"/>
+    <Action ID="ManualSendShooterCmd"
+            editable="true"/>
+    <Condition ID="RemainHP"
+               editable="true">
+      <output_port name="remain_hp"
+                   type="unsigned int"/>
+    </Condition>
+    <Action ID="SendChassisCommand"
+            editable="true"/>
+    <Action ID="SendManualCommand"
+            editable="true"/>
+    <Action ID="SetChassisCommandSourceFrame"
+            editable="true"/>
+    <Action ID="SetChassisMode"
+            editable="true"/>
+    <Action ID="SetGyro"
+            editable="true"/>
+    <Action ID="StartMainControllers"
+            editable="true"/>
+    <Action ID="StopAutoController"
+            editable="true"/>
+    <Action ID="VisionCalibrate"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

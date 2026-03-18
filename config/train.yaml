@@ -1,0 +1,478 @@
+rm_behavior_tree:
+  robot_type: "sentry"
+  init_gyro_state: false
+  map2minimap: [ -6.499, -8.109, 0.0 ]
+  enable_conduct_patrol: true
+
+  planner:
+    move_gyro_vel: 8.0
+    limit_vel: 0.8
+    default_limit_vel: 6.0
+    slope_side_window: 0.7
+    default_side_window: 0.3
+
+  chassis:
+    topic: "/cmd_chassis"
+    accel_x:
+      - [ 50.0,99.0 ]
+    accel_y:
+      - [ 50.0,99.0 ]
+    accel_z:
+      - [ 50.0,99.0 ]
+    safety_power: 100
+    capacitor_threshold: 0.1
+    charge_power: 20
+    extra_power: 30
+    burst_power: 240
+    buffer_threshold: 40
+    power_gain: 1.0 #0.85
+  vel:
+    topic: "/cmd_vel"
+    power_limit_topic: "/cmd_chassis"
+    max_linear_x:
+      - [ 150.0,2.00 ]
+    max_linear_y:
+      - [ 150.0,2.00 ]
+    max_angular_z:
+      - [ 150.0,6.7 ]
+    gyro_move_reduction: 1.0
+    gyro_rotate_reduction: 1.0
+    still_gyro_vel: 5.0
+
+  auto:
+    #hero(5),engineer(3->0),standard3(2<->4),standard4,standard5,outpost(5),sentry(0->3),base
+    default_aim_priority: [ 5, 3, 2, 2, 2, 5, 0, 0 ]
+    attack_engineer_enable: true
+    attack_engineer_time_interval: [ 30.0, 60.0 ]
+    attack_outpost_enable: true
+    attack_outpost_time_interval: [ 0.0, 60.0 ]
+    game_total_time: 420.0
+    base_open_time_threshold: 15.0  #<30 HpReturnArea to CenterSentryPatrolArea
+    enemy_urgent_hp: 50
+    lost_track_tolerant_sec: 0.8
+    chasing_max_tor_time: 8.0
+    avoid_drone_time: 20.0
+    stop_gyro_delay_time: 1.0
+    area_under_stair: [ "red_rolling_road_area","blue_outpost_area" ]
+    enable_delete_stair_wall: true
+
+    stair_and_slope:
+      blue_stair_area:
+        lines: [
+          [ 2.018, -6.781, 0.000 ,3.081, -7.574, 0.000 ],
+          [ 3.081, -7.574, 0.000, 3.087, -9.053, 0.000 ]
+        ]
+        virtual_walls: [
+        ]
+      blue_R3_area:
+        lines: [
+        ]
+        virtual_walls: [
+        ]
+      red_stair_area:
+        lines: [
+          [ 2.018, -6.781, 0.000 ,3.081, -7.574, 0.000 ],
+          [3.081, -7.574, 0.000, 3.087, -9.053, 0.000]
+        ]
+        virtual_walls: [
+          [ 2.018, -6.781, 0.000 ,3.081, -7.574, 0.000,1 ],
+          [ 3.081, -7.574, 0.000, 3.087, -9.053, 0.000,2 ]
+        ]
+      red_R3_area:
+        lines: [
+          [ 0.951, 2.363, 0.0 ,0.777, 0.369, 0.0 ]
+        ]
+        virtual_walls: [
+        ]
+
+
+    region_key_points: [
+      [-0.309, 2.459, 0.000],
+      [4.626, 2.222, 0.000],
+      [4.521, -1.635, 0.000],
+      [3.426, -1.617, 0.000],
+      [0.769, 0.363, 0.000],
+      [-0.212, 0.342, 0.000],
+      [ -2.399, 2.518, 0.000 ],
+      [ -2.310, -1.646, 0.000 ],
+      [ -4.188, -3.131, 0.000 ],
+      [ -4.176, -4.195, 0.000 ],
+      [ -5.830, -3.693, 0.000 ],
+      [ -5.926, -10.547, 0.000 ],
+      [ -4.382, -11.163, 0.000 ],
+      [ 3.064, -11.003, 0.000 ],
+      [ 3.110, -8.964, 0.000 ],
+      [ 4.283, -8.964, 0.000 ],
+      [ 2.563, -7.970, 0.000 ],
+      [ 4.459, -5.785, 0.000 ],
+      [ 3.108, -5.826, 0.000 ],
+      [ 0.945, -4.240, 0.000 ],
+      [ -1.067, -4.359, 0.000 ],
+      [ -2.826, -5.569, 0.000 ],
+      [ -1.793, -6.772, 0.000 ],
+      [ -0.400, -5.774, 0.000 ],
+      [ 0.479, -5.741, 0.000 ],
+      [ 1.795, -7.133, 0.000 ]    #1,
+    ]
+    zones:
+      ######red_home######
+      red_base:
+        position: [
+          [ -1.270, 1.818,0.0 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [1,6,7]
+      red_supply_base:
+        position: [
+          [ -1.710, 0.903, 0.000 ]
+        ]
+        aim_direct: [
+
+        ]
+        pos_detection_polygon: [6,7,8]
+      ######red_sentry_patrol_area######
+      red_center_sentry_patrol_area:
+        position: [
+          [1.727, -4.965, 0.000],    #1
+          [1.615, -3.447, 0.000],    #2
+          [0.534, -2.383, 0.000],    #3
+          [1.806, -2.275, 0.000],    #4
+          [1.421, -1.129, 0.000]    #5
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [4,5,6,8,21,20]
+      red_small_resource_island_area:
+        position: [
+          [ 0.492, -3.004,0.0 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [
+        ]
+      red_R3_area:
+        position: [
+          [ 3.541, 1.142, 0.000 ],
+          [ 3.607, -0.184, 0.000 ],
+          [ 2.963, 0.721, 0.000 ],
+          [ 2.092, 1.520, 0.000 ],
+          [ 2.140, 0.449, 0.000 ],
+          [ 2.939, 0.657, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [1,2,3,4,5,6]
+      red_R4_trapezoidal_heights_area:
+        position: [
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [
+        ]
+      ######red_other_area######
+      red_stair_area:
+        position: [
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [15,16,18,19,26,17]
+      red_outpost_area:
+        position: [
+          [ 3.384, -6.614, 0.000 ],
+          [ 0.529, -8.471, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [3,4,20,19,18]
+      red_rolling_road_area:
+        position: [
+          [ -0.024, -10.17, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [12,13,14,15,17,26,25,24,23]
+      red_ring_plateau_area:
+        position: [
+          [ 1.795, -5.750, 0.000 ],
+          [ -0.005, -5.021, 0.000 ],
+          [ -1.798, -5.788, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [19,20,21,22,23,24,25,26]
+      wait_red_engineer_area:
+        position: [
+          [ 0.435, 1.607,0.0 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [
+        ]
+      ######blue_home######
+      blue_outpost_area:
+        position: [
+          [ 3.511, -6.378, 0.000 ],
+          [ 0.958, -11.338, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [11,10,22,23,12]
+      wait_blue_engineer_area:
+        position: [
+          [ 1.130, -8.918,0.0 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [
+        ]
+      blue_R3_area:
+        position: [
+          [ 0.142, -7.416, 0.000 ],
+          [ -0.726, -1.821, 0.000 ],
+          [ 1.233, -1.497, 0.000 ]
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: []
+      blue_stair_area:
+        position: [
+        ]
+        aim_direct: [
+        ]
+        pos_detection_polygon: [  ]
+
+
+    patrols:
+      attack_engineer_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 5.0
+        name: [ "wait_blue_engineer_area" ]
+
+      first_arrival_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 5.0
+        name: [ "red_rolling_road_area" ]
+
+      outpost_guard_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 10.0
+        name: [ "red_outpost_area" ]
+        #      sentry_patrol_area:
+        #        sequential_patrol_enable: true
+        #        residence_time_at_one_point: 0.0
+        #        name: [ "red_R3_area" ]
+      sentry_patrol_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 0.8
+        name: [ "red_center_sentry_patrol_area" ]
+
+      base_defense_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 0.0
+        name: [ "red_center_sentry_patrol_area" ]
+      blood_return_area:
+        sequential_patrol_enable: false
+        residence_time_at_one_point: 0.0
+        name: [ "red_supply_base" ]
+      attack_enemy_outpost_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 20.0
+        name: [ "blue_outpost_area" ]
+      abnormal_back_home_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 720.0
+        name: [ "red_center_sentry_patrol_area" ]
+      after_reviving_patrol_area:
+        sequential_patrol_enable: false
+        residence_time_at_one_point: 20.0
+        name: [ "red_center_sentry_patrol_area","red_R3_area","red_outpost_area","red_rolling_road_area","blue_rolling_road_area" ]
+      attack_enemy_base_area:
+        sequential_patrol_enable: true
+        residence_time_at_one_point: 10.0
+        name: [ "blue_outpost_area" ]
+
+    standby_velocity: [ 1.0, 11.0, 0.5 ] # A sint + B in combat #gyro speed before combat
+    invincible_check: [ 10.0, 0.2 ,3.0, 100 ] #normal_invincible_continue_time,invincible_check_threshold,money_invincible_continue_time,money_revive_hp
+
+  chassis_behavior:
+    chase_restricted_zones:
+      extreme:
+        areas: [ ]
+        outpost_hp_threshold: 500
+      conservative:
+        areas: [ "red_base", "red_supply_base","red_stair_area","red_outpost_area","red_rolling_road_area","red_ring_plateau_area" ]
+        outpost_hp_threshold: 200
+      avoidant:
+        areas: [ "red_base","red_center_sentry_patrol_area","red_R3_area", "red_supply_base","red_stair_area","red_outpost_area","red_rolling_road_area","red_ring_plateau_area" ]
+        outpost_hp_threshold: 0
+    enable_chase: true
+    still_gyro_enable: true
+    trigger_blood_return_hp: 160
+    trigger_run_away_outpost_hp: 760
+    trigger_ban_chase_outpost_hp: 0
+    double_type_params:
+      max_planning_period:
+        param: 30.0
+      stand_at_conduct_point_sec:
+        param: 10.0
+      chase_freq:
+        param: 15.0
+      chase_distance:
+        param: 2.0
+      chase_tolerance:
+        param: 0.5
+
+  gimbal_behavior:
+    slope_zones: [ ]
+    lidar_towards_front_enable: false
+    double_type_params:
+      gimbal_inverse_sec:
+        param: 2.0
+      aim_per_point_sec:
+        param: 1.0
+    blue_outpost_positions: [
+      [ 2.103, -10.151, 0.95 ],
+      [ 2.103, -10.151, 0.75 ],
+      [ 2.103, -10.151, 1.15 ],
+    ]
+    red_outpost_positions: [
+      [ 4.436, -5.189, 0.95 ],
+      [ 4.436, -5.189, 0.75 ],
+      [ 4.436, -5.189, 1.15 ],
+    ]
+    red_base_positions:
+      [
+        [ -4.011, 0.20, 0.25 ],
+        [ -4.011, 0.20, 0.35 ],
+        [ -4.011, 0.20, 0.45 ],
+        [ -4.183, 0.822, 0.25 ],
+        [ -4.183, 0.822, 0.35 ],
+        [ -4.183, 0.822, 0.45 ],
+        [ -4.112, -0.481, 0.25 ],
+        [ -4.112, -0.481, 0.35 ],
+        [ -4.112, -0.481, 0.45 ]
+      ]
+    blue_base_positions:
+      [
+        [ 19.124, -0.745, 0.25 ],
+        [ 19.124, -0.745, 0.35 ],
+        [ 19.124, -0.745, 0.45 ],
+        [ 18.914, -0.294, 0.25 ],
+        [ 18.914, -0.294, 0.35 ],
+        [ 18.914, -0.294, 0.45 ],
+        [ 18.809, -1.413, 0.25 ],
+        [ 18.809, -1.413, 0.35 ],
+        [ 18.809, -1.413, 0.45 ]
+      ]
+
+  yaw:
+    pid: { p: 1.0, i: 0.15, d: 0.0, i_max: 0.1, i_min: -0.1, antiwindup: true, publish_state: false }
+    acc: 1.5
+    gimbal_vel_coeff: [ 0.8, 0.2 ] #normal,slow
+
+  pitch:
+    acc: 1.5
+    pitch_vel_coeff: 0.5
+
+  union:
+    gimbal:
+      topic: "/controllers/gimbal_controller/command"
+      max_yaw_vel: 4.0
+      max_pitch_vel: 1.0
+      track_timeout: 0.5
+      target_cost_function:
+        k_pos: 1.0
+        k_vel: 1.0
+        k_hp: 1.0
+        k_freq: 1.0
+        timeout: 0.05
+    switcher:
+      barrel:
+        topic: "/controllers/barrel_controller/command"
+        joint: "barrel_joint"
+        id1_point: 1.22
+        id2_point: -0.02
+        is_double_barrel: false
+        check_switch_threshold: 0.02
+        check_launch_threshold: 0.02
+        frequency_threshold: 17.0
+        ready_duration: 0.5
+        switching_duration: 0.5
+
+      shooter_ID1:
+        topic: "/controllers/shooter_controller/command"
+        track_armor_error_tolerance: 0.1
+        target_acceleration_tolerance: 99.0
+        accleration_moving_average_num: 10
+        speed_30m_per_speed: 28.5
+        wheel_speed_30: 740
+        heat_limit:
+          safe_speed_limit: 25
+          low_shoot_frequency: 25
+          high_shoot_frequency: 25
+          burst_shoot_frequency: 25
+          safe_shoot_frequency: 25
+          heat_tor: 105.0
+          heat_buffer: 22.0
+          heat_coeff: 28.0
+          is_local: false
+          type: "ID1_17MM"
+      shooter_ID2:
+        topic: "/controllers/shooter_controller/command"
+        track_armor_error_tolerance: 0.1
+        target_acceleration_tolerance: 99.0
+        accleration_moving_average_num: 10
+        speed_30m_per_speed: 28.5
+        wheel_speed_30: 740
+        heat_limit:
+          safe_speed_limit: 25
+          low_shoot_frequency: 25
+          high_shoot_frequency: 25
+          burst_shoot_frequency: 25
+          safe_shoot_frequency: 25
+          heat_tor: 105.0
+          heat_buffer: 22.0
+          heat_coeff: 28.0
+          type: "ID2_17MM"
+    auto: { pitch: [ 0.255438, 0.28, 0.01, 1.0 ],  circle: 2 , breach_threshold: 0.08 }
+    #max_small,min_
+  detection_switch:
+    fail_limit: 10
+    service_name: "/Processor/status_switch"
+  controllers_list:
+    state_controllers:
+      - controllers/joint_state_controller
+      - controllers/robot_state_controller
+    main_controllers:
+      - controllers/chassis_controller
+      - controllers/orientation_controller
+      - controllers/gimbal_controller
+      - controllers/shooter_controller
+      - controllers/barrel_controller
+    calibration_controllers:
+      - controllers/trigger_calibration_controller
+      - controllers/gimbal_calibration_controller
+      - controllers/barrel_calibration_controller
+  gimbal_calibration:
+    - start_controllers:
+        - controllers/gimbal_calibration_controller
+      stop_controllers:
+        - controllers/gimbal_controller
+      services_name:
+        - /controllers/gimbal_calibration_controller/is_calibrated
+  shooter_calibration:
+    - start_controllers:
+        - controllers/trigger_calibration_controller
+      stop_controllers:
+        - controllers/shooter_controller
+      services_name:
+        - /controllers/trigger_calibration_controller/is_calibrated
+  barrel_calibration:
+    - start_controllers:
+        - controllers/barrel_calibration_controller
+      stop_controllers:
+        - controllers/barrel_controller
+      services_name:
+        - /controllers/barrel_calibration_controller/is_calibrated
+

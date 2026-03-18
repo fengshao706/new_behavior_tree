@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="new_tree.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="AbnormalStillStopMotion" editable="true"/>
+        <Action ID="AvoidDrone" editable="true"/>
+        <Condition ID="BackCameraDetectionID" editable="true">
+            <output_port name="back_camera_detection_id" type="int"/>
+        </Condition>
+        <Action ID="Calibrate" editable="true"/>
+        <Action ID="Chase" editable="true"/>
+        <Action ID="ChaseRestrictedStateSetter" editable="true">
+            <output_port name="chase_restricted_state" type="std::string"/>
+        </Action>
+        <Condition ID="ChassisMode" editable="true">
+            <inout_port name="chassis_mode" type="int"/>
+        </Condition>
+        <Action ID="ChassisSlowGyro" editable="true">
+            <input_port name="still_gyro_vel" default="{slow_gyro_vel}" type="double"/>
+        </Action>
+        <Condition ID="DoSegmentsIntersect" editable="true"/>
+        <Action ID="EnableGimbalInverse" editable="true"/>
+        <Condition ID="EnableGotoReturnArea" editable="true">
+            <input_port name="defence_buff" type="int"/>
+            <input_port name="remain_hp" type="unsigned int"/>
+            <input_port name="max_hp" type="unsigned int"/>
+        </Condition>
+        <Action ID="GetAbnormalBackHomeGoal" editable="true">
+            <output_port name="patrol_goal" default="{patrol_goal}" type="geometry_msgs::PoseStamped"/>
+        </Action>
+        <Action ID="GetPresentTime" editable="true">
+            <output_port name="present_time" type="double"/>
+        </Action>
+        <Action ID="GotoAfterRevivingPatrolArea" editable="true"/>
+        <Action ID="GotoAttackEngineerArea" editable="true"/>
+        <Action ID="GotoBaseDefenseArea" editable="true"/>
+        <Action ID="GotoConductPoint" editable="true"/>
+        <Action ID="GotoEnemyBase" editable="true"/>
+        <Action ID="GotoEnemyOutpost" editable="true"/>
+        <Action ID="GotoFirstArea" editable="true"/>
+        <Action ID="GotoHoleUpArea" editable="true"/>
+        <Action ID="GotoHpReturnArea" editable="true"/>
+        <Action ID="GotoOwnOutpost" editable="true"/>
+        <Action ID="GotoSentryPatrolArea" editable="true"/>
+        <Condition ID="IsBackCameraDetective" editable="true"/>
+        <Condition ID="IsBulletsRemain" editable="true"/>
+        <Condition ID="IsCalibrated" editable="true">
+            <output_port name="is_calibrated" default="false" type="bool"/>
+        </Condition>
+        <Condition ID="IsChasePathFinished" editable="true"/>
+        <Condition ID="IsEffectiveConductPoint" editable="true"/>
+        <Condition ID="IsEngineerAlive" editable="true">
+            <input_port name="engineer_hp" type="unsigned int"/>
+        </Condition>
+        <Condition ID="IsGameInBattle" editable="true"/>
+        <Condition ID="IsInOwnHalfArea" editable="true"/>
+        <Condition ID="IsInRestrictedArea" editable="true">
+            <input_port name="current_area" type="std::string"/>
+            <input_port name="restricted_area_list" type="std::unordered_map&lt;std::string,AutoControlInfo::CHASE_JUDGE&gt;"/>
+        </Condition>
+        <Condition ID="IsInSlopeZones" editable="true">
+            <input_port name="current_area" type="std::string"/>
+            <input_port name="slope_zones" type="XmlRpc::XmlRpcValue"/>
+        </Condition>
+        <Condition ID="IsNavigationReady" editable="true"/>
+        <Condition ID="IsPathCrossLine" editable="true"/>
+        <Condition ID="IsPointOnSegment" editable="true"/>
+        <Condition ID="IsRefereeOnline" editable="true">
+            <output_port name="is_referee_online" default="false" type="bool"/>
+        </Condition>
+        <Condition ID="IsSupplyTaskFinished" editable="true"/>
+        <Condition ID="IsTrackEnemy" editable="true"/>
+        <Condition ID="IsTrackLost" editable="true">
+            <input_port name="last_track_time" type="double"/>
+            <input_port name="lost_track_tolerant_sec_" type="double"/>
+        </Condition>
+        <Condition ID="IsWithinRange" editable="true"/>
+        <Action ID="ManualSendChassisCmd" editable="true"/>
+        <Action ID="ManualSendGimbalCmd" editable="true"/>
+        <Action ID="ManualSendShooterCmd" editable="true"/>
+        <Action ID="NavigateToPose" editable="true"/>
+        <Condition ID="NeedSupply" editable="true"/>
+        <Condition ID="RemainHP" editable="true">
+            <output_port name="remain_hp" type="unsigned int"/>
+        </Condition>
+        <Action ID="RemoteControlTurnOff" editable="true"/>
+        <Action ID="ReverseGimbal" editable="true"/>
+        <Condition ID="RobotID" editable="true"/>
+        <Action ID="SendChassisCommand" editable="true"/>
+        <Action ID="SendGimbalCommand" editable="true"/>
+        <Action ID="SendManualCommand" editable="true"/>
+        <Action ID="SendShooterCommand" editable="true"/>
+        <Action ID="SetChassisCommandSourceFrame" editable="true"/>
+        <Action ID="SetChassisMode" editable="true"/>
+        <Action ID="SetGryoInCombat" editable="true"/>
+        <Action ID="SetGyro" editable="true"/>
+        <Action ID="StandSomeTime" editable="true"/>
+        <Action ID="StartMainControllers" editable="true"/>
+        <Action ID="StopAllMotion" editable="true"/>
+        <Action ID="StopAutoController" editable="true"/>
+        <Action ID="TargetProcessor" editable="true"/>
+        <Action ID="Unchase" editable="true"/>
+        <Action ID="UpdateSlopeStatus" editable="true">
+            <input_port name="path" type="nav_msgs::Path"/>
+            <input_port name="current_area" type="std::string"/>
+            <output_port name="is_on_slope" type="bool"/>
+        </Action>
+        <Action ID="VisionCalibrate" editable="true"/>
+    </TreeNodesModel>
+</root>
