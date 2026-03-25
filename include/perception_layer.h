@@ -38,7 +38,7 @@ namespace perception
   class Subscriber
   {
   public:
-    explicit Subscriber(CmdTools& cmd_tools, ros::NodeHandle& nh) : cmd_tools_(cmd_tools)
+    explicit Subscriber(tools::CmdTools& cmd_tools, ros::NodeHandle& nh , BT::Blackboard & blackboard) : cmd_tools_(cmd_tools) , blackboard_(blackboard)
     {
       ros::NodeHandle subscriber_nh;
       map_sentry_data_pub_ = subscriber_nh.advertise<rm_msgs::MapSentryData>("/map_sentry_data", 10);
@@ -167,13 +167,26 @@ namespace perception
     void trackCallback(const rm_msgs::TrackData::ConstPtr& data)
     {
       track_data_ = *data;
+      blackboard_.set<rm_msgs::TrackData>("track_data",track_data_);
       cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->updateTrackData(*data);
     }
 
     void gameStatusCallback(const rm_msgs::GameStatus::ConstPtr& data)
     {
+      double game_total_time;
+      try
+      {
+        game_total_time = blackboard_.get<double>("game_total_time");
+      }catch (BT::RuntimeError &e)
+      {
+        ROS_ERROR("BT can not access key name [game_total_time] , default value is 420.0");
+        game_total_time = 420.0;
+      }
       cmd_tools_.chassis_cmd_sender_->updateGameStatus(*data);
       game_status_ = *data;
+      double present_time;
+      present_time = game_total_time - game_status_.stage_remain_time;;
+      blackboard_.set<double>("present_time",present_time);
     }
 
     void robotHurtCallback(const rm_msgs::RobotHurt::ConstPtr& data)
@@ -184,6 +197,8 @@ namespace perception
     void robotBuffCallback(const rm_msgs::Buff::ConstPtr& data)
     {
       buff_ = *data;
+      int defense_buff = buff_.defence_buff;
+      blackboard_.set<int>("defense_buff",defense_buff);
     }
 
     void dartCallBack(const rm_msgs::DartRemainingTime::ConstPtr& data)
@@ -214,6 +229,7 @@ namespace perception
     void robotHpCallback(const rm_msgs::GameRobotHp::ConstPtr& data)
     {
       game_robot_hp_ = *data;
+      blackboard_.set<rm_msgs::GameRobotHp>("game_robot_hp",game_robot_hp_);
     }
 
     void gameRobotStatusCallback(const rm_msgs::GameRobotStatus::ConstPtr& data)
@@ -236,7 +252,33 @@ namespace perception
       if (*data != client_map_send_data_)
       {
         client_map_send_data_ = *data;
-        client_map_update_ = true;
+        ros::Time need_avoid_drone_time;
+        switch (client_map_send_data_.command_keyboard)
+        {
+        case rm_msgs::ClientMapSendData::KEY_D:
+          {
+            need_avoid_drone_time = ros::Time::now();
+            blackboard_.set<ros::Time>("need_avoid_drone_time",need_avoid_drone_time);
+            break;
+          }
+        case rm_msgs::ClientMapSendData::KEY_H:
+          {
+            bool need_defense_base = blackboard_.get<bool>("need_defense_base");
+            need_defense_base = !need_defense_base;
+            blackboard_.set<bool>("need_defense_base",need_defense_base);
+            break;
+          }
+        case rm_msgs::ClientMapSendData::KEY_G:
+          {
+            bool need_still_gyro = blackboard_.get<bool>("need_still_gyro");
+            need_still_gyro = !need_still_gyro;
+            blackboard_.set<bool>("need_still_gyro",need_still_gyro);
+            break;
+          }
+        default:
+          break;
+          client_map_update_ = true;
+        }
       }
     }
 
@@ -289,7 +331,8 @@ namespace perception
       odom_ = *msg;
     }
 
-    CmdTools& cmd_tools_;
+    tools::CmdTools& cmd_tools_;
+    BT::Blackboard & blackboard_;
 
     ros::Subscriber dbus_sub_;
     ros::Subscriber track_sub_;
@@ -318,7 +361,7 @@ namespace perception
   class Perception
   {
   public:
-    Perception()
+    Perception(BT::Blackboard &blackboard) : blackboard_(blackboard)
     {
       ros::NodeHandle auto_nh(nh,"auto");
       auto_nh.getParam("game_total_time",game_total_time);
@@ -326,7 +369,10 @@ namespace perception
 
     double get_present_time()
     {
-      return game_total_time-subscriber_->game_status_.stage_remain_time;
+      double present_time;
+      present_time = game_total_time-subscriber_->game_status_.stage_remain_time;
+      blackboard_.set<double>("present_time",present_time);
+      return present_time;
     }
 
 
@@ -334,6 +380,7 @@ namespace perception
     ros::NodeHandle nh;
     Subscriber * subscriber_;
     double game_total_time;
+    BT::Blackboard & blackboard_;
   };
 }
 

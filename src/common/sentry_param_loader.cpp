@@ -19,26 +19,61 @@ public:
     chassis_behavior_param_load();
     planner_param_load();
     load_zone_configs();
+    param_initialization();
   }
 
   void chassis_behavior_param_load()
   {
     ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(nh,"chassis_behavior");
+    ros::NodeHandle auto_nh(nh,"auto");
     int trigger_blood_return_hp;
     int trigger_blood_return_hp_without_buff;
     int trigger_run_away_outpost_hp;
     int trigger_ban_chase_outpost_hp;
+    double max_planning_period;
+    double stand_at_conduct_point_sec;
+    double chase_freq;
+    double chase_distance;
+    double chase_tolerance;
+    double avoid_drone_time;
+    double game_total_time;
+    double chasing_max_for_time;
+    bool attack_engineer_enable;
+    bool attack_outpost_enable;
+
     XmlRpc::XmlRpcValue chase_restricted_zones;
     chassis_behavior_nh.getParam("trigger_blood_return_hp", trigger_blood_return_hp);
     chassis_behavior_nh.getParam("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
     chassis_behavior_nh.getParam("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp);//离开前哨站的血量阈值
     chassis_behavior_nh.getParam("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp);//禁止追击敌人到前哨站区域的血量阈值
     chassis_behavior_nh.getParam("chase_restricted_zones", chase_restricted_zones);//限制追击的区域
+    chassis_behavior_nh.getParam("max_planning_period",max_planning_period);
+    chassis_behavior_nh.getParam("stand_at_conduct_point_sec",stand_at_conduct_point_sec);
+    chassis_behavior_nh.getParam("chase_freq",chase_freq);
+    chassis_behavior_nh.getParam("chase_distance",chase_distance);
+    chassis_behavior_nh.getParam("chase_tolerance",chase_tolerance);
+
+    auto_nh.getParam("avoid_drone_time",avoid_drone_time);
+    auto_nh.getParam("game_total_time",game_total_time);
+    auto_nh.getParam("chasing_max_for_time",chasing_max_for_time);
+    auto_nh.getParam("attack_engineer_enable",attack_engineer_enable);
+    auto_nh.getParam("attack_outpost_enable",attack_outpost_enable);
+
     blackboard_->set<int>("trigger_blood_return_hp",trigger_blood_return_hp);
     blackboard_->set<int>("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
     blackboard_->set<int>("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp);
     blackboard_->set<int>("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp);
     blackboard_->set<XmlRpc::XmlRpcValue>("chase_restricted_zones",chase_restricted_zones);
+    blackboard_->set<double>("max_planning_period",max_planning_period);
+    blackboard_->set<double>("stand_at_conduct_point_sec",stand_at_conduct_point_sec);
+    blackboard_->set<double>("chase_freq",chase_freq);
+    blackboard_->set<double>("chase_distance",chase_distance);
+    blackboard_->set<double>("chase_tolerance",chase_tolerance);
+    blackboard_->set<double>("avoid_drone_time",avoid_drone_time);
+    blackboard_->set<double>("game_total_time",game_total_time);
+    blackboard_->set<double>("chasing_max_for_time",chasing_max_for_time);
+    blackboard_->set<bool>("attack_engineer_enable",attack_engineer_enable);
+    blackboard_->set<bool>("attack_outpost_enable",attack_outpost_enable);
   }
 
   void chassis_vel_param_load() // TODO : 当前未完成全部参数加载任务
@@ -87,6 +122,7 @@ public:
   void load_zone_configs()
   {
     ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle chassis_behavior_nh(nh,"chassis_behavior");
     XmlRpc::XmlRpcValue zones;
     auto_nh.getParam("zones",zones);
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones; //所有的区域的所有坐标
@@ -142,10 +178,17 @@ public:
       chase_restricted_zones.insert(std::make_pair(zone_params.first,chase_judge));
     }
 
+    //----------------------------------------------------------------------
+    std::vector<std::string> red_half_area;
+    std::vector<std::string> blue_half_area;
+    chassis_behavior_nh.getParam("red_half_area",red_half_area);
+    chassis_behavior_nh.getParam("blue_half_area",blue_half_area);
+
     blackboard_->set<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones",all_zones);
     blackboard_->set<std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>>>("pos_detection_polygons",pos_detection_polygons);
     blackboard_->set<std::unordered_map<std::string,types::CHASE_JUDGE>>("chase_restricted_zones",chase_restricted_zones);
-
+    blackboard_->set<std::vector<std::string>>("red_half_area",red_half_area);
+    blackboard_->set<std::vector<std::string>>("blue_half_area",blue_half_area);
   }
 
   void load_default_aim_rank()
@@ -166,6 +209,22 @@ public:
     std::string color;
     nh.getParam("color",color);
     blackboard_->set<std::string>("robot_color",color);
+  }
+
+  void param_initialization()
+  {
+    blackboard_->set<ros::Time>("need_avoid_drone_time",ros::Time(0)); //该值用于记录云台手按下避开无人机的按键时的时刻，初始化为0，后续将在subscriber里面进行更新
+    blackboard_->set<bool>("need_defense_base",false);
+    blackboard_->set<bool>("need_still_gyro",false);
+    blackboard_->set<double>("present_time",0.0);
+    blackboard_->set<types::ChassisMode>("chassis_mode",types::ChassisMode::ChassisSlowGyro);
+    blackboard_->set<bool>("has_revived",false);
+    blackboard_->set<bool>("need_supply",false);
+    blackboard_->set<bool>("has_calibrated_barrel",false);
+    blackboard_->set<bool>("enable_fight",false);
+    blackboard_->set<bool>("enable_hole_up",false);
+    blackboard_->set<bool>("need_enable_fight",false);
+    blackboard_->set<bool>("ignore_buff",false);
   }
 
 

@@ -87,7 +87,7 @@ namespace tools
   class CmdTools
   {
   public:
-    explicit CmdTools(ros::NodeHandle& nh)
+    explicit CmdTools(ros::NodeHandle& nh) : tf_listener_(tf_buffer_)
     {
       ros::NodeHandle chassis_nh(nh, "chassis");
       chassis_cmd_sender_ = new rm_common::ChassisCommandSender(chassis_nh);
@@ -185,6 +185,11 @@ namespace tools
     {
     }
 
+    tf2_ros::Buffer& getTfBuffer()
+    {
+      return tf_buffer_;
+    }
+
     rm_common::ChassisCommandSender* chassis_cmd_sender_{};
     UnionCommandSender* union_cmd_sender_{};
     rm_common::Vel2DCommandSender* vel_2d_cmd_sender_;
@@ -202,6 +207,8 @@ namespace tools
 
     int last_neutral_cost_, last_lethal_cost_, default_neutral_cost_, default_lethal_cost_;
 
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
     //  std::deque<std::pair<geometry_msgs::PoseStamped, geometry_msgs::PoseStamped>> goal_deque;
   };
 
@@ -234,6 +241,45 @@ namespace tools
       unsigned int rand_index = (rand() % points.size());
       return points[rand_index];
     }
+  }
+
+  bool isPointInPolygon(const geometry_msgs::TransformStamped& point,
+                        const std::vector<geometry_msgs::PointStamped>& polygon)
+  {
+    int n = polygon.size();
+    int count = 0;
+    for (int i = 0; i < n; ++i)
+    {
+      if (point.transform.translation.x == polygon[i].point.x && point.transform.translation.y == polygon[i].point.y)
+        return true;
+      if (point.transform.translation.x == polygon[(i + 1) % n].point.x &&
+          point.transform.translation.y == polygon[(i + 1) % n].point.y)
+        return true;
+
+      if ((point.transform.translation.y < polygon[i].point.y) !=
+          (point.transform.translation.y < polygon[(i + 1) % n].point.y))
+      {
+        double x = (polygon[(i + 1) % n].point.x - polygon[i].point.x) *
+                       (point.transform.translation.y - polygon[i].point.y) /
+                       (polygon[(i + 1) % n].point.y - polygon[i].point.y) +
+                   polygon[i].point.x;
+        if (x > point.transform.translation.x)
+          count++;
+        else if (x == point.transform.translation.x)
+          return true;
+      }
+    }
+    return count % 2 == 1;
+  }
+
+  std::string determinePolygonInWhich(const geometry_msgs::TransformStamped& point , std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>> pos_detection_polygons)
+  {
+    for (const auto& pair : pos_detection_polygons)
+    {
+      if (isPointInPolygon(point, pair.second))
+        return pair.first;
+    }
+    return "unknown";
   }
 
 

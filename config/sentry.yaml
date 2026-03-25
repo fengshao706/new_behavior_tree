@@ -57,7 +57,7 @@ rm_behavior_tree:
     base_open_time_threshold_after_4min: 15.0
     enemy_urgent_hp: 50
     lost_track_tolerant_sec: 0.3
-    chasing_max_tor_time: 5.0
+    chasing_max_for_time: 5.0
     avoid_drone_time: 30.0
     stop_gyro_delay_time: 1.0
     area_under_stair: [ "rolling_road_area","blue_outpost_area","red_outpost_area" ]
@@ -428,19 +428,15 @@ rm_behavior_tree:
     trigger_blood_return_hp_without_buff: 330
     trigger_run_away_outpost_hp: 310
     trigger_ban_chase_outpost_hp: 320
-    #    own_half_area: [ "blue_base_area","blue_outpost_area","blue_center_sentry_patrol_area","blue_small_resource_island_area" ]
-    own_half_area: [ "red_base_area","red_outpost_area","red_center_sentry_patrol_area","red_small_resource_island_area" ]
-    double_type_params:
-      max_planning_period:
-        param: 30.0
-      stand_at_conduct_point_sec:
-        param: 10.0
-      chase_freq:
-        param: 15.0
-      chase_distance:
-        param: 2.0
-      chase_tolerance:
-        param: 0.5
+    blue_half_area: [ "blue_base_area","blue_outpost_area","blue_center_sentry_patrol_area","blue_small_resource_island_area" ]
+    red_half_area: [ "red_base_area","red_outpost_area","red_center_sentry_patrol_area","red_small_resource_island_area" ]
+
+    max_planning_period: 30.0
+    stand_at_conduct_point_sec: 10.0
+    chase_freq: 3.0
+    chase_distance: 2.0
+    chase_tolerance: 0.5
+
 
   gimbal_behavior:
     slope_zones: [ ]

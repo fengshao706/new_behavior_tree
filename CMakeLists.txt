@@ -18,7 +18,7 @@ find_package(catkin REQUIRED
         sensor_msgs
         move_base_msgs
         tf
-        #service_processor
+        service_processor
         dynamic_reconfigure
         controller_manager
         mbf_msgs
@@ -52,6 +52,7 @@ catkin_package(
         dynamic_reconfigure
         controller_manager
         costmap_2d
+        service_processor
         DEPENDS
 )
 
@@ -64,7 +65,7 @@ include_directories(
 FILE(GLOB ALL_SOURCES "src/*.cpp")
 
 add_executable(${PROJECT_NAME} src/perception_layer.cpp src/common/basic_control.cpp src/behavior_tree/chassis_action_node.cpp src/common/sentry_param_loader.cpp include/common/types.h src/common/navigation_bridge.cpp
-                                src/behavior_tree/manual_action_node.cpp src/main.cpp
+                                src/behavior_tree/manual_action_node.cpp src/main.cpp src/behavior_tree/chassis_condition_node.cpp
 
 )
 #add_dependencies(${PROJECT_NAME}

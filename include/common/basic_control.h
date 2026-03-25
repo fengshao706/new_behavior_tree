@@ -5,6 +5,8 @@
 #ifndef NEW_BEHAVIOR_TREE_BASIC_CONTROL_H
 #define NEW_BEHAVIOR_TREE_BASIC_CONTROL_H
 
+#include <perception_layer.h>
+
 #include "rm_behavior_tree/common/subscriber.h"
 #include "common/tools.h"
 #include "rm_behavior_tree/common/auto_control_info.h"
@@ -36,8 +38,8 @@ public:
   rm_common::SwitchDetectionCaller* switch_detection_srv_{};
   rm_common::SwitchDetectionCaller* switch_detection_black_srv_;
 
-  CmdTools cmd_tools_;
-  Subscriber subscriber_;
+  tools::CmdTools cmd_tools_;
+  perception::Subscriber subscriber_;
   AutoControlInfo auto_control_info_;
 
   Manual* manual_state_;

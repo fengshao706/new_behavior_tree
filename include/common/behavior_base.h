@@ -20,12 +20,14 @@
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 #include <costmap_2d/keepOutZone.h>
+#include "rm_common/decision/controller_manager.h"
+#include "rm_common/decision/calibration_queue.h"
 
 class BehaviorBase
 {
 public:
-  BehaviorBase(ros::NodeHandle& nh, tools::CmdTools& cmd_tools, perception::Subscriber & subscriber,AutoControlInfo& autoControlInfo)
-    : cmd_tools_(cmd_tools), subscriber_(subscriber), auto_control_info_(autoControlInfo),tf_listener_(tf_buffer_)
+  BehaviorBase(ros::NodeHandle& nh, tools::CmdTools& cmd_tools, perception::Subscriber & subscriber , BT::Blackboard &blackboard)
+    : cmd_tools_(cmd_tools), subscriber_(subscriber),tf_listener_(tf_buffer_) ,controller_manager_(nh), blackboard_(blackboard)
   {
     ros::NodeHandle auto_nh(nh, "auto");
     auto_nh.getParam("standby_velocity", standby_velocity_);
@@ -223,6 +225,43 @@ public:
       << mbf_goal_.target_pose.pose.position.y);
   }
 
+  void calibrate()
+  {
+    try
+    {
+      ros::NodeHandle nh;
+      XmlRpc::XmlRpcValue gimbal_calibration, shooter_calibration, barrel_calibration;
+      nh.getParam("gimbal_calibration", gimbal_calibration);
+      gimbal_calibration_ = new rm_common::CalibrationQueue(gimbal_calibration, nh, controller_manager_);
+      nh.getParam("shooter_calibration", shooter_calibration);
+      shooter_calibration_ = new rm_common::CalibrationQueue(shooter_calibration, nh, controller_manager_);
+      nh.getParam("barrel_calibration", barrel_calibration);
+      barrel_calibration_ = new rm_common::CalibrationQueue(barrel_calibration, nh, controller_manager_);
+    }
+    catch (XmlRpc::XmlRpcException& e)
+    {
+      ROS_ERROR("%s", e.getMessage().c_str());
+    }
+    //  ros::Time time = ros::Time::now();
+    gimbal_calibration_->reset();
+    shooter_calibration_->reset();
+    bool has_calibrated_barrel = blackboard_.get<bool>("has_calibrated_barrel");
+    if (!has_calibrated_barrel)
+    {
+      barrel_calibration_->reset();
+      has_calibrated_barrel = true;
+      blackboard_.set<bool>("has_calibrated_barrel",has_calibrated_barrel);
+    }
+    else
+    {
+      barrel_calibration_->stopController();
+      cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->init();
+    }
+    //  cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->setMode(rm_msgs::ShootCmd::STOP);
+    //  cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->sendCommand(time);
+  }
+
+
   ros::Subscriber vel_sub_;
   tools::CmdTools& cmd_tools_;
   perception::Subscriber & subscriber_;
@@ -238,4 +277,7 @@ public:
   double last_yaw_{};
   int circle_count_{};
   mbf_msgs::MoveBaseGoal mbf_goal_;
+  rm_common::CalibrationQueue *gimbal_calibration_{}, *shooter_calibration_{}, *barrel_calibration_{};
+  rm_common::ControllerManager controller_manager_;
+  BT::Blackboard &blackboard_;
 };

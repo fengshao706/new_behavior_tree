@@ -1,6 +1,139 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="MainTree">
+  <BehaviorTree ID="BulletDecision">
+    <Fallback>
+      <Sequence>
+        <Fallback>
+          <ScriptCondition code="defense_buff &lt; 30"/>
+          <ScriptCondition code="ignore_buff == true"/>
+        </Fallback>
+        <Fallback>
+          <Sequence>
+            <ScriptCondition code="need_enable_fight == true"/>
+            <Fallback>
+              <Sequence>
+                <ScriptCondition code="enable_fight == true"/>
+                <ForceSuccess>
+                  <SubTree ID="OutputHpBasedDecision"/>
+                </ForceSuccess>
+              </Sequence>
+              <Sequence>
+                <IsBulletsRemain/>
+                <Fallback>
+                  <Sequence>
+                    <IsInOwnHalfArea/>
+                    <Script code="enable_fight = true"/>
+                  </Sequence>
+                  <Sequence>
+                    <Script code="enable_fight = false"/>
+                    <SetChassisMode chassis_mode_id="7"/>
+                  </Sequence>
+                </Fallback>
+              </Sequence>
+              <Sequence>
+                <Script code="enable_fight = true"/>
+                <ForceSuccess>
+                  <SubTree ID="OutputHpBasedDecision"/>
+                </ForceSuccess>
+              </Sequence>
+            </Fallback>
+          </Sequence>
+          <Fallback>
+            <Sequence>
+              <IsBulletsRemain/>
+              <Inverter>
+                <IsInOwnHalfArea/>
+              </Inverter>
+              <SetChassisMode chassis_mode_id="7"/>
+            </Sequence>
+            <ForceSuccess>
+              <SubTree ID="OutputHpBasedDecision"/>
+            </ForceSuccess>
+          </Fallback>
+        </Fallback>
+      </Sequence>
+      <Sequence>
+        <SetIsEnableFight is_enable_fight="false"/>
+        <ForceSuccess>
+          <SubTree ID="OutputHpBasedDecision"/>
+        </ForceSuccess>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="ChassisBehavior">
+    <Fallback>
+      <Sequence>
+        <IsRefereeOnline/>
+        <Fallback>
+          <Sequence>
+            <IsGameInBattle/>
+            <Fallback>
+              <Sequence>
+                <IsClientMapUpdate/>
+                <GetKeyboardCommand/>
+                <Switch3 case_1="0"
+                         case_2="83"
+                         case_3="65"
+                         variable="keyboard_command">
+                  <SetChassisMode chassis_mode_id="10"/>
+                  <SetChassisMode chassis_mode_id="11"/>
+                  <SetChassisMode chassis_mode_id="14"/>
+                </Switch3>
+              </Sequence>
+              <Sequence>
+                <ScriptCondition code="need_still_gyro == true"/>
+                <SetChassisMode chassis_mode_id="15"/>
+              </Sequence>
+              <Sequence>
+                <IsSentryHpUrgent/>
+                <SetChassisMode chassis_mode_id="7"/>
+              </Sequence>
+              <Sequence>
+                <Fallback>
+                  <Sequence>
+                    <Inverter>
+                      <IsSupplyTaskFinished/>
+                    </Inverter>
+                    <SetChassisMode chassis_mode_id="7"/>
+                  </Sequence>
+                  <Sequence>
+                    <ScriptCondition code="chassis_mode == 7"/>
+                    <Inverter>
+                      <IsSentryHpReturnMax/>
+                    </Inverter>
+                    <ScriptCondition code="defense_buff &lt; 30"/>
+                    <Sequence>
+                      <SetChassisMode chassis_mode_id="7"/>
+                    </Sequence>
+                  </Sequence>
+                  <Sequence>
+                    <IsNeedAvoidDrone/>
+                    <SetChassisMode chassis_mode_id="16"/>
+                  </Sequence>
+                  <Sequence>
+                    <IsNeedDefenseBase/>
+                    <SetChassisMode chassis_mode_id="13"/>
+                  </Sequence>
+                  <ForceSuccess>
+                    <SubTree ID="TimeBasedDecision"/>
+                  </ForceSuccess>
+                </Fallback>
+              </Sequence>
+            </Fallback>
+          </Sequence>
+          <SetChassisMode chassis_mode_id="0"/>
+        </Fallback>
+      </Sequence>
+      <Sequence>
+        <IsGameInBattle/>
+        <SetChassisMode chassis_mode_id="2"/>
+      </Sequence>
+      <SetChassisMode chassis_mode_id="1"/>
+    </Fallback>
+  </BehaviorTree>
+
   <BehaviorTree ID="GetEnemyInfo">
     <Sequence>
       <IsGameInBattle/>
@@ -38,6 +171,109 @@
     </Parallel>
   </BehaviorTree>
 
+  <BehaviorTree ID="OutputHpBasedDecision">
+    <Fallback>
+      <Sequence>
+        <Sequence>
+          <Fallback>
+            <CheckGimbalMode gimbal_mode_id="8"/>
+            <Inverter>
+              <IsChasePathFinished/>
+            </Inverter>
+          </Fallback>
+          <Fallback>
+            <IsOwnOutpostHpBeyondTheValue outpost_hp_threshold="310"/>
+            <IsInOwnHalfArea/>
+          </Fallback>
+          <IsBulletsRemain/>
+          <Inverter>
+            <CheckTargetType track_id="6"/>
+          </Inverter>
+        </Sequence>
+        <ForceSuccess>
+          <Fallback>
+            <Sequence>
+              <Inverter>
+                <CheckTargetType track_id="6"/>
+              </Inverter>
+              <Inverter>
+                <CheckTargetType track_id="8"/>
+              </Inverter>
+              <SetChassisMode chassis_mode_id="17"/>
+            </Sequence>
+            <SetChassisMode chassis_mode_id="18"/>
+          </Fallback>
+        </ForceSuccess>
+      </Sequence>
+      <Fallback>
+        <Sequence>
+          <Inverter>
+            <IsHasRevived/>
+          </Inverter>
+          <Fallback>
+            <Sequence>
+              <Sequence>
+                <Fallback>
+                  <IsOwnOutpostHpBeyondTheValue outpost_hp_threshold="310"/>
+                  <IsEnableFight/>
+                </Fallback>
+                <IsBulletsRemain/>
+              </Sequence>
+              <Fallback>
+                <Sequence>
+                  <GetPresentTime present_time="{present_time}"/>
+                  <ScriptCondition code="present_time &gt; 90.0"/>
+                  <IsHasEngineerMarked/>
+                  <ScriptCondition code="engineer_revived_times &lt;= 1"/>
+                  <IsEngineerAlive/>
+                  <ScriptCondition code="attack_engineer_enable == true"/>
+                  <SetChassisMode chassis_mode_id="9"/>
+                </Sequence>
+                <Sequence>
+                  <IsOutpostAlive/>
+                  <GetPresentTime present_time="{present_time}"/>
+                  <ScriptCondition code="present_time &gt; 50.0 &amp;&amp; present_time &lt; 90.0"/>
+                  <ScriptCondition code="attack_outpost_enable == true"/>
+                  <SetChassisMode chassis_mode_id="5"/>
+                </Sequence>
+                <SetChassisMode chassis_mode_id="3"/>
+              </Fallback>
+            </Sequence>
+            <Sequence>
+              <Fallback>
+                <Sequence>
+                  <GetPresentTime present_time="{present_time}"/>
+                  <ScriptCondition code="present_time &gt; 240.0"/>
+                  <Fallback>
+                    <Sequence>
+                      <ScriptCondition code="enable_hole_up == true"/>
+                      <IsSentryHpUrgent/>
+                      <SetChassisMode chassis_mode_id="8"/>
+                    </Sequence>
+                    <Sequence>
+                      <IsBulletsRemain/>
+                      <SetChassisMode chassis_mode_id="4"/>
+                    </Sequence>
+                    <SetChassisMode chassis_mode_id="6"/>
+                  </Fallback>
+                </Sequence>
+                <Fallback>
+                  <Sequence>
+                    <ScriptCondition code="enable_hole_up == true"/>
+                    <IsSentryHpUrgent/>
+                    <SetChassisMode chassis_mode_id="8"/>
+                  </Sequence>
+                  <SetChassisMode chassis_mode_id="6"/>
+                </Fallback>
+              </Fallback>
+            </Sequence>
+          </Fallback>
+        </Sequence>
+        <SetChassisMode chassis_mode_id="12"/>
+      </Fallback>
+    </Fallback>
+  </BehaviorTree>
+
   <BehaviorTree ID="SendManualCmd">
     <Sequence>
       <StopAutoController/>
@@ -51,10 +287,96 @@
       <Calibrate/>
       <VisionCalibrate/>
       <SetGyro/>
-      <SetChassisMode/>
+      <SetChassisMode chassis_mode_id=""/>
       <SetChassisCommandSourceFrame/>
       <SendChassisCommand/>
     </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="TimeBasedDecision">
+    <Fallback>
+      <Sequence>
+        <GetPresentTime present_time="{present_time}"/>
+        <ScriptCondition code="present_time &gt; 120.0"/>
+        <Fallback>
+          <Sequence>
+            <GetPresentTime present_time="{present_time}"/>
+            <ScriptCondition code="present_time &gt; 158.0"/>
+            <Sequence>
+              <Script code="enable_hole_up = false"/>
+            </Sequence>
+            <Fallback>
+              <Sequence>
+                <GetPresentTime present_time="{present_time}"/>
+                <ScriptCondition code="present_time &gt; 230.0"/>
+                <Fallback>
+                  <Sequence>
+                    <GetPresentTime present_time="{present_time}"/>
+                    <ScriptCondition code="present_time &gt; 270.0"/>
+                    <Fallback>
+                      <Sequence>
+                        <GetPresentTime present_time="{present_time}"/>
+                        <ScriptCondition code="present_time &gt; 300.0"/>
+                        <Sequence>
+                          <Script code="need_enable_fight = false"/>
+                          <Script code="ignore_buff = true"/>
+                          <ForceSuccess>
+                            <SubTree ID="BulletDecision"
+                                     need_enable_fight="{need_enable_fight}"
+                                     ignore_buff="{ignore_buff}"/>
+                          </ForceSuccess>
+                        </Sequence>
+                      </Sequence>
+                      <Sequence>
+                        <Script code="need_enable_fight = false"/>
+                        <Script code="ignore_buff = false"/>
+                        <ForceSuccess>
+                          <SubTree ID="BulletDecision"
+                                   need_enable_fight="{need_enable_fight}"
+                                   ignore_buff="{ignore_buff}"/>
+                        </ForceSuccess>
+                      </Sequence>
+                    </Fallback>
+                  </Sequence>
+                  <Sequence>
+                    <Script code="enable_fight = false"/>
+                    <Script code="need_enable_fight = false"/>
+                    <Script code="ignore_buff = false"/>
+                    <ForceSuccess>
+                      <SubTree ID="BulletDecision"
+                               need_enable_fight="{need_enable_fight}"
+                               ignore_buff="{ignore_buff}"/>
+                    </ForceSuccess>
+                  </Sequence>
+                </Fallback>
+              </Sequence>
+              <Sequence>
+                <Script code="need_enable_fight = true"/>
+                <Script code="ignore_buff = true"/>
+                <ForceSuccess>
+                  <SubTree ID="BulletDecision"
+                           need_enable_fight="{need_enable_fight}"
+                           ignore_buff="{ignore_buff}"/>
+                </ForceSuccess>
+              </Sequence>
+            </Fallback>
+          </Sequence>
+          <Sequence>
+            <Script code="need_enable_fight = false"/>
+            <Script code="ignore_buff = false"/>
+            <ForceSuccess>
+              <SubTree ID="BulletDecision"
+                       need_enable_fight="{need_enable_fight}"
+                       ignore_buff="{ignore_buff}"/>
+            </ForceSuccess>
+          </Sequence>
+        </Fallback>
+      </Sequence>
+      <Sequence>
+        <Script code="enable_hole_up = true"/>
+        <SubTree ID="OutputHpBasedDecision"/>
+      </Sequence>
+    </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="manual">
@@ -67,6 +389,15 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <SubTree ID="BulletDecision"
+             editable="true">
+      <input_port name="need_enable_fight"
+                  default="{need_enable_fight}"
+                  type="bool"/>
+      <input_port name="ignore_buff"
+                  default="{ignore_buff}"
+                  type="bool"/>
+    </SubTree>
     <Action ID="Calibrate"
             editable="true"/>
     <Condition ID="ChassisMode"
@@ -80,9 +411,59 @@
                   default="{slow_gyro_vel}"
                   type="double"/>
     </Action>
+    <Condition ID="CheckGimbalMode"
+               editable="true">
+      <input_port name="gimbal_mode_id"
+                  type="int"/>
+    </Condition>
+    <Condition ID="CheckTargetType"
+               editable="true">
+      <input_port name="track_id"
+                  type="int"/>
+    </Condition>
+    <Action ID="GetKeyboardCommand"
+            editable="true"/>
+    <Action ID="GetPresentTime"
+            editable="true">
+      <output_port name="present_time"
+                   type="double"/>
+    </Action>
+    <Condition ID="IsBulletsRemain"
+               editable="true"/>
+    <Condition ID="IsChasePathFinished"
+               editable="true"/>
+    <Condition ID="IsClientMapUpdate"
+               editable="true"/>
+    <Condition ID="IsEnableFight"
+               editable="true"/>
+    <Condition ID="IsEngineerAlive"
+               editable="true"/>
     <Condition ID="IsGameInBattle"
                editable="true"/>
+    <Condition ID="IsHasEngineerMarked"
+               editable="true"/>
+    <Condition ID="IsHasRevived"
+               editable="true"/>
     <Condition ID="IsInOwnHalfArea"
+               editable="true"/>
+    <Condition ID="IsNeedAvoidDrone"
+               editable="true"/>
+    <Condition ID="IsNeedDefenseBase"
+               editable="true"/>
+    <Condition ID="IsOutpostAlive"
+               editable="true"/>
+    <Condition ID="IsOwnOutpostHpBeyondTheValue"
+               editable="true">
+      <input_port name="outpost_hp_threshold"
+                  type="int"/>
+    </Condition>
+    <Condition ID="IsRefereeOnline"
+               editable="true"/>
+    <Condition ID="IsSentryHpReturnMax"
+               editable="true"/>
+    <Condition ID="IsSentryHpUrgent"
+               editable="true"/>
+    <Condition ID="IsSupplyTaskFinished"
                editable="true"/>
     <Action ID="ManualSendChassisCmd"
             editable="true"/>
@@ -102,9 +483,17 @@
     <Action ID="SetChassisCommandSourceFrame"
             editable="true"/>
     <Action ID="SetChassisMode"
-            editable="true"/>
+            editable="true">
+      <input_port name="chassis_mode_id"
+                  type="int"/>
+    </Action>
     <Action ID="SetGyro"
             editable="true"/>
+    <Action ID="SetIsEnableFight"
+            editable="true">
+      <input_port name="is_enable_fight"
+                  type="bool"/>
+    </Action>
     <Action ID="StartMainControllers"
             editable="true"/>
     <Action ID="StopAutoController"
