@@ -44,7 +44,7 @@ namespace types
     AimBase,
     TrackEnemy
   };
-  enum class BoosterMode
+  enum class ShooterMode
   {
     Stop,
     Ready,

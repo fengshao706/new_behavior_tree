@@ -5,7 +5,7 @@
 #ifndef NEW_BEHAVIOR_TREE_ACTION_NODE_H
 #define NEW_BEHAVIOR_TREE_ACTION_NODE_H
 
-#include <common/navigation_bridge.h>
+#include "common/navigation_bridge.h"
 #include <rm_common/decision/controller_manager.h>
 
 #include "behaviortree_cpp/action_node.h"
@@ -519,7 +519,7 @@ namespace chassis
     BT::NodeStatus onRunning() override
     {
       auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
+      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE) //TODO : 还有更多的状态需要被处理
       {
         return BT::NodeStatus::RUNNING;
       }
@@ -1015,6 +1015,30 @@ namespace chassis
   private:
     BT::Blackboard &blackboard_;
     perception::Subscriber &subscriber_;
+  };
+
+  class SetGyroInCombat : public BT::SyncActionNode
+  {
+  public:
+    SetGyroInCombat(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools)
+    {
+
+    }
+
+    BT::NodeStatus tick() override
+    {
+      XmlRpc::XmlRpcValue standby_velocity;
+      standby_velocity = blackboard_.get<XmlRpc::XmlRpcValue>("standby_velocity");
+      ros::Time time = ros::Time::now();
+      cmd_tools_.vel_2d_cmd_sender_->set2DVel(0.0, 0.0,
+                                                static_cast<double>(standby_velocity[0]) *
+                                                        std::sin(ros::Time::now().toSec()) +
+                                                    static_cast<double>(standby_velocity[1]));
+      return BT::NodeStatus::SUCCESS;
+    }
+  private:
+    BT::Blackboard &blackboard_;
+    tools::CmdTools &cmd_tools_;
   };
 
 }

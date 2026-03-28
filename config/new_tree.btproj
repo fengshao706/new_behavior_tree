@@ -4,6 +4,8 @@
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="AbnormalStillStopMotion" editable="true"/>
+        <Action ID="AimBase" editable="true"/>
+        <Action ID="AimOutpost" editable="true"/>
         <Action ID="AvoidDrone" editable="true"/>
         <Condition ID="BackCameraDetectionID" editable="true">
             <output_port name="back_camera_detection_id" type="int"/>
@@ -49,6 +51,7 @@
         <Action ID="GotoEnemyOutpost" editable="true"/>
         <Action ID="GotoReturnBloodArea" editable="true"/>
         <Action ID="GotoSentryPatrolArea" editable="true"/>
+        <Action ID="InverseGimbal" editable="true"/>
         <Condition ID="IsBackCameraDetective" editable="true"/>
         <Condition ID="IsBulletsRemain" editable="true"/>
         <Condition ID="IsCalibrated" editable="true">
@@ -77,32 +80,39 @@
         <Condition ID="IsNavigationReady" editable="true"/>
         <Condition ID="IsNeedAvoidDrone" editable="true"/>
         <Condition ID="IsNeedDefenseBase" editable="true"/>
+        <Condition ID="IsNeedInverseGimbal" editable="true"/>
         <Condition ID="IsOutpostAlive" editable="true"/>
         <Condition ID="IsOwnOutpostHpBeyondTheValue" editable="true">
             <input_port name="outpost_hp_threshold" type="int"/>
         </Condition>
         <Condition ID="IsPathCrossLine" editable="true"/>
         <Condition ID="IsPointOnSegment" editable="true"/>
+        <Condition ID="IsReachGoal" editable="true"/>
         <Condition ID="IsRefereeOnline" editable="true"/>
         <Condition ID="IsSentryHpReturnMax" editable="true"/>
         <Condition ID="IsSentryHpUrgent" editable="true"/>
         <Condition ID="IsSupplyTaskFinished" editable="true"/>
+        <Condition ID="IsTargetEffective" editable="true"/>
+        <Condition ID="IsTargetNotInvincible" editable="true"/>
         <Condition ID="IsTimeRangeCondition" editable="true">
             <input_port name="min_time" type="double"/>
             <input_port name="max_time" type="double"/>
         </Condition>
         <Condition ID="IsTrackEnemy" editable="true"/>
+        <Condition ID="IsTrackLoss" editable="true"/>
         <Condition ID="IsTrackLost" editable="true">
             <input_port name="last_track_time" type="double"/>
             <input_port name="lost_track_tolerant_sec_" type="double"/>
         </Condition>
         <Condition ID="IsWithinRange" editable="true"/>
+        <Action ID="LidarTowardsFront" editable="true"/>
         <Action ID="ManualSendChassisCmd" editable="true"/>
         <Action ID="ManualSendGimbalCmd" editable="true"/>
         <Action ID="ManualSendShooterCmd" editable="true"/>
         <Action ID="NavigateToPose" editable="true"/>
         <Condition ID="NeedSupply" editable="true"/>
         <Action ID="PatrolAbnormalBackHomeGoal" editable="true"/>
+        <Action ID="PatrolAfterRevivePatrolArea" editable="true"/>
         <Action ID="PatrolAttackEnemyPositiveArea" editable="true"/>
         <Action ID="PatrolEnemyOutpostArea" editable="true"/>
         <Action ID="PatrolHoleUpArea" editable="true"/>
@@ -114,6 +124,7 @@
         <Action ID="RemoteControlTurnOff" editable="true"/>
         <Action ID="ReverseGimbal" editable="true"/>
         <Condition ID="RobotID" editable="true"/>
+        <Action ID="RoundSearchEnemy" editable="true"/>
         <Action ID="SendChassisCommand" editable="true"/>
         <Action ID="SendGimbalCommand" editable="true"/>
         <Action ID="SendManualCommand" editable="true"/>
@@ -122,16 +133,25 @@
         <Action ID="SetChassisMode" editable="true">
             <input_port name="chassis_mode_id" type="int"/>
         </Action>
-        <Action ID="SetGryoInCombat" editable="true"/>
-        <Action ID="SetGyro" editable="true"/>
+        <Action ID="SetGimbalMode" editable="true">
+            <input_port name="gimbal_mode_id" type="int"/>
+        </Action>
+        <Action ID="SetGyroInCombat" editable="true"/>
         <Action ID="SetIsEnableFight" editable="true">
             <input_port name="is_enable_fight" type="bool"/>
         </Action>
+        <Action ID="SetShooterMode" editable="true">
+            <input_port name="shooter_mode_id" type="int"/>
+        </Action>
+        <Action ID="ShooterPush" editable="true"/>
+        <Action ID="ShooterReady" editable="true"/>
+        <Action ID="ShooterStop" editable="true"/>
         <Action ID="StandSomeTime" editable="true"/>
         <Action ID="StartMainControllers" editable="true"/>
         <Action ID="StopAllMotion" editable="true"/>
         <Action ID="StopAutoController" editable="true"/>
         <Action ID="TargetProcessor" editable="true"/>
+        <Action ID="TrackEnemy" editable="true"/>
         <Action ID="Unchase" editable="true"/>
         <Action ID="UpdateSlopeStatus" editable="true">
             <input_port name="path" type="nav_msgs::Path"/>
@@ -139,5 +159,6 @@
             <output_port name="is_on_slope" type="bool"/>
         </Action>
         <Action ID="VisionCalibrate" editable="true"/>
+        <Action ID="YawSlowRound" editable="true"/>
     </TreeNodesModel>
 </root>

@@ -441,11 +441,9 @@ rm_behavior_tree:
   gimbal_behavior:
     slope_zones: [ ]
     lidar_towards_front_enable: false
-    double_type_params:
-      gimbal_inverse_sec:
-        param: 2.0
-      aim_per_point_sec:
-        param: 0.5
+    gimbal_inverse_sec: 2.0
+    aim_per_point_sec: 0.5
+
     blue_outpost_positions: [
       [ 4.554, -5.053, 0.95 ],
       [ 4.554, -5.053, 0.75 ],

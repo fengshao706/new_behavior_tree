@@ -36,6 +36,11 @@ public:
     yaw_nh.getParam("gimbal_vel_coeff", gimbal_vel_coeff_);
     ros::NodeHandle pitch_nh(nh, "pitch");
     pitch_nh.getParam("pitch_vel_coeff", pitch_vel_coeff_);
+
+    std::unordered_map<std::string, double> gimbal_double_type_params_;
+
+    gimbal_inverse_timer_ = nh.createTimer(ros::Duration(gimbal_double_type_params_["gimbal_inverse_sec"]),
+                                           &BehaviorBase::exitInverseModeCallback, this, false, false); //用于给云台反向计时，超过一定时间后就不要反向
   }
 
   void getDoubleTypeParams(const XmlRpc::XmlRpcValue& double_type_params,
@@ -104,8 +109,17 @@ public:
 
   void setGryoInCombat()
   {
+    std::string robot_color = blackboard_.get<std::string>("robot_color");
+    int own_outpost_hp;
+    if (robot_color == "red")
+    {
+      own_outpost_hp = subscriber_.game_robot_hp_.red_outpost_hp;
+    }else
+    {
+      own_outpost_hp = subscriber_.game_robot_hp_.blue_outpost_hp;
+    }
     ros::Time time = ros::Time::now();
-    if (auto_control_info_.own_outpost_hp_ <= 0)
+    if (own_outpost_hp <= 0)
       cmd_tools_.vel_2d_cmd_sender_->set2DVel(0.0, 0.0,
                                               static_cast<double>(standby_velocity_[0]) *
                                                       std::sin(ros::Time::now().toSec()) +
@@ -261,6 +275,13 @@ public:
     //  cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->sendCommand(time);
   }
 
+  void exitInverseModeCallback(const ros::TimerEvent& event)
+  {
+    subscriber_.has_back_camera_detected_ = false;
+    subscriber_.back_camera_detection_id_ = 0;
+    gimbal_inverse_timer_.stop();
+  }
+
 
   ros::Subscriber vel_sub_;
   tools::CmdTools& cmd_tools_;
@@ -280,4 +301,5 @@ public:
   rm_common::CalibrationQueue *gimbal_calibration_{}, *shooter_calibration_{}, *barrel_calibration_{};
   rm_common::ControllerManager controller_manager_;
   BT::Blackboard &blackboard_;
+  ros::Timer gimbal_inverse_timer_;
 };

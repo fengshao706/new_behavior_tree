@@ -145,29 +145,61 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="GimbalBehavior">
+    <Fallback>
+      <Sequence>
+        <IsRefereeOnline/>
+        <Fallback>
+          <Sequence>
+            <IsGameInBattle/>
+            <Fallback>
+              <Sequence>
+                <Inverter>
+                  <IsTrackLoss/>
+                </Inverter>
+                <SetGimbalMode gimbal_mode_id="8"/>
+              </Sequence>
+              <Sequence>
+                <ScriptCondition code="chassis_mode == 14"/>
+                <IsReachGoal/>
+                <SetGimbalMode gimbal_mode_id="7"/>
+              </Sequence>
+              <Sequence>
+                <ScriptCondition code="chassis_mode == 5"/>
+                <Fallback>
+                  <Sequence>
+                    <IsReachGoal/>
+                    <SetGimbalMode gimbal_mode_id="6"/>
+                  </Sequence>
+                  <SetGimbalMode gimbal_mode_id="3"/>
+                </Fallback>
+              </Sequence>
+              <Fallback>
+                <Sequence>
+                  <IsNeedInverseGimbal/>
+                  <SetGimbalMode gimbal_mode_id="5"/>
+                </Sequence>
+                <Sequence>
+                  <IsReachGoal/>
+                  <SetGimbalMode gimbal_mode_id="3"/>
+                </Sequence>
+              </Fallback>
+            </Fallback>
+          </Sequence>
+          <SetGimbalMode gimbal_mode_id="0"/>
+        </Fallback>
+      </Sequence>
+      <SetGimbalMode gimbal_mode_id="1"/>
+    </Fallback>
+  </BehaviorTree>
+
   <BehaviorTree ID="MainTree">
     <Parallel failure_count="1"
               success_count="-1">
-      <Sequence>
-        <ChassisMode chassis_mode=""/>
-        <RemainHP remain_hp=""/>
-        <ScriptCondition name="IsSentryHpUrgent"
-                         code="remain_hp &lt;&#10;(&#10;    defence_buff &lt; 30 ?&#10;        trigger_hp_without_buff :&#10;        trigger_hp_with_buff&#10;)"/>
-        <ScriptCondition name="IsSentryHpReturnMax"
-                         code="remain_hp &gt;= max_hp"/>
-        <IsInOwnHalfArea/>
-        <ChassisSlowGyro still_gyro_vel="{slow_gyro_vel}"/>
-      </Sequence>
-      <Sequence>
-        <StartMainControllers/>
-        <Switch2 case_1="6"
-                 case_2="8"
-                 variable="track_id">
-          <AlwaysFailure/>
-          <AlwaysFailure/>
-          <AlwaysSuccess/>
-        </Switch2>
-      </Sequence>
+      <SubTree ID="ChassisBehavior"/>
+      <SubTree ID="GimbalBehavior"/>
+      <SubTree ID="ShooterBehavior"/>
+      <SubTree ID="SentryCommandSender"/>
     </Parallel>
   </BehaviorTree>
 
@@ -281,16 +313,126 @@
     </Sequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="SentryCommandSender">
+    <Parallel failure_count="1"
+              success_count="-1">
+      <ReactiveFallback>
+        <Switch6 case_1="0"
+                 case_2="1"
+                 case_3="2"
+                 case_4="3"
+                 case_5="4"
+                 case_6="5"
+                 variable="chassis_mode">
+          <ChassisSlowGyro still_gyro_vel="{slow_gyro_vel}"/>
+          <AbnormalStillStopMotion/>
+          <PatrolAbnormalBackHomeGoal/>
+          <PatrolAttackEnemyPositiveArea/>
+          <PatrolOwnOutpostArea/>
+          <GotoEnemyOutpost/>
+        </Switch6>
+        <Switch6 case_1="6"
+                 case_2="7"
+                 case_3="8"
+                 case_4="10"
+                 case_5="11"
+                 case_6="12"
+                 variable="chassis_mode">
+          <PatrolSentryPatrolArea/>
+          <GotoReturnBloodArea/>
+          <PatrolHoleUpArea/>
+          <GotoConductPoint/>
+          <GotoConductPoint/>
+          <PatrolAfterRevivePatrolArea/>
+        </Switch6>
+        <Switch6 case_1="13"
+                 case_2="14"
+                 case_3="15"
+                 case_4="16"
+                 case_5="17"
+                 case_6="18"
+                 variable="chassis_mode">
+          <GotoBaseDefenseArea/>
+          <GotoEnemyBaseArea/>
+          <SetGyroInCombat/>
+          <PatrolSentryPatrolArea/>
+          <ChaseEnemy/>
+          <SetGyroInCombat/>
+        </Switch6>
+        <ReactiveSequence>
+          <ScriptCondition code="chassis_mode == 9"/>
+          <GotoAttackEnemyEngineer/>
+        </ReactiveSequence>
+      </ReactiveFallback>
+      <ReactiveFallback>
+        <Switch6 case_1="0"
+                 case_2="1"
+                 case_3="2"
+                 case_4="3"
+                 case_5="5"
+                 case_6="6"
+                 variable="gimbal_mode">
+          <YawSlowRound/>
+          <AbnormalStillStopMotion/>
+          <LidarTowardsFront/>
+          <RoundSearchEnemy/>
+          <InverseGimbal/>
+          <AimOutpost/>
+        </Switch6>
+        <Switch2 case_1="7"
+                 case_2="8"
+                 variable="gimbal_mode">
+          <AimBase/>
+          <TrackEnemy/>
+        </Switch2>
+      </ReactiveFallback>
+      <ReactiveFallback>
+        <Switch3 case_1="0"
+                 case_2="1"
+                 case_3="2"
+                 variable="shooter_mode">
+          <ShooterStop/>
+          <ShooterReady/>
+          <ShooterPush/>
+        </Switch3>
+      </ReactiveFallback>
+    </Parallel>
+  </BehaviorTree>
+
   <BehaviorTree ID="SetIdle">
     <Sequence>
       <StartMainControllers/>
       <Calibrate/>
       <VisionCalibrate/>
-      <SetGyro/>
+      <SetGyroInCombat/>
       <SetChassisMode chassis_mode_id=""/>
       <SetChassisCommandSourceFrame/>
       <SendChassisCommand/>
     </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="ShooterBehavior">
+    <Fallback>
+      <Sequence>
+        <IsRefereeOnline/>
+        <Fallback>
+          <Sequence>
+            <IsGameInBattle/>
+            <Fallback>
+              <Sequence>
+                <ScriptCondition code="gimbal_mode == 8"/>
+                <IsTargetEffective/>
+                <IsTargetNotInvincible/>
+                <SetShooterMode shooter_mode_id="2"/>
+              </Sequence>
+              <SetShooterMode shooter_mode_id="1"/>
+            </Fallback>
+          </Sequence>
+          <SetShooterMode shooter_mode_id="1"/>
+        </Fallback>
+      </Sequence>
+      <SetShooterMode shooter_mode_id="0"/>
+    </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="TimeBasedDecision">
@@ -389,6 +531,12 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Action ID="AbnormalStillStopMotion"
+            editable="true"/>
+    <Action ID="AimBase"
+            editable="true"/>
+    <Action ID="AimOutpost"
+            editable="true"/>
     <SubTree ID="BulletDecision"
              editable="true">
       <input_port name="need_enable_fight"
@@ -400,11 +548,8 @@
     </SubTree>
     <Action ID="Calibrate"
             editable="true"/>
-    <Condition ID="ChassisMode"
-               editable="true">
-      <inout_port name="chassis_mode"
-                  type="int"/>
-    </Condition>
+    <Action ID="ChaseEnemy"
+            editable="true"/>
     <Action ID="ChassisSlowGyro"
             editable="true">
       <input_port name="still_gyro_vel"
@@ -428,6 +573,20 @@
       <output_port name="present_time"
                    type="double"/>
     </Action>
+    <Action ID="GotoAttackEnemyEngineer"
+            editable="true"/>
+    <Action ID="GotoBaseDefenseArea"
+            editable="true"/>
+    <Action ID="GotoConductPoint"
+            editable="true"/>
+    <Action ID="GotoEnemyBaseArea"
+            editable="true"/>
+    <Action ID="GotoEnemyOutpost"
+            editable="true"/>
+    <Action ID="GotoReturnBloodArea"
+            editable="true"/>
+    <Action ID="InverseGimbal"
+            editable="true"/>
     <Condition ID="IsBulletsRemain"
                editable="true"/>
     <Condition ID="IsChasePathFinished"
@@ -450,6 +609,8 @@
                editable="true"/>
     <Condition ID="IsNeedDefenseBase"
                editable="true"/>
+    <Condition ID="IsNeedInverseGimbal"
+               editable="true"/>
     <Condition ID="IsOutpostAlive"
                editable="true"/>
     <Condition ID="IsOwnOutpostHpBeyondTheValue"
@@ -457,6 +618,8 @@
       <input_port name="outpost_hp_threshold"
                   type="int"/>
     </Condition>
+    <Condition ID="IsReachGoal"
+               editable="true"/>
     <Condition ID="IsRefereeOnline"
                editable="true"/>
     <Condition ID="IsSentryHpReturnMax"
@@ -465,17 +628,34 @@
                editable="true"/>
     <Condition ID="IsSupplyTaskFinished"
                editable="true"/>
+    <Condition ID="IsTargetEffective"
+               editable="true"/>
+    <Condition ID="IsTargetNotInvincible"
+               editable="true"/>
+    <Condition ID="IsTrackLoss"
+               editable="true"/>
+    <Action ID="LidarTowardsFront"
+            editable="true"/>
     <Action ID="ManualSendChassisCmd"
             editable="true"/>
     <Action ID="ManualSendGimbalCmd"
             editable="true"/>
     <Action ID="ManualSendShooterCmd"
             editable="true"/>
-    <Condition ID="RemainHP"
-               editable="true">
-      <output_port name="remain_hp"
-                   type="unsigned int"/>
-    </Condition>
+    <Action ID="PatrolAbnormalBackHomeGoal"
+            editable="true"/>
+    <Action ID="PatrolAfterRevivePatrolArea"
+            editable="true"/>
+    <Action ID="PatrolAttackEnemyPositiveArea"
+            editable="true"/>
+    <Action ID="PatrolHoleUpArea"
+            editable="true"/>
+    <Action ID="PatrolOwnOutpostArea"
+            editable="true"/>
+    <Action ID="PatrolSentryPatrolArea"
+            editable="true"/>
+    <Action ID="RoundSearchEnemy"
+            editable="true"/>
     <Action ID="SendChassisCommand"
             editable="true"/>
     <Action ID="SendManualCommand"
@@ -487,18 +667,38 @@
       <input_port name="chassis_mode_id"
                   type="int"/>
     </Action>
-    <Action ID="SetGyro"
+    <Action ID="SetGimbalMode"
+            editable="true">
+      <input_port name="gimbal_mode_id"
+                  type="int"/>
+    </Action>
+    <Action ID="SetGyroInCombat"
             editable="true"/>
     <Action ID="SetIsEnableFight"
             editable="true">
       <input_port name="is_enable_fight"
                   type="bool"/>
     </Action>
+    <Action ID="SetShooterMode"
+            editable="true">
+      <input_port name="shooter_mode_id"
+                  type="int"/>
+    </Action>
+    <Action ID="ShooterPush"
+            editable="true"/>
+    <Action ID="ShooterReady"
+            editable="true"/>
+    <Action ID="ShooterStop"
+            editable="true"/>
     <Action ID="StartMainControllers"
             editable="true"/>
     <Action ID="StopAutoController"
             editable="true"/>
+    <Action ID="TrackEnemy"
+            editable="true"/>
     <Action ID="VisionCalibrate"
+            editable="true"/>
+    <Action ID="YawSlowRound"
             editable="true"/>
   </TreeNodesModel>
 

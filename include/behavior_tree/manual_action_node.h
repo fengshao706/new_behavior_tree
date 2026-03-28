@@ -5,17 +5,17 @@
 #ifndef NEW_BEHAVIOR_TREE_MANUAL_ACTION_NODE_H
 #define NEW_BEHAVIOR_TREE_MANUAL_ACTION_NODE_H
 
-#include "ros/ros.h"
+#include <ros/ros.h>
 #include "common/tools.h"
 #include "perception_layer.h"
-#include "behaviortree_cpp/action_node.h"
+#include <behaviortree_cpp/action_node.h>
 
 namespace manual
 {
   class SimpleAction
   {
   public:
-    explicit SimpleAction(ros::NodeHandle& nh, CmdTools& cmd_tools, perception::Subscriber& subscriber)
+    explicit SimpleAction(ros::NodeHandle& nh, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber)
       : cmd_tools_(cmd_tools), subscriber_(subscriber)
     {
       ros::NodeHandle vel_nh(nh, "vel");
@@ -134,7 +134,7 @@ namespace manual
     ros::Time last_time_{};
     bool one_shoot_{false};
     bool continue_shoot_{false};
-    CmdTools& cmd_tools_;
+    tools::CmdTools& cmd_tools_;
     perception::Subscriber& subscriber_;
     double gyro_move_reduction_{1.};
     double gyro_rotate_reduction_{1.};

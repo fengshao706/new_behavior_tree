@@ -6,7 +6,7 @@
 #define NEW_BEHAVIOR_TREE_CHASSIS_CONDITION_NODE_H
 
 #include <behaviortree_cpp/condition_node.h>
-#include <common/types.h>
+#include "common/types.h"
 
 #include "behaviortree_cpp/action_node.h"
 #include "common/behavior_base.h"
@@ -713,6 +713,28 @@ namespace chassis
 
   };
 
+  class IsReachGoal : public BT::ConditionNode
+  {
+  public:
+    IsReachGoal(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools) : ConditionNode(name , config) , cmd_tools_(cmd_tools)
+    {
+
+    }
+
+    BT::NodeStatus tick() override
+    {
+      auto state = cmd_tools_.mbf_client_->getState();
+      if (state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED)
+      {
+        return BT::NodeStatus::SUCCESS;
+      }else
+      {
+        return BT::NodeStatus::FAILURE;
+      }
+    }
+  private:
+    tools::CmdTools &cmd_tools_;
+  };
 
 }
 
