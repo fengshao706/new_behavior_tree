@@ -3,9 +3,12 @@
 //
 #include "common/tools.h"
 
+#include <common/types.h>
+
 namespace tools
 {
-  EnableGyroServiceCaller::EnableGyroServiceCaller(ros::NodeHandle& nh) : ServiceCallerBase<rm_msgs::EnableGyro>(nh, "/enable_gyro")
+  EnableGyroServiceCaller::EnableGyroServiceCaller(ros::NodeHandle& nh) : ServiceCallerBase<rm_msgs::EnableGyro>(
+    nh, "/enable_gyro")
   {
     service_.request.gyro_speed = 0.0;
     callService();
@@ -26,8 +29,8 @@ namespace tools
     callService();
   }
 
-  SetLimitVelServiceCaller::SetLimitVelServiceCaller(ros::NodeHandle& nh,const double init_limit_vel)
-      : ServiceCallerBase<rm_msgs::SetLimitVel>(nh, "/set_limit_vel")
+  SetLimitVelServiceCaller::SetLimitVelServiceCaller(ros::NodeHandle& nh, const double init_limit_vel)
+    : ServiceCallerBase<rm_msgs::SetLimitVel>(nh, "/set_limit_vel")
   {
     service_.request.limit_vel = init_limit_vel;
     callService();
@@ -51,22 +54,20 @@ namespace tools
     return service_.response.current_limit_vel;
   }
 
-  CmdTools::CmdTools(ros::NodeHandle& nh) : tf_listener_(tf_buffer_)
+  CmdTools::CmdTools(ros::NodeHandle& nh, BT::Blackboard& blackboard) : tf_listener_(tf_buffer_),
+                                                                        blackboard_(blackboard)
   {
     senders_ = std::make_unique<Senders>();
     ros::NodeHandle chassis_nh(nh, "chassis");
     senders_->chassis_command_sender_ = std::make_unique<rm_common::ChassisCommandSender>(chassis_nh);
     ros::NodeHandle vel_nh(nh, "vel");
     senders_->vel_2d_command_sender_ = std::make_unique<rm_common::Vel2DCommandSender>(vel_nh);
-    ros::NodeHandle base_gimbal_nh(nh,"base_gimbal");
+    ros::NodeHandle base_gimbal_nh(nh, "base_gimbal");
     senders_->base_gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(base_gimbal_nh);
-    ros::NodeHandle gimbal_nh(nh,"gimbal");
+    ros::NodeHandle gimbal_nh(nh, "gimbal");
     senders_->gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(gimbal_nh);
-    ros::NodeHandle shooter_nh(nh,"shooter");
+    ros::NodeHandle shooter_nh(nh, "shooter");
     senders_->shooter_command_sender_ = std::make_unique<rm_common::ShooterCommandSender>(shooter_nh);
-
-    mbf_client_ =
-        std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>("/move_base_flex/move_base", true);
     dClient_ = std::make_unique<dynamic_reconfigure::Client<global_planner::GlobalPlannerConfig>>("/move_base_flex/GlobalPlanner");
 
     ros::NodeHandle yaw_nh(nh, "yaw");
@@ -82,11 +83,6 @@ namespace tools
   CmdTools::Senders* CmdTools::getSenders() const
   {
     return senders_.get();
-  }
-
-  auto CmdTools::getMbfClient() const
-  {
-    return mbf_client_.get();
   }
 
   auto CmdTools::getDClient() const
@@ -135,8 +131,8 @@ namespace tools
       global_planner::GlobalPlannerConfig config;
       dClient_->getCurrentConfiguration(config);
       ROS_INFO_STREAM("cur neutral cost: " << config.neutral_cost << " target neutral_cost:" << neutral_cost
-                                           << " cur lethal cost:" << config.lethal_cost
-                                           << " target lethal cost:" << lethal_cost);
+        << " cur lethal cost:" << config.lethal_cost
+        << " target lethal cost:" << lethal_cost);
       config.neutral_cost = neutral_cost;
       config.lethal_cost = lethal_cost;
       last_neutral_cost_ = neutral_cost;
@@ -177,7 +173,7 @@ namespace tools
 
   void CmdTools::setStackGimbalPoint()
   {
-   //void
+    //void
   }
 
   tf2_ros::Buffer& CmdTools::getTfBuffer()
@@ -186,13 +182,16 @@ namespace tools
     //  std::pair<ros::Time, geometry_msgs::TransformStamped> check_obstacle_{};
   }
 
-  geometry_msgs::PoseStamped getZonesPosition(const std::string& area_name, BT::Blackboard& blackboard, int& last_patrol_position_index, bool sequential_patrol_enable, bool& is_complete)
+  geometry_msgs::PoseStamped getZonesPosition(const std::string& area_name, BT::Blackboard& blackboard,
+                                              int& last_patrol_position_index, bool sequential_patrol_enable,
+                                              bool& is_complete)
   {
-    auto all_zones=blackboard.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
+    auto all_zones = blackboard.get<std::unordered_map<
+      std::string, std::vector<geometry_msgs::PoseStamped>>>("all_zones");
 
     std::vector<geometry_msgs::PoseStamped> points = all_zones[area_name];
 
-    if (last_patrol_position_index == points.size()-2) //当下标到了区域点最多的情况，为防止溢出，就将其赋值为-1
+    if (last_patrol_position_index == points.size() - 2) //当下标到了区域点最多的情况，为防止溢出，就将其赋值为-1
     {
       is_complete = true;
     }
@@ -208,7 +207,8 @@ namespace tools
     }
   }
 
-  bool isPointInPolygon(const geometry_msgs::TransformStamped& point, const std::vector<geometry_msgs::PointStamped>& polygon)
+  bool isPointInPolygon(const geometry_msgs::TransformStamped& point,
+                        const std::vector<geometry_msgs::PointStamped>& polygon)
   {
     int n = polygon.size();
     int count = 0;
@@ -217,16 +217,16 @@ namespace tools
       if (point.transform.translation.x == polygon[i].point.x && point.transform.translation.y == polygon[i].point.y)
         return true;
       if (point.transform.translation.x == polygon[(i + 1) % n].point.x &&
-          point.transform.translation.y == polygon[(i + 1) % n].point.y)
+        point.transform.translation.y == polygon[(i + 1) % n].point.y)
         return true;
 
       if ((point.transform.translation.y < polygon[i].point.y) !=
-          (point.transform.translation.y < polygon[(i + 1) % n].point.y))
+        (point.transform.translation.y < polygon[(i + 1) % n].point.y))
       {
         double x = (polygon[(i + 1) % n].point.x - polygon[i].point.x) *
-                       (point.transform.translation.y - polygon[i].point.y) /
-                       (polygon[(i + 1) % n].point.y - polygon[i].point.y) +
-                   polygon[i].point.x;
+          (point.transform.translation.y - polygon[i].point.y) /
+          (polygon[(i + 1) % n].point.y - polygon[i].point.y) +
+          polygon[i].point.x;
         if (x > point.transform.translation.x)
           count++;
         else if (x == point.transform.translation.x)
@@ -236,7 +236,9 @@ namespace tools
     return count % 2 == 1;
   }
 
-  std::string determinePolygonInWhich(const geometry_msgs::TransformStamped& point, std::unordered_map<std::string, std::vector<geometry_msgs::PointStamped>> pos_detection_polygons)
+  std::string determinePolygonInWhich(const geometry_msgs::TransformStamped& point,
+                                      std::unordered_map<std::string, std::vector<geometry_msgs::PointStamped>>
+                                      pos_detection_polygons)
   {
     for (const auto& pair : pos_detection_polygons)
     {
@@ -244,5 +246,241 @@ namespace tools
         return pair.first;
     }
     return "unknown";
+  }
+
+  MiniMapTools::MiniMapTools(BT::Blackboard& blackboard, perception::Publisher& publisher,
+                             perception::Subscriber& subscriber) : blackboard_(blackboard), publisher_(publisher),
+                                                                   subscriber_(subscriber) //用于构造旋转矩阵
+  {
+    std::vector<double> minimap2map;
+    if (!blackboard_.get<std::vector<double>>("minimap2map", minimap2map))
+    {
+      ROS_ERROR("BT can not access key name [minimap2map] , default value is zero");
+      minimap2map.emplace_back(0);
+      minimap2map.emplace_back(0);
+      minimap2map.emplace_back(0);
+    }
+    minimap2world_.setOrigin(tf2::Vector3(minimap2map[0], minimap2map[1], 0));
+    tf2::Quaternion quaternion;
+    quaternion.setRPY(0, 0, minimap2map[2]);
+    minimap2world_.setRotation(quaternion);
+  }
+
+  void MiniMapTools::pathTransform(const nav_msgs::Path& goal_path, rm_msgs::MapSentryData* map_sentry_data)
+  // 首先括号里代表着要初始化的两个成员变量，函数实现了将路径
+  // (goal_path) 转换为某种格式，并存储到 map_sentry_data
+  {
+    // 注意这里的map_sentry_data是一个指针，只有访问指针下面的成员采用->符号
+    map_sentry_data->stamp =
+      goal_path.header.stamp; // 将 goal_path 的时间戳 (goal_path.header.stamp) 赋值给 map_sentry_data 的 stamp 字段
+    int sentry_intention ;
+    if (!blackboard_.get<int>("sentry_intention", sentry_intention))
+    {
+      sentry_intention = static_cast<int>(types::SentryIntention::MoveToTheTargetPoint);//赋予默认值为3
+      ROS_ERROR(
+        "BT can not access key name [sentry_intention] , default value is types::ControlState::MoveToTheTargetPoint");
+    }
+    map_sentry_data->intention = sentry_intention; // 将当前的控制状态保存到目标数据的 intention（意图）字段中
+    int num = 0; // num: 初始化路径点的计数器，标记当前处理的是路径中的第几个点；
+    int step = ceil(goal_path.poses.size() / 10.0); // step: 计算路径的采样间隔，将路径点数等分为 10 段 ； ceil(...):
+    // 使用 ceil 函数向上取整，确保步长为整数且至少为 1
+    for (const auto& goal : goal_path.poses) // 遍历路径中的每一个点
+    {
+      if (step != 0)
+      {
+        if (num == 0)
+          pathPointTransform(map_sentry_data, goal, num / step - 1, true);
+        else if (num % step == 0)
+          pathPointTransform(map_sentry_data, goal, num / step - 1, false);
+      }
+      num = num + 1; // 更新点的计数器，处理下一个路径点
+    }
+  }
+
+  void MiniMapTools::pathPointTransform(rm_msgs::MapSentryData* map_sentry_data, const geometry_msgs::PoseStamped& goal,
+                                        int num,
+                                        bool is_start_point)
+  {
+    if (num >= 49)
+      return;
+    tf2::Transform minimap2path, world2path;
+    world2path.setOrigin(tf2::Vector3(goal.pose.position.x, goal.pose.position.y, 0.0)); //设置原点偏移量
+    world2path.setRotation(tf2::Quaternion(0, 0, 0, 1)); //设置原点偏移量
+    minimap2path = minimap2world_ * world2path; //这里其实是变换矩阵相乘
+    if (is_start_point)
+    {
+      map_sentry_data->start_position_x = minimap2path.getOrigin().x() * 10.0; //乘10是更改精度单位，米改成分米
+      map_sentry_data->start_position_y = minimap2path.getOrigin().y() * 10.0;
+    }
+    else
+    {
+      map_sentry_data->delta_x[num] = (int8_t)(minimap2path.getOrigin().x() * 10.0 - last_point_x_ * 10.0);
+      map_sentry_data->delta_y[num] = (int8_t)(minimap2path.getOrigin().y() * 10.0 - last_point_y_ * 10.0);
+    }
+    last_point_x_ = minimap2path.getOrigin().x();
+    last_point_y_ = minimap2path.getOrigin().y();
+  }
+
+  void MiniMapTools::targetPoseTransform(float sub_x, float sub_y, geometry_msgs::PoseStamped* target_pose)
+  {
+    tf2::Transform minimap2target, world2target;
+    minimap2target.setOrigin(tf2::Vector3(sub_x, sub_y, 0));
+    minimap2target.setRotation(tf2::Quaternion(0, 0, 0, 1));
+    world2target = minimap2world_.inverse() * minimap2target;
+    target_pose->header.frame_id = "map";
+    target_pose->pose.position.x = world2target.getOrigin().x();
+    target_pose->pose.position.y = world2target.getOrigin().y();
+    target_pose->pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, 0, 1));
+  }
+
+  geometry_msgs::PoseStamped MiniMapTools::getConductPoint()
+  {
+    geometry_msgs::PoseStamped target_pose;
+
+    targetPoseTransform(subscriber_.getClientMapSendData().target_position_x,
+                        subscriber_.getClientMapSendData().target_position_y, &target_pose);
+    publisher_.getPublishers()->conduct_point_pub_.publish(target_pose);
+    return target_pose;
+  }
+
+  NavigationTools::NavigationTools(BT::Blackboard& blackboard , perception::Subscriber &subscriber , CmdTools &cmd_tools) : blackboard_(blackboard) , subscriber_(subscriber) , cmd_tools_(cmd_tools)
+  {
+    mbf_client_ = std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>("/move_base_flex/move_base", true);
+    if (!blackboard_.get<double>("max_planning_period",max_planning_period_))
+    {
+      ROS_ERROR("BT can not access key name [max_planning_period] in NavigationTools , default value is 30.0");
+      max_planning_period_ = 30.0;
+    }
+    if (!blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones",all_zones))
+    {
+      ROS_ERROR("BT can not access key name [all_zones] , no default param");
+    }
+  }
+
+  void NavigationTools::reachGoalJudgement(const actionlib::SimpleClientGoalState& state , const mbf_msgs::MoveBaseResultConstPtr& result)
+  {
+    if (result->outcome == mbf_msgs::MoveBaseResult::SUCCESS)
+    {
+      patrol_state_ = PatrolState::REACHED;
+      reach_time_ = ros::Time::now();
+    }
+    else
+    {
+      ROS_INFO_THROTTLE(0.5, "failed to reach goal");
+      patrol_state_ = PatrolState::IDLE;
+    }
+  }
+
+  void NavigationTools::patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode)
+  {
+    ros::Time time = ros::Time::now();
+    if (checkMbfClientState())
+    {
+      if (patrol_state_ == PatrolState::IDLE || patrol_state_ == PatrolState::TIMEOUT)
+      {
+        int sentry_intention = is_conduct_mode ? static_cast<int>(types::SentryIntention::MoveToTheTargetPoint) : static_cast<int>(types::SentryIntention::DefendAtTheTargetPoint);
+        blackboard_.set<int>("sentry_intention",sentry_intention);  //设置sentry intention，给minimap tool使用
+        mbf_client_->cancelGoal();
+        mbf_goal_.target_pose = point;
+        mbf_goal_.direct_track = false;
+        mbf_client_->sendGoal(mbf_goal_, [this](const actionlib::SimpleClientGoalState& state,
+                                                             const mbf_msgs::MoveBaseResultConstPtr& result) {
+            reachGoalJudgement(state, result);
+          });
+
+        patrol_state_ = PatrolState::MOVING;
+        ROS_INFO_STREAM_THROTTLE(0.5, "Present target point is: " << mbf_goal_.target_pose.pose.position.x << ","
+                                                    << mbf_goal_.target_pose.pose.position.y
+                                                    << ",patrol sequential index:" << patrol_sequential_index_);
+        planning_start_time_ = ros::Time::now();
+      }
+      else
+      {
+        if (patrol_state_ == PatrolState::REACHED) //目标点信息发出去且到达目标，但是没有待够时间以重设has_determined_goal标志位的情况
+        {
+          if (ros::Time::now() - reach_time_ > ros::Duration(residence_time_at_point))
+          {
+            if (is_conduct_mode)
+              subscriber_.clearClientMapUpdateState();
+            patrol_state_ = PatrolState::IDLE;
+            ROS_INFO_THROTTLE(0.5, "Stay there long enough, change goal.");
+          }
+        }
+        else //目标点信息发出去但是还没有到达目标的情况，可能出现一些状况导致无法到达，因此需要做超时检测
+        {
+          if (ros::Time::now() - planning_start_time_ > ros::Duration(max_planning_period_))
+          {
+            mbf_client_->cancelGoal();
+            patrol_state_ = PatrolState::TIMEOUT;
+            ROS_INFO_THROTTLE(0.5, "Planning timeout, change goal.");
+          }
+        }
+      }
+    }
+    cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
+  }
+
+  geometry_msgs::PoseStamped NavigationTools::getPatrolPoint(const std::string& patrol_area_name ,const bool sequential_patrol_enable)
+  {
+    std::vector<geometry_msgs::PoseStamped> points = all_zones[patrol_area_name];
+    if (points.empty())
+    {
+      ROS_ERROR_THROTTLE(0.5, "Patrol area has no points: %s", patrol_area_name.c_str());
+      geometry_msgs::PoseStamped fallback;
+      fallback.header.frame_id = "map";
+      return fallback;
+    }
+    if (sequential_patrol_enable) //顺序取点
+    {
+      if (last_patrol_area_name_ != patrol_area_name)
+        patrol_sequential_index_ = -1;
+      patrol_sequential_index_ = ((patrol_sequential_index_ + 1) % points.size());
+      last_patrol_area_name_ = patrol_area_name;
+      return points[patrol_sequential_index_];
+    }
+    else //随机取点
+    {
+      unsigned int rand_index = (rand() % points.size());
+      last_patrol_area_name_ = patrol_area_name;
+      return points[rand_index];
+    }
+  }
+
+  actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>* NavigationTools::getMbfClient() const
+  {
+    return mbf_client_.get();
+  }
+
+  bool NavigationTools::checkMbfClientState()
+  {
+    bool is_server_connect = getMbfClient()->waitForServer(ros::Duration(0.03));
+    if (!is_server_connect)
+    {
+      ROS_WARN_THROTTLE(0.5, "action not connect");
+      if (last_action_state_)
+      {
+        last_mbf_retry_time_ = ros::Time::now();
+        resetMbfClient();
+      }
+      else if (ros::Time::now() - last_mbf_retry_time_ > ros::Duration(2.0))
+      {
+        resetMbfClient();
+        last_mbf_retry_time_ = ros::Time::now();
+      }
+    }
+    last_action_state_ = is_server_connect;
+    return is_server_connect;
+  }
+
+  void NavigationTools::resetMbfClient()
+  {
+    mbf_client_.reset();
+    mbf_client_ = std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>(
+      "/move_base_flex/move_base", true);
+  }
+
+  void NavigationTools::resetPatrolState()
+  {
+    patrol_state_ = PatrolState::IDLE;
   }
 }
