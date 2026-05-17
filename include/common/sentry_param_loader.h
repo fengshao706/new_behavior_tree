@@ -13,9 +13,8 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "common/types.h"
-#include "common/behavior_base.h"
 
-class SentryParamLoader  // TODO : 需在main函数中构造
+class SentryParamLoader  //需在main函数中构造
 {
 public:
   SentryParamLoader(ros::NodeHandle &nh , BT::Blackboard::Ptr & blackboard) : nh(nh) , blackboard_(blackboard)
@@ -25,6 +24,7 @@ public:
     gimbal_behavior_param_load();
     chassis_vel_param_load();
     planner_param_load();
+    get_region_key_points();
     load_zone_configs();
     load_default_aim_rank();
     param_initialization();
@@ -32,8 +32,9 @@ public:
 
   void chassis_behavior_param_load()
   {
-    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(nh,"chassis_behavior");
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(rm_behavior_tree_nh,"chassis_behavior");
+    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
     int trigger_blood_return_hp;
     int trigger_blood_return_hp_without_buff;
     int trigger_run_away_outpost_hp;
@@ -73,7 +74,7 @@ public:
     blackboard_->set<int>("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
     blackboard_->set<int>("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp);
     blackboard_->set<int>("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp);
-    blackboard_->set<XmlRpc::XmlRpcValue>("chase_restricted_zones",chase_restricted_zones);
+
     blackboard_->set<XmlRpc::XmlRpcValue>("standby_velocity", standby_velocity);
     blackboard_->set<double>("max_planning_period",max_planning_period);
     blackboard_->set<double>("stand_at_conduct_point_sec",stand_at_conduct_point_sec);
@@ -89,9 +90,10 @@ public:
 
   void gimbal_behavior_param_load()
   {
-    ros::NodeHandle auto_nh(nh,"auto");
-    ros::NodeHandle yaw_nh(nh, "yaw");
-    ros::NodeHandle gimbal_behavior_nh(nh, "gimbal_behavior");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
+    ros::NodeHandle yaw_nh(rm_behavior_tree_nh, "yaw");
+    ros::NodeHandle gimbal_behavior_nh(rm_behavior_tree_nh, "gimbal_behavior");
 
     double lost_track_tolerant_sec;
     double gimbal_inverse_sec;
@@ -117,6 +119,7 @@ public:
       outpost_pose.point.z = static_cast<double>(blue_outpost_positions[i][2]);
       blue_outpost_poses.push_back(outpost_pose);
     }
+
     for (int i = 0; i < red_outpost_positions.size(); i++)
     {
       geometry_msgs::PointStamped outpost_pose;
@@ -154,7 +157,8 @@ public:
 
   void chassis_vel_param_load() // TODO : 当前未完成全部参数加载任务
   {
-    ros::NodeHandle chassis_vel_nh=ros::NodeHandle(nh,"vel");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle chassis_vel_nh=ros::NodeHandle(rm_behavior_tree_nh,"vel");
     double slow_gyro_vel = chassis_vel_nh.param("slow_gyro_vel",0.5);
 
     blackboard_->set<double>("still_gyro_vel",slow_gyro_vel);
@@ -162,7 +166,8 @@ public:
 
   void planner_param_load()
   {
-    ros::NodeHandle planner_nh=ros::NodeHandle(nh,"planner");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle planner_nh=ros::NodeHandle(rm_behavior_tree_nh,"planner");
     double default_limit_vel;
     double slope_side_window;
     double default_side_window;
@@ -182,7 +187,8 @@ public:
 
   void get_region_key_points() //用于下面的多边形
   {
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
     XmlRpc::XmlRpcValue region_key_points;
     auto_nh.getParam("region_key_points",region_key_points);
     for (int i = 0; i < region_key_points.size(); i++)
@@ -197,8 +203,9 @@ public:
 
   void load_zone_configs()
   {
-    ros::NodeHandle auto_nh(nh,"auto");
-    ros::NodeHandle chassis_behavior_nh(nh,"chassis_behavior");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
+    ros::NodeHandle chassis_behavior_nh(rm_behavior_tree_nh,"chassis_behavior");
     XmlRpc::XmlRpcValue zones;
     auto_nh.getParam("zones",zones);
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones; //所有的区域的所有坐标
@@ -206,10 +213,9 @@ public:
 
     for (const auto& zone : zones)
     {
-      ROS_ASSERT(zone.second.hasMember("position") and zone.second.hasMember("aim_direct") and
+      ROS_ASSERT(zone.second.hasMember("position") and
                  zone.second.hasMember("pos_detection_polygon"));
       ROS_ASSERT(zone.second["position"].getType() == XmlRpc::XmlRpcValue::TypeArray and
-                 zone.second["aim_direct"].getType() == XmlRpc::XmlRpcValue::TypeArray and
                  zone.second["pos_detection_polygon"].getType() == XmlRpc::XmlRpcValue::TypeArray); // TODO : 将其放入gtest中
       std::vector<geometry_msgs::PoseStamped> points;
       for (int i = 0; i < zone.second["position"].size(); ++i)
@@ -237,7 +243,6 @@ public:
       pos_detection_polygons.insert(std::make_pair(zone.first, polygon_points));
     }
     //-----------------------------------------------------------------------
-
     XmlRpc::XmlRpcValue chase_restricted_zone_params;
     std::unordered_map<std::string,types::CHASE_JUDGE> chase_restricted_zones;
     auto_nh.getParam("chase_restricted_zones",chase_restricted_zone_params);
@@ -269,7 +274,8 @@ public:
 
   void load_default_aim_rank()
   {
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
     XmlRpc::XmlRpcValue default_aim_priority;
     std::vector<int> default_aim_rank;
     auto_nh.getParam("default_aim_priority",default_aim_priority); //TODO : 这里需要使用gtest测试确保类型为数组且=内部的数据为整数
@@ -282,8 +288,9 @@ public:
 
   void load_robot_color()
   {
+    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
     std::string color;
-    nh.getParam("color",color);
+    rm_behavior_tree_nh.getParam("color",color);
     blackboard_->set<std::string>("robot_color",color);
   }
 
@@ -305,6 +312,17 @@ public:
     blackboard_->set<types::GimbalMode>("gimbal_mode",types::GimbalMode::YawSlowRound);
     blackboard_->set<int>("circle_count",0); //该参数在gimbal_action_node中被调用
     blackboard_->set<double>("last_yaw",0.0); //该参数在gimbal_action_node中被调用
+    blackboard_->set<bool>("has_determined_goal",false);
+    blackboard_->set<bool>("has_reached_goal",false);
+    blackboard_->set<ros::Time>("reach_time",ros::Time::now());
+    blackboard_->set<int>("sentry_intention",static_cast<int>(types::SentryIntention::MoveToTheTargetPoint));
+  }
+
+  void loadMapParam()
+  {
+    std::vector<double> minimap2map;
+    nh.getParam("minimap2map",minimap2map);
+    blackboard_->set<std::vector<double>>("minimap2map",minimap2map);
   }
 
 

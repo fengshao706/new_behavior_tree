@@ -72,11 +72,11 @@ namespace types
     BASE
   };
 
-  enum class ControlState
+  enum class SentryIntention
   {
-    CHASE_MODE = 1,
-    GIMBAL_CONTROL_MODE ,
-    DEFAULT_NAVIGATION_MODE
+    AttackAtTheTargetPoint = 1,
+    DefendAtTheTargetPoint ,
+    MoveToTheTargetPoint
   };
 
   typedef struct

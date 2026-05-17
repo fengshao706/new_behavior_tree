@@ -17,7 +17,7 @@ namespace gimbal
   class IsTrackLoss : public BT::ConditionNode
   {
   public:
-    IsTrackLoss(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard) : ConditionNode(name ,config) ,blackboard_(blackboard)
+    IsTrackLoss(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : ConditionNode(name ,config) ,blackboard_(blackboard)
     {
 
     }
@@ -49,10 +49,50 @@ namespace gimbal
     BT::Blackboard &blackboard_;
   };
 
+  //TODO : gimbal_mode需保证在gimbal_action_node中正确设定
+  class CheckGimbalMode : public BT::ConditionNode // 若实际的云台模式和给定的云台模式相同，则返回success，否则返回failure
+  {
+  public:
+    CheckGimbalMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : ConditionNode(name,config) ,blackboard_(blackboard)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return { BT::InputPort<int>("gimbal_mode_id") };
+    }
+
+    BT::NodeStatus tick() override
+    {
+      try
+      {
+        gimbal_mode_ = static_cast<int>(blackboard_.get<types::GimbalMode>("gimbal_mode"));
+      }catch (BT::RuntimeError &e)
+      {
+        ROS_WARN("BT can not access key name [gimbal_mode] , default is types::GimbalMode::YawSlowRound");
+        gimbal_mode_ = static_cast<int>(types::GimbalMode::YawSlowRound);
+      }
+
+      BT::Expected<int> gimbal_mode_id = getInput<int>("gimbal_mode_id");
+      if (gimbal_mode_id.value() == gimbal_mode_)
+      {
+        return BT::NodeStatus::SUCCESS;
+      }else
+      {
+        return BT::NodeStatus::FAILURE;
+      }
+    }
+
+  private:
+    BT::Blackboard &blackboard_;
+    int gimbal_mode_;
+  };
+
   class IsNeedInverseGimbal : public BT::ConditionNode
   {
   public:
-    IsNeedInverseGimbal(std::string& name, BT::NodeConfig& config , BT::Blackboard &blackboard ,  perception::Subscriber &subscriber) : BT::ConditionNode(name, config) , blackboard_(blackboard) , subscriber_(subscriber)
+    IsNeedInverseGimbal(const std::string& name,const BT::NodeConfig& config , BT::Blackboard &blackboard ,  perception::Subscriber &subscriber) : BT::ConditionNode(name, config) , blackboard_(blackboard) , subscriber_(subscriber)
     {
 
     }

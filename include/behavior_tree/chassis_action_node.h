@@ -18,65 +18,65 @@ namespace chassis
   class ChassisSlowGyro : public BT::SyncActionNode  // 用于赛前的慢速小陀螺
   {
   public:
-    ChassisSlowGyro(std::string name , BT::NodeConfig config , BehaviorBase & behavior_base , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , behavior_base_(behavior_base) , cmd_tools_(cmd_tools)
+    ChassisSlowGyro(const std::string &name ,const BT::NodeConfig &config  , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , cmd_tools_(cmd_tools)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return { BT::InputPort<double>("slow_gyro_vel") };
+      return { BT::InputPort<double>("slow_gyro_vel_scale") };
     }
 
     BT::NodeStatus tick() override
     {
-      BT::Expected<double> msg = getInput<double>("slow_gyro_vel");
+      BT::Expected<double> msg = getInput<double>("slow_gyro_vel_scale");
       // Check if expected is valid. If not, throw its error
       if (!msg)
       {
-        throw BT::RuntimeError("missing required input [slow_gyro_vel]: ",
+        throw BT::RuntimeError("missing required input [slow_gyro_vel_scale]: ",
                                 msg.error() );
       }
       // use the method value() to extract the valid message.
 
-      behavior_base_.sendChassisCmd();
+      cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
+      cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame = "base_link";
       ros::Time time = ros::Time::now();
-      cmd_tools_.vel_2d_cmd_sender_->setAngularZVel(msg.value());//在我给出的配置文件中设定底盘的旋转速度
-      cmd_tools_.chassis_cmd_sender_->sendChassisCommand(time, true);
-      cmd_tools_.vel_2d_cmd_sender_->sendCommand(time);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(msg.value());//在我给出的配置文件中设定底盘的旋转速度
+      cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
       return BT::NodeStatus::SUCCESS;
     }
   private:
-    BehaviorBase & behavior_base_;
     tools::CmdTools & cmd_tools_;
   };
 
   class AbnormalStillStopAllMotion : public BT::SyncActionNode
   {
   public:
-    AbnormalStillStopAllMotion(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , behavior_base_(behavior_base) , cmd_tools_(cmd_tools)
+    AbnormalStillStopAllMotion(const std::string & name ,const BT::NodeConfig & config , BehaviorBase & behavior_base , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , behavior_base_(behavior_base) , cmd_tools_(cmd_tools)
     {
 
     }
 
     BT::NodeStatus tick() override
     {
-      behavior_base_.sendChassisCmd();
-      cmd_tools_.vel_2d_cmd_sender_->setZero();
-      cmd_tools_.union_cmd_sender_->gimbal_cmd_sender_->setZero();
-      cmd_tools_.union_cmd_sender_->base_gimbal_cmd_sender_->setZero();
-      cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->setZero();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
+      cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
+      cmd_tools_.getSenders()->chassis_command_sender_->setZero();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(ros::Time::now());
+      cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
+      cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(ros::Time::now(),false);
       return BT::NodeStatus::SUCCESS;
     }
   private:
-    BehaviorBase & behavior_base_;
     tools::CmdTools & cmd_tools_;
   };
 
   class PatrolAbnormalBackHomeGoal : public BT::StatefulActionNode
   {
   public:
-    PatrolAbnormalBackHomeGoal(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolAbnormalBackHomeGoal(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) ,navigation_tools_(navigation_tools)
     {
 
     }
@@ -88,9 +88,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       target_area_name = robot_color + "_center_sentry_patrol_area";
       return BT::NodeStatus::RUNNING;
@@ -98,42 +95,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),2.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class PatrolAttackEnemyPositiveArea : public BT::StatefulActionNode
   {
   public:
-    PatrolAttackEnemyPositiveArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolAttackEnemyPositiveArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard ,tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -145,9 +127,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
       {
@@ -162,42 +141,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
-  class PatrolOwnOutputArea : public BT::StatefulActionNode
+  class PatrolOwnOutpostArea : public BT::StatefulActionNode
   {
   public:
-    PatrolOwnOutputArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolOwnOutpostArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -209,9 +173,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       target_area_name = robot_color + "_outpost_area";
       return BT::NodeStatus::RUNNING;
@@ -219,42 +180,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class PatrolEnemyOutpostArea : public BT::StatefulActionNode
   {
   public:
-    PatrolEnemyOutpostArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolEnemyOutpostArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard ,tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -266,9 +212,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
       {
@@ -283,42 +226,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),10.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class PatrolSentryPatrolArea : public BT::StatefulActionNode
   {
   public:
-    PatrolSentryPatrolArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolSentryPatrolArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -330,9 +258,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       target_area_name = robot_color + "_center_sentry_patrol_area";
       return BT::NodeStatus::RUNNING;
@@ -340,42 +265,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class GotoReturnBloodArea : public BT::StatefulActionNode
   {
   public:
-    GotoReturnBloodArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    GotoReturnBloodArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -387,9 +297,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       target_area_name = robot_color + "_supply_area";
       return BT::NodeStatus::RUNNING;
@@ -397,42 +304,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class PatrolHoleUpArea : public BT::StatefulActionNode
   {
   public:
-    PatrolHoleUpArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    PatrolHoleUpArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -444,9 +336,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       target_area_name = robot_color + "_hole_up_points";
       return BT::NodeStatus::RUNNING;
@@ -454,42 +343,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class GotoEnemyBaseArea : public BT::StatefulActionNode
   {
   public:
-    GotoEnemyBaseArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    GotoEnemyBaseArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -501,9 +375,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
       {
@@ -518,42 +389,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE) //TODO : 还有更多的状态需要被处理
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class GotoAttackEnemyEngineer : public BT::StatefulActionNode
   {
   public:
-    GotoAttackEnemyEngineer(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    GotoAttackEnemyEngineer(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
     {
 
     }
@@ -565,9 +421,6 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
       robot_color=blackboard_.get<std::string>("robot_color");
       if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
       {
@@ -582,106 +435,27 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
     BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::string robot_color;
     std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
-  };
-
-  class PatrolAfterRevivePatrolArea : public BT::StatefulActionNode
-  {
-  public:
-    PatrolAfterRevivePatrolArea(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , BT::Blackboard & blackboard , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
-    {
-
-    }
-
-    static BT::PortsList providedPorts()
-    {
-      return {  };
-    }
-
-    BT::NodeStatus onStart() override
-    {
-      is_complete = false;
-      last_patrol_position_index=-1;
-      all_zones=blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones");
-      robot_color=blackboard_.get<std::string>("robot_color");
-      if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
-      {
-        robot_color = "blue";
-      }else
-      {
-        robot_color = "red";
-      }
-      target_area_name =robot_color + "_outpost_area";
-      return BT::NodeStatus::RUNNING;
-    }
-
-    BT::NodeStatus onRunning() override
-    {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-
-      if (is_complete == true)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      auto point = tools::getZonesPosition(target_area_name,blackboard_,last_patrol_position_index,true,is_complete);
-      behavior_base_.conduct(point);
-      return BT::NodeStatus::RUNNING;
-    }
-
-    void onHalted() override
-    {
-      behavior_base_.cancelGoal();
-    }
-
-  private:
-    BT::Blackboard &blackboard_;
-    int last_patrol_position_index;
-    bool is_complete;
-    std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
-    std::string robot_color;
-    std::string target_area_name;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class GotoConductPoint : public BT::StatefulActionNode
   {
   public:
-    GotoConductPoint(std::string & name , BT::NodeConfig & config , BehaviorBase & behavior_base , tools::CmdTools &cmd_tools , perception::Subscriber &subscriber) : BT::StatefulActionNode(name,config) ,  cmd_tools_(cmd_tools) , behavior_base_(behavior_base) ,subscriber_(subscriber)
+    GotoConductPoint(const std::string & name ,const BT::NodeConfig & config , perception::Subscriber &subscriber , tools::NavigationTools &navigation_tools , tools::MiniMapTools &mini_map_tools) : BT::StatefulActionNode(name,config) ,subscriber_(subscriber) , navigation_tools_(navigation_tools) , mini_map_tools_(mini_map_tools)
     {
 
     }
@@ -693,185 +467,67 @@ namespace chassis
 
     BT::NodeStatus onStart() override
     {
-      geometry_msgs::PoseStamped target_pose;
-      navigation_bridge_.targetPoseTransform(subscriber_.client_map_send_data_.target_position_x,
-                                             subscriber_.client_map_send_data_.target_position_y, &target_pose);
-      behavior_base_.conduct(target_pose);
+      target_pose_ = mini_map_tools_.getConductPoint();;
       return BT::NodeStatus::RUNNING;
     }
 
     BT::NodeStatus onRunning() override
     {
-      auto state = cmd_tools_.mbf_client_->getState();  //用于查看是否到达目标点
-      if (state.state_==actionlib::SimpleClientGoalState::ACTIVE)
-      {
-        return BT::NodeStatus::RUNNING;
-      }
-      if (state.state_ == actionlib::SimpleClientGoalState::SUCCEEDED)
-      {
-        return BT::NodeStatus::SUCCESS;
-      }
-
-      return BT::NodeStatus::FAILURE;
+      navigation_tools_.patrol(target_pose_,5,true);
+      return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelAllGoals();
+      navigation_tools_.resetPatrolState();
     }
 
   private:
-    geometry_msgs::PoseStamped point;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase & behavior_base_;
-    NavigationBridge navigation_bridge_;
+    geometry_msgs::PoseStamped target_pose_;
     perception::Subscriber & subscriber_;
+    tools::NavigationTools &navigation_tools_;
+    tools::MiniMapTools &mini_map_tools_;
   };
 
-  class CreateMbfClient : public BT::SyncActionNode // TODO : 当检测到mbf掉线的时候需要调用它
+  class ChaseEnemy : public BT::StatefulActionNode // TODO : 未完成追击优先级判断
   {
   public:
-    CreateMbfClient(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
+    ChaseEnemy(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
     {
 
-    }
-
-    static BT::PortsList providedPorts()
-    {
-      return {  };
-    }
-
-    BT::NodeStatus tick() override
-    {
-      cmd_tools_.mbf_client_.reset();
-      cmd_tools_.mbf_client_ = std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>(
-          "/move_base_flex/move_base", true);
-      return BT::NodeStatus::SUCCESS;
-    }
-
-  private:
-    tools::CmdTools & cmd_tools_;
-  };
-
-  class ChaseEnemy : public BT::StatefulActionNode  // TODO : 这个节点也需要检查mbf服务是否在线的前置condition node
-  {
-  public:
-    ChaseEnemy(std::string & name , BT::NodeConfig & config , BT::Blackboard &blackboard , perception::Subscriber & subscriber , tools::CmdTools &cmd_tools , ros::NodeHandle &nh , BehaviorBase &behavior_base) : StatefulActionNode(name,config) , blackboard_(blackboard) ,subscriber_(subscriber) , cmd_tools_(cmd_tools) , tf_buffer_(cmd_tools.getTfBuffer()) , nh_(nh) , behavior_base_(behavior_base)
-    {
-      search_enable_point_client_ = nh_.serviceClient<service_processor::SearchEnablePoint>("/get_enable_point");
     }
 
     BT::NodeStatus onStart() override
     {
-      try
-      {
-        chase_freq=blackboard_.get<double>("chase_freq");
-      }catch (BT::RuntimeError & e)
-      {
-        ROS_ERROR("BT can not access key name [chase_freq] , default value is 15.0");
-        chase_freq=3.0;
-      }
-      try
-      {
-        chase_distance=blackboard_.get<double>("chase_distance");
-      }catch (BT::RuntimeError & e)
-      {
-        ROS_ERROR("BT can not access key name [chase_distance] , default value is 2.0");
-        chase_distance=2.0;
-      }
-      try
-      {
-        chase_tolerance=blackboard_.get<double>("chase_tolerance");
-      }catch (BT::RuntimeError & e)
-      {
-        ROS_ERROR("BT can not access key name [chase_tolerance] , default value is 0.5");
-        chase_tolerance=0.5;
-      }
-      last_chase_time_=ros::Time::now();
       return BT::NodeStatus::RUNNING;
     }
 
     BT::NodeStatus onRunning() override
     {
-      ros::Time time = ros::Time::now();
-
-      if (time - last_chase_time_ > ros::Duration(1 / chase_freq))
-      {
-        geometry_msgs::PointStamped target_at_map;
-        try
-        {
-          track_point_.point = subscriber_.track_data_.position;
-          geometry_msgs::TransformStamped transform_stamped =
-              tf_buffer_.lookupTransform("map", subscriber_.track_data_.header.frame_id, ros::Time(0));
-
-          tf2::doTransform(track_point_, target_at_map, transform_stamped);
-        }
-        catch (tf2::TransformException& ex)
-        {
-          ROS_ERROR("Failed to transform point: %s", ex.what());
-        }
-        try
-        {
-          cur_map2base_ = tf_buffer_.lookupTransform("map", "base_link", ros::Time(0));
-        }
-        catch (tf2::TransformException& ex)
-        {
-          ROS_ERROR("%s", ex.what());
-        }
-        service_processor::SearchEnablePoint srv;
-        srv.request.target_pos = target_at_map;
-        srv.request.robot_pos = cur_map2base_;
-        srv.request.chase_distance = chase_distance;
-        srv.request.chase_tolerance = chase_tolerance;
-
-        if (search_enable_point_client_.call(srv))
-        {
-          mbf_msgs::MoveBaseGoal mbf_goal;
-          mbf_goal.target_pose = srv.response.move_point;
-          mbf_goal.direct_track = !srv.response.is_block_on_line;
-          cmd_tools_.mbf_client_->sendGoal(mbf_goal);
-          last_chase_time_ = ros::Time::now();
-          return BT::NodeStatus::RUNNING;
-        }
-        else
-        {
-          last_chase_time_ = ros::Time::now();
-          return BT::NodeStatus::FAILURE;
-        }
-      }
+      navigation_tools_.chase();
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      behavior_base_.cancelGoal();
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetLastTargetAtMap();
     }
 
   private:
-    double chase_freq;
-    double chase_distance;
-    double chase_tolerance;
-    BT::Blackboard& blackboard_;
-    ros::Time last_chase_time_;
-    geometry_msgs::PointStamped track_point_;
-    perception::Subscriber &subscriber_;
-    geometry_msgs::TransformStamped cur_map2base_;
-    ros::ServiceClient search_enable_point_client_;
-    tools::CmdTools &cmd_tools_;
-    tf2_ros::Buffer &tf_buffer_;
-    ros::NodeHandle &nh_;
-    BehaviorBase &behavior_base_;
+    tools::NavigationTools &navigation_tools_;
   };
 
   class SetChassisMode : public BT::SyncActionNode
   {
   public:
-    SetChassisMode(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name,config) , blackboard_(blackboard)
+    SetChassisMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name,config) , blackboard_(blackboard)
     {
 
     }
 
-    static BT::PortsList providePorts()
+    static BT::PortsList providedPorts()
     {
       return { BT::InputPort<int>("chassis_mode_id") };
     }
@@ -891,68 +547,77 @@ namespace chassis
   class ReviveIfDead : public BT::SyncActionNode
   {
   public:
-    ReviveIfDead(const std::string& name, const BT::NodeConfiguration& config, rm_common::ControllerManager &controller_manager, tools::CmdTools &cmd_tools ,perception::Subscriber &subscriber ,
-                 double wait_time , BT::Blackboard &blackboard , BehaviorBase &behavior_base)
-      : BT::SyncActionNode(name, config), controller_manager_(controller_manager),cmd_tools_(cmd_tools), subscriber_(subscriber) ,wait_time_(wait_time) , blackboard_(blackboard) ,behavior_base_(behavior_base) {}
+    ReviveIfDead(const std::string& name, const BT::NodeConfiguration& config, tools::CmdTools &cmd_tools ,perception::Subscriber &subscriber ,
+                 double wait_time , rm_common::ControllerManager &controller_manager , tools::NavigationTools &navigation_tools , tools::ControllerTools &controller_tools)
+      : BT::SyncActionNode(name, config),cmd_tools_(cmd_tools), subscriber_(subscriber) ,wait_time_(wait_time) , controller_manager_(controller_manager) , navigation_tools_(navigation_tools) , controller_tools_(controller_tools) {}
 
     static BT::PortsList providedPorts()
     {
-      BT::PortsList ports_list;
-      return ports_list;
+      return {
+        BT::OutputPort<bool>("self_is_weak"),
+        BT::OutputPort<ros::Time>("self_weak_until"),
+        BT::OutputPort<bool>("need_supply"),
+        BT::OutputPort<bool>("has_revived"),
+        BT::OutputPort<bool>("confirm_respawn")
+      };
+
     }
 
     BT::NodeStatus tick() override
     {
-      if (subscriber_.game_robot_status_.remain_hp == 0)
+      BT::NodeStatus status = BT::NodeStatus::SUCCESS;
+      const ros::Time now = ros::Time::now();
+      if (subscriber_.getGameRobotStatus().remain_hp == 0)  // 如果订阅到哨兵的剩余血量为0，则关闭主要控制器
       {
         controller_manager_.stopMainControllers();
-        is_dead_ = true; //没血了就停止主控制器并把死亡标志置为1
-        rm_msgs::SentryCmd sentry_cmd;
-        sentry_cmd.sentry_info = 1;
-        subscriber_.sentry_cmd_pub_.publish(sentry_cmd);
-        blackboard_.set<bool>("need_supply",true);
-        blackboard_.set<bool>("has_revived",true);
-
-        behavior_base_.cancelGoal();
-        ROS_INFO("Reviving...");
-        return BT::NodeStatus::RUNNING; //没复活的时候就一直将状态置为FAIL，不断尝试开启整棵子树
+        is_dead_=true;  // 若血量为零则判定为死亡
+        revival_time_ = ros::Time(0.);                    // 等待检测到复活瞬间后重新计时
+        setOutput("confirm_respawn",true); // 挂到共享 sentry_cmd，等待后续统一发布
+        setOutput("need_supply",true);  // 死亡后复活是残血，表明复活后需要回家补血
+        navigation_tools_.getMbfClient()->cancelGoal();  // 在机器人"死亡"或复活时，取消之前设定的目标，以防止机器人执行与当前状态不一致的动作例如继续追击等等
+        ROS_INFO_THROTTLE(0.5, "Reviving...");
+        return BT::NodeStatus::FAILURE;
       }
-      else if (ros::Time::now() - revival_time_ < ros::Duration(wait_time_))      //当前时刻与刚复活的时刻的时间差小于我们设定的等待时间就认为还没有校准完成
+      else if (is_dead_ == true) //首次检测到HP从0恢复
       {
-        controller_manager_.startMainControllers();
-        behavior_base_.calibrate();
-        cmd_tools_.chassis_cmd_sender_->setMode(rm_msgs::ChassisCmd::RAW);
-        cmd_tools_.chassis_cmd_sender_->getMsg()->command_source_frame = "base_link";
-        cmd_tools_.chassis_cmd_sender_->sendChassisCommand(ros::Time::now(), false);
-        ROS_INFO("Calibrating...");
-        return BT::NodeStatus::RUNNING;
-      }
-      else
-      {
-        if (is_dead_)
+        setOutput("has_revived",true);  // 设置一个标志表明哨兵的复活过程已经完成
+        if (revival_time_.isZero())
         {
-          revival_time_ = ros::Time::now();
-          is_dead_ = false;
+          revival_time_ = now;  // 首次检测到 HP 从 0 恢复，开始复活后等待窗口
+          setOutput("self_is_weak",true);//使用黑板向外传值
+          setOutput("self_weak_until",now + ros::Duration(30.0));
         }
-        return BT::NodeStatus::SUCCESS;
+        if (now - revival_time_ < ros::Duration(wait_time_))  // 复活后短暂等待+校准
+        {
+          controller_tools_.getControllerManager()->startMainControllers();  // 重启主要控制器
+          controller_tools_.calibrate();                                    // 执行校准函数
+          cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
+          cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame =
+              "base_link";                                                                 // 指定命令坐标系为base_link
+          cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(now, false);  // 发送底盘命令
+          ROS_INFO_THROTTLE(0.5, "Calibrating...");
+          return BT::NodeStatus::FAILURE;
+        }
+        is_dead_ = false;
       }
-    };
+      return BT::NodeStatus::SUCCESS;
+    }
 
   private:
-    rm_common::ControllerManager &controller_manager_;
     tools::CmdTools &cmd_tools_;
     perception::Subscriber &subscriber_;
     bool is_dead_{ false };
     ros::Time revival_time_{ 0. };
     double wait_time_;
-    BT::Blackboard &blackboard_;
-    BehaviorBase &behavior_base_;
+    rm_common::ControllerManager &controller_manager_;
+    tools::NavigationTools &navigation_tools_;
+    tools::ControllerTools &controller_tools_;
   };
 
   class SetIsEnableFight : public BT::SyncActionNode
   {
   public:
-    SetIsEnableFight(std::string &name ,BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name,config) , blackboard_(blackboard)
+    SetIsEnableFight(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name,config) , blackboard_(blackboard)
     {
 
     }
@@ -971,73 +636,55 @@ namespace chassis
     BT::Blackboard &blackboard_;
   };
 
-  class GetPresentTime : public BT::SyncActionNode
+  class GetKeyboardCommand : public BT::SyncActionNode
   {
   public:
-    GetPresentTime(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , perception::Subscriber &subscriber) : SyncActionNode(name,config) , blackboard_(blackboard) , subscriber_(subscriber)
+    GetKeyboardCommand(const std::string &name ,const BT::NodeConfig &config , perception::Subscriber &subscriber) : SyncActionNode(name , config) , subscriber_(subscriber)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return { BT::OutputPort<double>("present_time") };
+      return {BT::OutputPort<uint8_t>("keyboard_command")};
     }
 
     BT::NodeStatus tick() override
     {
-      double game_total_time = blackboard_.get<double>("game_total_time");
-      double present_time;
-      present_time = game_total_time-subscriber_.game_status_.stage_remain_time;
-      setOutput<double>("present_time",present_time);
+      setOutput("keyboard_command",subscriber_.getClientMapSendData().command_keyboard);
       return BT::NodeStatus::SUCCESS;
     }
   private:
-    BT::Blackboard &blackboard_;
-    perception::Subscriber &subscriber_;
-
-  };
-
-  class GetKeyboardCommand : public BT::SyncActionNode
-  {
-  public:
-    GetKeyboardCommand(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , perception::Subscriber &subscriber) : SyncActionNode(name , config) , blackboard_(blackboard) , subscriber_(subscriber)
-    {
-
-    }
-
-    BT::NodeStatus tick() override
-    {
-      auto keyboard_command = subscriber_.client_map_send_data_.command_keyboard;
-      blackboard_.set<uint8_t>("keyboard_command",keyboard_command);
-      return BT::NodeStatus::SUCCESS;
-    }
-  private:
-    BT::Blackboard &blackboard_;
     perception::Subscriber &subscriber_;
   };
 
   class SetGyroInCombat : public BT::SyncActionNode
   {
   public:
-    SetGyroInCombat(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools)
+    SetGyroInCombat(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
     {
 
+    }
+
+    BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<std::vector<double>>("standby_velocity")}; //TODO : 获取参数处未完成参数类型的适配
     }
 
     BT::NodeStatus tick() override
     {
-      XmlRpc::XmlRpcValue standby_velocity;
-      standby_velocity = blackboard_.get<XmlRpc::XmlRpcValue>("standby_velocity");
       ros::Time time = ros::Time::now();
-      cmd_tools_.vel_2d_cmd_sender_->set2DVel(0.0, 0.0,
-                                                static_cast<double>(standby_velocity[0]) *
+      std::vector<double> standby_velocity;
+      getInput<std::vector<double>>("standby_velocity",standby_velocity);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->set2DVel(0.0, 0.0,
+                                                standby_velocity[0] *
                                                         std::sin(ros::Time::now().toSec()) +
-                                                    static_cast<double>(standby_velocity[1]));
+                                                    standby_velocity[1]);
+      cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
       return BT::NodeStatus::SUCCESS;
     }
   private:
-    BT::Blackboard &blackboard_;
     tools::CmdTools &cmd_tools_;
   };
 

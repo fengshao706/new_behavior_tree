@@ -16,12 +16,12 @@ namespace shooter
   class SetShooterMode : public BT::SyncActionNode
   {
   public:
-    SetShooterMode(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name , config) ,blackboard_(blackboard)
+    SetShooterMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name , config) ,blackboard_(blackboard)
     {
 
     }
 
-    BT::PortsList providedPorts()
+    static BT::PortsList providedPorts()
     {
       return { BT::InputPort<int>("shooter_mode_id") };
     }
@@ -40,7 +40,7 @@ namespace shooter
   class ShooterStop : public BT::SyncActionNode
   {
   public:
-    ShooterStop(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
+    ShooterStop(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
     {
 
     }
@@ -60,7 +60,7 @@ namespace shooter
   class ShooterReady : public BT::SyncActionNode
   {
   public:
-    ShooterReady(std::string &name , BT::NodeConfig &config , BehaviorBase &behavior_base) : SyncActionNode(name , config) , behavior_base_(behavior_base)
+    ShooterReady(const std::string &name ,const BT::NodeConfig &config , BehaviorBase &behavior_base) : SyncActionNode(name , config) , behavior_base_(behavior_base)
     {
 
     }
@@ -77,7 +77,7 @@ namespace shooter
   class ShooterPush : public BT::SyncActionNode
   {
   public:
-    ShooterPush(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
+    ShooterPush(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
     {
 
     }

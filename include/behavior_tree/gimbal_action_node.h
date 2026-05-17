@@ -19,7 +19,7 @@ namespace gimbal
   class SetGimbalMode : public BT::SyncActionNode
   {
   public:
-    SetGimbalMode(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name , config) , blackboard_(blackboard)
+    SetGimbalMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name , config) , blackboard_(blackboard)
     {
 
     }
@@ -43,7 +43,7 @@ namespace gimbal
   class YawSlowRound : public BT::SyncActionNode
   {
   public:
-    YawSlowRound(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools ,BehaviorBase &behavior_base) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    YawSlowRound(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools ,BehaviorBase &behavior_base) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
     {
 
     }
@@ -68,7 +68,7 @@ namespace gimbal
   class LidarTowardsFront : public BT::SyncActionNode
   {
   public:
-    LidarTowardsFront(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools , perception::Subscriber &subscriber , BehaviorBase &behavior_base) : SyncActionNode(name , config) , cmd_tools_(cmd_tools) , subscriber_(subscriber) , behavior_base_(behavior_base) , tf_buffer_(cmd_tools.getTfBuffer())
+    LidarTowardsFront(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools , perception::Subscriber &subscriber , BehaviorBase &behavior_base) : SyncActionNode(name , config) , cmd_tools_(cmd_tools) , subscriber_(subscriber) , behavior_base_(behavior_base) , tf_buffer_(cmd_tools.getTfBuffer())
     {
       axis_z_.header.frame_id = "livox_frame";
       axis_z_.point.x = 0;
@@ -117,7 +117,7 @@ namespace gimbal
   class RoundSearchEnemy : public BT::SyncActionNode
   {
   public:
-    RoundSearchEnemy(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools , BehaviorBase &behavior_base) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    RoundSearchEnemy(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools , BehaviorBase &behavior_base) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
     {
 
     }
@@ -143,7 +143,7 @@ namespace gimbal
   class InverseGimbal : public BT::SyncActionNode
   {
   public:
-    InverseGimbal(std::string &name , BT::NodeConfig &config , BehaviorBase &behavior_base , perception::Subscriber &subscriber , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , behavior_base_(behavior_base) , subscriber_(subscriber) , tf_buffer_(cmd_tools.getTfBuffer())
+    InverseGimbal(const std::string &name ,const BT::NodeConfig &config , BehaviorBase &behavior_base , perception::Subscriber &subscriber , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , behavior_base_(behavior_base) , subscriber_(subscriber) , tf_buffer_(cmd_tools.getTfBuffer())
     {
 
     }
@@ -172,7 +172,7 @@ namespace gimbal
   class AimOutpost : public BT::StatefulActionNode
   {
   public:
-    AimOutpost(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , BehaviorBase &behavior_base) : StatefulActionNode(name , config) , blackboard_(blackboard) , behavior_base_(behavior_base)
+    AimOutpost(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard , BehaviorBase &behavior_base) : StatefulActionNode(name , config) , blackboard_(blackboard) , behavior_base_(behavior_base)
     {
 
     }
@@ -234,7 +234,7 @@ namespace gimbal
   class AimBase : public BT::StatefulActionNode
   {
   public:
-    AimBase(std::string &name , BT::NodeConfig &config , BT::Blackboard &blackboard , BehaviorBase &behavior_base , perception::Subscriber &subscriber) : StatefulActionNode(name , config) , blackboard_(blackboard) , behavior_base_(behavior_base) , subscriber_(subscriber)
+    AimBase(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard , BehaviorBase &behavior_base , perception::Subscriber &subscriber) : StatefulActionNode(name , config) , blackboard_(blackboard) , behavior_base_(behavior_base) , subscriber_(subscriber)
     {
 
     }
@@ -297,7 +297,7 @@ namespace gimbal
   class TrackEnemy : public BT::SyncActionNode
   {
   public:
-    TrackEnemy(std::string &name , BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
+    TrackEnemy(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools)
     {
 
     }

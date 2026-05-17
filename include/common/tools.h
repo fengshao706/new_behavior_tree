@@ -26,10 +26,13 @@
 #include <mbf_msgs/RecoveryAction.h>
 #include <global_planner/GlobalPlannerConfig.h>
 #include <dynamic_reconfigure/client.h>
+#include <service_processor/SearchEnablePoint.h>
+#include "types.h"
 #include "rm_common/decision/command_sender.h"
 #include "rm_common/filters/filters.h"
 #include "rm_common/decision/service_caller.h"
-#include "../union_command_sender.h"
+#include <rm_common/decision/controller_manager.h>
+#include <rm_common/decision/calibration_queue.h>
 #include "behaviortree_cpp/blackboard.h"
 
 namespace tools
@@ -161,7 +164,7 @@ namespace tools
 
     /**@brief 用于从订阅者中获取操作手指引的目标导航点
      * **/
-    geometry_msgs::PoseStamped getConductPoint();
+    [[nodiscard]]geometry_msgs::PoseStamped getConductPoint();
 
   private:
     BT::Blackboard & blackboard_;
@@ -183,7 +186,7 @@ namespace tools
       TIMEOUT,
     };
 
-    NavigationTools(BT::Blackboard &blackboard , perception::Subscriber &subscriber , CmdTools &cmd_tools);
+    NavigationTools(BT::Blackboard &blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools);
 
     actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>* getMbfClient() const;
 
@@ -205,6 +208,14 @@ namespace tools
      * **/
     void resetPatrolState();
 
+    /**@brief 用于获取Track所标记的目标在地图上面的位置，并给mbf发送该位置坐标用于追击敌人
+     * **/
+    bool chase();
+
+    /**@brief 用于在退出追击逻辑的时候重置记录的目标在地图上面的位置
+     * **/
+    void resetLastTargetAtMap();
+
   private:
     bool checkMbfClientState();
 
@@ -215,19 +226,51 @@ namespace tools
 
     BT::Blackboard &blackboard_;
     perception::Subscriber &subscriber_;
+    perception::TfAccessor &tf_accessor_;
     std::unique_ptr<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>> mbf_client_;
 
     ros::Time last_mbf_retry_time_;
     bool last_action_state_ = false;
     mbf_msgs::MoveBaseGoal mbf_goal_;
     ros::Time planning_start_time_; //用于超时检测，判断距离send goal过去了多长时间
-    ros::Time reach_time_; //用于检查在一个点
+    ros::Time reach_time_; //用于检查在一个点中停留的时间，超时将会切换到下一个点
+    ros::Time last_chase_time_;
     double max_planning_period_; //规划器超时时间
+    double chase_freq_;
+    double chase_distance_ = 2.0;
+    double chase_tolerance_ = 0.5;
     CmdTools &cmd_tools_;
-    int patrol_sequential_index_;
+    int patrol_sequential_index_ = -1;
     std::string last_patrol_area_name_{};
     PatrolState patrol_state_ = PatrolState::IDLE;
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
+    geometry_msgs::PointStamped track_point_;
+    geometry_msgs::PointStamped last_target_at_map_;
+    ros::ServiceClient service_client_;
+  };
+
+  class ControllerTools
+  {
+  public:
+    ControllerTools(ros::NodeHandle &bt_nh);
+
+    [[nodiscard]]rm_common::ControllerManager * getControllerManager() const;
+
+    void calibrate();
+
+    /** @brief 用于刷新控制器启停管理器，该函数需要在主循环线程中调用
+     * **/
+    void ControllerUpdate();
+
+    void startMainController();
+
+    void stopMainController();
+
+  private:
+    ros::NodeHandle &bt_nh_;
+    std::unique_ptr<rm_common::ControllerManager> controller_manager_;
+    XmlRpc::XmlRpcValue shooter_calibration_config_;
+    std::unique_ptr<rm_common::CalibrationQueue> shooter_calibration_queue_;
   };
 }
 

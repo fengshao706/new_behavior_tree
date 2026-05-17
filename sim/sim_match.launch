@@ -1,0 +1,107 @@
+<!-- 
+  sim_match.launch
+  RMUC 2026 比赛仿真启动文件
+
+  用法（最简单）：
+    roslaunch rm_behavior_tree sim_match.launch
+
+  支持参数：
+    scenario         比赛场景 [full_match|hp_urgent|death_revive|attack_phase]
+    sim_speed        仿真加速比（默认3.0x）
+    rviz             是否启动 rviz 可视化（默认 false）
+    bt_log_output    行为树日志输出文件（默认 /tmp/bt_sim_$(date).txt）
+    enable_controller_manager  是否启动控制器管理器（仿真时建议 false）
+
+  架构：
+    1. fake_tf_publisher.py    → 发布仿真 TF 树
+    2. match_simulator.py      → 发布仿真裁判/跟踪数据
+    3. rm_behavior_tree        → 行为树决策节点（待测）
+    4. bt_monitor.py           → 状态监控 + 日志记录
+
+  注意：
+    - rm_behavior_tree 节点需要先编译：catkin build rm_behavior_tree
+    - 仿真时 enable_controller_manager 应为 false（无真实硬件）
+    - map_server 可选，如需完整路径规划仿真需额外启动
+-->
+<launch>
+  <!-- ===== 仿真参数 ===== -->
+  <arg name="scenario"                 default="full_match"   doc="仿真场景 [full_match|hp_urgent|attack_phase]"/>
+  <arg name="sim_speed"                default="3.0"          doc="仿真加速比，3.0=加速3倍"/>
+  <arg name="rviz"                     default="false"        doc="是否启动 rviz"/>
+  <arg name="bt_log_output"            default="/tmp/bt_sim.txt" doc="行为树日志输出路径"/>
+  <arg name="enable_controller_manager" default="false"       doc="是否启用控制器管理器（仿真时关闭）"/>
+
+  <!-- ===== 加载行为树参数 ===== -->
+  <rosparam file="$(find rm_behavior_tree)/test/sentry.yaml" command="load"/>
+
+  <!-- ===== 1. TF 仿真发布器 ===== -->
+  <node pkg="rm_behavior_tree" type="fake_tf_publisher.py"
+        name="fake_tf_publisher"
+        output="screen"
+        required="true">
+  </node>
+
+  <!-- ===== 2. 比赛场景仿真驱动 ===== -->
+  <node pkg="rm_behavior_tree" type="match_simulator.py"
+        name="match_simulator"
+        output="screen"
+        required="true"
+        launch-prefix="python3">
+    <param name="scenario"  value="$(arg scenario)"/>
+    <param name="speed"     value="$(arg sim_speed)"/>
+  </node>
+
+  <!-- ===== 3. rm_behavior_tree 决策节点 ===== -->
+  <node pkg="rm_behavior_tree" type="rm_behavior_tree"
+        name="rm_behavior_tree"
+        output="screen"
+        required="false"
+        respawn="true">
+    <param name="xml_file_path" type="string"
+           value="$(find rm_behavior_tree)/config/main_tree.xml"/>
+    <param name="enable_controller_manager" type="bool"
+           value="$(arg enable_controller_manager)"/>
+  </node>
+
+  <!-- ===== 4. 行为树状态监控器 ===== -->
+  <node pkg="rm_behavior_tree" type="bt_monitor.py"
+        name="bt_monitor"
+        output="screen"
+        launch-prefix="python3">
+    <param name="output" value="$(arg bt_log_output)"/>
+  </node>
+
+  <!-- ===== 5. service_processor（路径规划辅助） ===== -->
+  <node name="service_processor" pkg="service_processor" type="service_processor"
+        output="screen" required="false">
+    <param name="trigger_locked_time"    value="2.0"/>
+    <param name="trigger_unlocked_time"  value="8.0"/>
+    <param name="still_threshold"        value="0.2"/>
+    <rosparam file="$(find service_processor)/config/global_costmap.yaml"
+              command="load" ns="global_costmap"/>
+    <rosparam file="$(find service_processor)/config/local_costmap.yaml"
+              command="load" ns="local_costmap"/>
+  </node>
+
+  <!-- ===== 6. RViz 可视化（可选） ===== -->
+  <group if="$(arg rviz)">
+    <node pkg="rviz" type="rviz" name="rviz"
+          args="-d $(find rm_behavior_tree)/config/sim.rviz"
+          output="screen" required="false"/>
+  </group>
+
+  <!-- ===== 日志说明 ===== -->
+  <!-- 
+    运行后观察以下话题：
+      rostopic echo /behavior_tree/log      # 行为树节点日志
+      rostopic echo /sentry_cmd             # 哨兵姿态指令
+      rostopic echo /custom_info            # 攻击目标信息
+      rostopic echo /conduct_point_in_map   # 巡逻目标点
+    
+    查看 TF 树：
+      rosrun tf2_tools view_frames.py
+    
+    查看模式变化：
+      rqt_console  (过滤 [BT] 前缀)
+  -->
+</launch>

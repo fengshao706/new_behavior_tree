@@ -16,7 +16,7 @@ namespace shooter
   class IsTargetNotInvincible : public BT::ConditionNode  //TODO : 需重写无敌检测算法
   {
   public:
-    IsTargetNotInvincible(std::string &name , BT::NodeConfig &config) : ConditionNode(name , config)
+    IsTargetNotInvincible(const std::string &name ,const BT::NodeConfig &config) : ConditionNode(name , config)
     {
 
     }
@@ -31,7 +31,7 @@ namespace shooter
   class IsTargetEffective : public BT::ConditionNode
   {
   public:
-    IsTargetEffective(std::string &name , BT::NodeConfig &config , perception::Subscriber &subscriber) : ConditionNode(name , config) , subscriber_(subscriber)
+    IsTargetEffective(const std::string &name ,const BT::NodeConfig &config , perception::Subscriber &subscriber) : ConditionNode(name , config) , subscriber_(subscriber)
     {
 
     }

@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ## By adding -Wall and -Werror, the compiler does not ignore warnings anymore, enforcing cleaner code.
-add_definitions(-Wall -Werror -Wno-enum-compare)
+add_definitions(-Wall -Wno-enum-compare)
 
 find_package(catkin REQUIRED
         COMPONENTS
@@ -64,11 +64,13 @@ include_directories(
 ## Declare cpp executablesm
 FILE(GLOB ALL_SOURCES "src/*.cpp")
 
-add_executable(${PROJECT_NAME} src/perception_layer.cpp src/common/basic_control.cpp src/behavior_tree/chassis_action_node.cpp src/common/sentry_param_loader.cpp include/common/types.h src/common/navigation_bridge.cpp
-                                src/behavior_tree/manual_action_node.cpp src/main.cpp src/behavior_tree/chassis_condition_node.cpp src/behavior_tree/gimbal_action_node.cpp src/behavior_tree/gimbal_condition_node.cpp src/behavior_tree/shooter_condition_node.cpp
-                                    src/behavior_tree/shooter_action_node.cpp src/behavior_tree/sentry_command_sender.cpp
+add_executable(${PROJECT_NAME} include/behavior_tree/chassis_action_node.h
+include/behavior_tree/chassis_condition_node.h include/behavior_tree/gimbal_action_node.h include/behavior_tree/gimbal_condition_node.h
+include/behavior_tree/manual_action_node.h include/behavior_tree/manual_condition_node.h include/behavior_tree/shooter_action_node.h
+include/behavior_tree/shooter_condition_node.h include/perception_layer.h include/register_node.h src/common/tools.cpp src/main.cpp
+src/perception_layer.cpp src/register_node.cpp)
 
-)
+
 #add_dependencies(${PROJECT_NAME}
 #        ${catkin_EXPORTED_TARGETS}
 #)

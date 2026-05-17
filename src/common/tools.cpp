@@ -333,7 +333,7 @@ namespace tools
     target_pose->pose.orientation = tf2::toMsg(tf2::Quaternion(0, 0, 0, 1));
   }
 
-  geometry_msgs::PoseStamped MiniMapTools::getConductPoint()
+  [[nodiscard]]geometry_msgs::PoseStamped MiniMapTools::getConductPoint()
   {
     geometry_msgs::PoseStamped target_pose;
 
@@ -343,7 +343,7 @@ namespace tools
     return target_pose;
   }
 
-  NavigationTools::NavigationTools(BT::Blackboard& blackboard , perception::Subscriber &subscriber , CmdTools &cmd_tools) : blackboard_(blackboard) , subscriber_(subscriber) , cmd_tools_(cmd_tools)
+  NavigationTools::NavigationTools(BT::Blackboard& blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools) : blackboard_(blackboard) , subscriber_(subscriber) ,tf_accessor_(tf_viewer), cmd_tools_(cmd_tools)
   {
     mbf_client_ = std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>("/move_base_flex/move_base", true);
     if (!blackboard_.get<double>("max_planning_period",max_planning_period_))
@@ -354,6 +354,19 @@ namespace tools
     if (!blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones",all_zones))
     {
       ROS_ERROR("BT can not access key name [all_zones] , no default param");
+    }
+    if (!blackboard_.get<double>("chase_freq",chase_freq_))
+    {
+      ROS_ERROR("BT can not access key name [chase_freq] in NavigationTools , default value is 15.0");
+      chase_freq_ = 15.0;
+    }
+    if (!blackboard.get<double>("chase_distance",chase_distance_))
+    {
+      ROS_ERROR("BT can not access key name [chase_distance] in NavigationTools , default value is 2.0");
+    }
+    if (!blackboard.get<double>("chase_tolerance",chase_tolerance_))
+    {
+      ROS_ERROR("BT can not access key name [chase_tolerance] in NavigationTools , default value is 0.5");
     }
   }
 
@@ -482,5 +495,107 @@ namespace tools
   void NavigationTools::resetPatrolState()
   {
     patrol_state_ = PatrolState::IDLE;
+  }
+
+  bool NavigationTools::chase()
+  {
+    ros::Time time = ros::Time::now();
+    if (time - last_chase_time_ > ros::Duration(1.0 / chase_freq_))
+    {
+      last_chase_time_ = ros::Time::now();
+      blackboard_.set<int>("sentry_intention",static_cast<int>(types::SentryIntention::AttackAtTheTargetPoint));
+      geometry_msgs::PointStamped target_at_map;
+      try
+      {
+        track_point_.point = subscriber_.getTrackData().position;
+        geometry_msgs::TransformStamped transform_stamped =
+            tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP, perception::TfAccessor::FrameId::TRACK);
+
+        tf2::doTransform(track_point_, target_at_map, transform_stamped);
+      }
+      catch (tf2::TransformException& ex)
+      {
+        ROS_ERROR_THROTTLE(0.5, "Failed to transform point: %s", ex.what());
+        return false;
+      }
+      if (std::hypot(target_at_map.point.x - last_target_at_map_.point.x , target_at_map.point.y - last_target_at_map_.point.y) < 0.1)
+      {
+        ROS_INFO("target at map move too short , skip!");
+        return true;
+      }
+      last_target_at_map_ = target_at_map;
+      service_processor::SearchEnablePoint srv;
+      srv.request.target_pos = target_at_map;
+      srv.request.robot_pos = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,perception::TfAccessor::FrameId::BASE_LINK);
+      srv.request.chase_distance = chase_distance_;
+      srv.request.chase_tolerance = chase_tolerance_;
+
+      if (service_client_.call(srv))
+      {
+        mbf_msgs::MoveBaseGoal mbf_goal;
+        mbf_goal.target_pose = srv.response.move_point;
+        mbf_goal.direct_track = !srv.response.is_block_on_line;
+        if (checkMbfClientState())
+          mbf_client_->sendGoal(mbf_goal);
+      }
+      else
+      {
+        ROS_WARN("chase service client can not get response");
+        return false;
+      }
+      return true;
+    }
+    return true;
+  }
+
+  void NavigationTools::resetLastTargetAtMap()
+  {
+    last_target_at_map_.point.x = 0;
+    last_target_at_map_.point.y = 0;
+    last_target_at_map_.point.z = 0;
+  }
+
+  ControllerTools::ControllerTools(ros::NodeHandle &bt_nh) : bt_nh_(bt_nh)
+  {
+    bt_nh_.getParam("shooter_calibration",shooter_calibration_config_);
+    controller_manager_ = std::make_unique<rm_common::ControllerManager>(bt_nh_);
+    shooter_calibration_queue_ = std::make_unique<rm_common::CalibrationQueue>(shooter_calibration_config_,bt_nh_,*controller_manager_);
+  }
+
+  [[nodiscard]]rm_common::ControllerManager* ControllerTools::getControllerManager() const
+  {
+    return controller_manager_.get();
+  }
+
+  void ControllerTools::calibrate()
+  {
+    shooter_calibration_queue_->reset();
+  }
+
+  void ControllerTools::ControllerUpdate()
+  {
+    if (!controller_manager_)
+    {
+      return;
+    }
+    ros::Time time = ros::Time::now();
+    // // gimbal_calibration - DISABLED: gimbal does not need calibration
+    // // if (gimbal_calibration_)
+    // //   gimbal_calibration_->update(time);
+    if (shooter_calibration_queue_)
+    {
+      shooter_calibration_queue_->update(time);
+    }
+    controller_manager_->update();
+  }
+
+  void ControllerTools::startMainController() //TODO : 未完成
+  {
+
+  }
+
+  void ControllerTools::stopMainController() //TODO : 未完成
+  {
+
   }
 }

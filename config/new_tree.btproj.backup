@@ -3,7 +3,7 @@
     <include path="new_tree.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
-        <Action ID="AbnormalStillStopMotion" editable="true"/>
+        <Action ID="AbnormalStillStopAllMotion" editable="true"/>
         <Action ID="AimBase" editable="true"/>
         <Action ID="AimOutpost" editable="true"/>
         <Action ID="AvoidDrone" editable="true"/>
@@ -23,7 +23,7 @@
             <inout_port name="chassis_mode" type="int"/>
         </Condition>
         <Action ID="ChassisSlowGyro" editable="true">
-            <input_port name="still_gyro_vel" default="{slow_gyro_vel}" type="double"/>
+            <input_port name="slow_gyro_vel_scale" default="{slow_gyro_vel_scale}" type="double"/>
         </Action>
         <Condition ID="CheckGimbalMode" editable="true">
             <input_port name="gimbal_mode_id" type="int"/>
@@ -48,7 +48,6 @@
         <Action ID="GotoBaseDefenseArea" editable="true"/>
         <Action ID="GotoConductPoint" editable="true"/>
         <Action ID="GotoEnemyBaseArea" editable="true"/>
-        <Action ID="GotoEnemyOutpost" editable="true"/>
         <Action ID="GotoReturnBloodArea" editable="true"/>
         <Action ID="GotoSentryPatrolArea" editable="true"/>
         <Action ID="InverseGimbal" editable="true"/>
@@ -89,9 +88,9 @@
         <Condition ID="IsPointOnSegment" editable="true"/>
         <Condition ID="IsReachGoal" editable="true"/>
         <Condition ID="IsRefereeOnline" editable="true"/>
+        <Condition ID="IsRemoteControlTurnOn" editable="true"/>
         <Condition ID="IsSentryHpReturnMax" editable="true"/>
         <Condition ID="IsSentryHpUrgent" editable="true"/>
-        <Condition ID="IsSupplyTaskFinished" editable="true"/>
         <Condition ID="IsTargetEffective" editable="true"/>
         <Condition ID="IsTargetNotInvincible" editable="true"/>
         <Condition ID="IsTimeRangeCondition" editable="true">
@@ -149,7 +148,6 @@
         <Action ID="StandSomeTime" editable="true"/>
         <Action ID="StartMainControllers" editable="true"/>
         <Action ID="StopAllMotion" editable="true"/>
-        <Action ID="StopAutoController" editable="true"/>
         <Action ID="TargetProcessor" editable="true"/>
         <Action ID="TrackEnemy" editable="true"/>
         <Action ID="Unchase" editable="true"/>

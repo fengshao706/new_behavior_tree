@@ -65,7 +65,10 @@
   <BehaviorTree ID="ChassisBehavior">
     <Fallback>
       <Sequence>
-        <IsRefereeOnline/>
+        <Fallback>
+          <IsRefereeOnline/>
+          <AlwaysSuccess/>
+        </Fallback>
         <Fallback>
           <Sequence>
             <IsGameInBattle/>
@@ -92,12 +95,6 @@
               </Sequence>
               <Sequence>
                 <Fallback>
-                  <Sequence>
-                    <Inverter>
-                      <IsSupplyTaskFinished/>
-                    </Inverter>
-                    <SetChassisMode chassis_mode_id="7"/>
-                  </Sequence>
                   <Sequence>
                     <ScriptCondition code="chassis_mode == 7"/>
                     <Inverter>
@@ -194,13 +191,31 @@
   </BehaviorTree>
 
   <BehaviorTree ID="MainTree">
-    <Parallel failure_count="1"
-              success_count="-1">
-      <SubTree ID="ChassisBehavior"/>
-      <SubTree ID="GimbalBehavior"/>
-      <SubTree ID="ShooterBehavior"/>
-      <SubTree ID="SentryCommandSender"/>
-    </Parallel>
+    <ReactiveFallback>
+      <Sequence>
+        <IsRemoteControlTurnOn/>
+        <Parallel failure_count="1"
+                  success_count="-1">
+          <ManualSendChassisCmd/>
+          <ManualSendGimbalCmd/>
+          <ManualSendShooterCmd/>
+        </Parallel>
+      </Sequence>
+      <Sequence>
+        <RemoteControlTurnOff/>
+        <Parallel failure_count="1"
+                  success_count="-1">
+          <SubTree ID="ChassisBehavior"
+                   _autoremap="true"/>
+          <SubTree ID="GimbalBehavior"
+                   _autoremap="true"/>
+          <SubTree ID="ShooterBehavior"
+                   _autoremap="true"/>
+          <SubTree ID="SentryCommandSender"
+                   _autoremap="true"/>
+        </Parallel>
+      </Sequence>
+    </ReactiveFallback>
   </BehaviorTree>
 
   <BehaviorTree ID="OutputHpBasedDecision">
@@ -306,13 +321,6 @@
     </Fallback>
   </BehaviorTree>
 
-  <BehaviorTree ID="SendManualCmd">
-    <Sequence>
-      <StopAutoController/>
-      <SendManualCommand/>
-    </Sequence>
-  </BehaviorTree>
-
   <BehaviorTree ID="SentryCommandSender">
     <Parallel failure_count="1"
               success_count="-1">
@@ -324,12 +332,13 @@
                  case_5="4"
                  case_6="5"
                  variable="chassis_mode">
-          <ChassisSlowGyro still_gyro_vel="{slow_gyro_vel}"/>
-          <AbnormalStillStopMotion/>
+          <ChassisSlowGyro slow_gyro_vel="{slow_gyro_vel}"/>
+          <AbnormalStillStopAllMotion/>
           <PatrolAbnormalBackHomeGoal/>
           <PatrolAttackEnemyPositiveArea/>
           <PatrolOwnOutpostArea/>
-          <GotoEnemyOutpost/>
+          <PatrolEnemyOutpostArea/>
+          <AlwaysSuccess/>
         </Switch6>
         <Switch6 case_1="6"
                  case_2="7"
@@ -344,6 +353,7 @@
           <GotoConductPoint/>
           <GotoConductPoint/>
           <PatrolAfterRevivePatrolArea/>
+          <AlwaysSuccess/>
         </Switch6>
         <Switch6 case_1="13"
                  case_2="14"
@@ -352,12 +362,13 @@
                  case_5="17"
                  case_6="18"
                  variable="chassis_mode">
-          <GotoBaseDefenseArea/>
+          <PatrolSentryPatrolArea/>
           <GotoEnemyBaseArea/>
           <SetGyroInCombat/>
           <PatrolSentryPatrolArea/>
           <ChaseEnemy/>
           <SetGyroInCombat/>
+          <AlwaysSuccess/>
         </Switch6>
         <ReactiveSequence>
           <ScriptCondition code="chassis_mode == 9"/>
@@ -373,17 +384,19 @@
                  case_6="6"
                  variable="gimbal_mode">
           <YawSlowRound/>
-          <AbnormalStillStopMotion/>
+          <AbnormalStillStopAllMotion/>
           <LidarTowardsFront/>
           <RoundSearchEnemy/>
           <InverseGimbal/>
           <AimOutpost/>
+          <AlwaysSuccess/>
         </Switch6>
         <Switch2 case_1="7"
                  case_2="8"
                  variable="gimbal_mode">
           <AimBase/>
           <TrackEnemy/>
+          <AlwaysSuccess/>
         </Switch2>
       </ReactiveFallback>
       <ReactiveFallback>
@@ -394,21 +407,10 @@
           <ShooterStop/>
           <ShooterReady/>
           <ShooterPush/>
+          <AlwaysSuccess/>
         </Switch3>
       </ReactiveFallback>
     </Parallel>
-  </BehaviorTree>
-
-  <BehaviorTree ID="SetIdle">
-    <Sequence>
-      <StartMainControllers/>
-      <Calibrate/>
-      <VisionCalibrate/>
-      <SetGyroInCombat/>
-      <SetChassisMode chassis_mode_id=""/>
-      <SetChassisCommandSourceFrame/>
-      <SendChassisCommand/>
-    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="ShooterBehavior">
@@ -531,7 +533,7 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="AbnormalStillStopMotion"
+    <Action ID="AbnormalStillStopAllMotion"
             editable="true"/>
     <Action ID="AimBase"
             editable="true"/>
@@ -546,13 +548,11 @@
                   default="{ignore_buff}"
                   type="bool"/>
     </SubTree>
-    <Action ID="Calibrate"
-            editable="true"/>
     <Action ID="ChaseEnemy"
             editable="true"/>
     <Action ID="ChassisSlowGyro"
             editable="true">
-      <input_port name="still_gyro_vel"
+      <input_port name="slow_gyro_vel"
                   default="{slow_gyro_vel}"
                   type="double"/>
     </Action>
@@ -575,13 +575,9 @@
     </Action>
     <Action ID="GotoAttackEnemyEngineer"
             editable="true"/>
-    <Action ID="GotoBaseDefenseArea"
-            editable="true"/>
     <Action ID="GotoConductPoint"
             editable="true"/>
     <Action ID="GotoEnemyBaseArea"
-            editable="true"/>
-    <Action ID="GotoEnemyOutpost"
             editable="true"/>
     <Action ID="GotoReturnBloodArea"
             editable="true"/>
@@ -622,11 +618,11 @@
                editable="true"/>
     <Condition ID="IsRefereeOnline"
                editable="true"/>
+    <Condition ID="IsRemoteControlTurnOn"
+               editable="true"/>
     <Condition ID="IsSentryHpReturnMax"
                editable="true"/>
     <Condition ID="IsSentryHpUrgent"
-               editable="true"/>
-    <Condition ID="IsSupplyTaskFinished"
                editable="true"/>
     <Condition ID="IsTargetEffective"
                editable="true"/>
@@ -648,19 +644,17 @@
             editable="true"/>
     <Action ID="PatrolAttackEnemyPositiveArea"
             editable="true"/>
+    <Action ID="PatrolEnemyOutpostArea"
+            editable="true"/>
     <Action ID="PatrolHoleUpArea"
             editable="true"/>
     <Action ID="PatrolOwnOutpostArea"
             editable="true"/>
     <Action ID="PatrolSentryPatrolArea"
             editable="true"/>
+    <Action ID="RemoteControlTurnOff"
+            editable="true"/>
     <Action ID="RoundSearchEnemy"
-            editable="true"/>
-    <Action ID="SendChassisCommand"
-            editable="true"/>
-    <Action ID="SendManualCommand"
-            editable="true"/>
-    <Action ID="SetChassisCommandSourceFrame"
             editable="true"/>
     <Action ID="SetChassisMode"
             editable="true">
@@ -690,13 +684,7 @@
             editable="true"/>
     <Action ID="ShooterStop"
             editable="true"/>
-    <Action ID="StartMainControllers"
-            editable="true"/>
-    <Action ID="StopAutoController"
-            editable="true"/>
     <Action ID="TrackEnemy"
-            editable="true"/>
-    <Action ID="VisionCalibrate"
             editable="true"/>
     <Action ID="YawSlowRound"
             editable="true"/>

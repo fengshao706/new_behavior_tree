@@ -1,0 +1,613 @@
+[WARN] [1772886362.585168762]: Controller manager disabled; skipping controller setup.
+[INFO] [1772886362.577954999]: zone loaded: enemy_attack_mid_robot_area points=0 aims=1 polygon=5
+[INFO] [1772886362.583269157]: Failed to call service N7rm_msgs10EnableGyroE on /enable_gyro. Retrying now ...
+[INFO] [1772886362.583833386]: Failed to call service N7rm_msgs11SetLimitVelE on /set_limit_vel. Retrying now ...
+[INFO] [1772886362.586241367]: Failed to call service N7rm_msgs12StatusChangeE on /Processor_front/status_switch. Retrying now ...
+[INFO] [1772886365.022588303]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:S pos=(0.00,0.00) Enemy:blue Time:0.00 switch=auto state=auto
+[INFO] [1772886365.022692345]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:S pos=(0.00,0.00) Enemy:blue Time:0.00 revive=done
+[INFO] [1772886365.022724929]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:S pos=(0.00,0.00) Enemy:blue Time:0.00
+[INFO] [1772886365.022802933]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:S pos=(2.85,3.76) Enemy:blue Time:0.00
+[INFO] [1772886365.022849041]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area
+[INFO] [1772886365.022897885]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area desired=0 mode=3 acc_sec=0 degraded=0
+[INFO] [1772886365.023073083]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023105006]: Present time:0 C:AS G:YSR B:S staying_area_name: own_protect_mid_robot_area
+[INFO] [1772886365.023124609]: [BT] GetChassisDecisions SUCCESS C:AS G:YSR B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023152572]: [BT] SendChassisCommand SUCCESS C:AS G:YSR B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023173655]: Present time:0 C:AS G:AS B:S
+[INFO] [1772886365.023188768]: [BT] GetGimbalDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023212263]: [BT] SendGimbalCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023245989]: [BT] GetShooterDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.023358149]: [BT] SendShooterCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.522613784]: [BT] OutputRightSwitchState SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 switch=auto state=auto
+[INFO] [1772886365.532533666]: [BT] ReviveIfDead SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 revive=done
+[INFO] [1772886365.532618444]: [BT] GetPresentTime SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.532671464]: [BT] GetPosInMap SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.532704077]: [BT] GetPolygonInWhich SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area
+[INFO] [1772886365.532779516]: [BT] GetSentryCmd SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area desired=0 mode=3 acc_sec=0 degraded=0 change=0
+[INFO] [1772886365.532916655]: [BT] SetPidPlannerParam SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.532954527]: [BT] GetChassisDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.533048928]: [BT] SendChassisCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.533079208]: [BT] GetGimbalDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.533099749]: [BT] SendGimbalCommand SUCCESS C:AS G:AS B:S pos[WARN] [1772886366.203414336]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886366.203506500]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.533197822]: [BT] GetShooterDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886365.533263212]: [BT] SendShooterCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.022725608]: [BT] OutputRightSwitchState SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 switch=auto state=auto
+[INFO] [1772886366.032598063]: [BT] ReviveIfDead SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 revive=done
+[INFO] [1772886366.032704002]: [BT] GetPresentTime SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.032794694]: [BT] GetPosInMap SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.032888899]: [BT] GetPolygonInWhich SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area
+[INFO] [1772886366.032941978]: [BT] GetSentryCmd SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area desired=0 mode=3 acc_sec=1 degraded=0 change=0
+[INFO] [1772886366.033132783]: [BT] SetPidPlannerParam SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033185397]: [BT] GetChassisDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033225562]: [BT] SendChassisCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033259801]: [BT] GetGimbalDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033293184]: [BT] SendGimbalCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033324846]: [BT] GetShooterDecisions SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.033373796]: [BT] SendShooterCommand SUCCESS C:AS G:AS B:S pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.202942222]: Present time:0 C:CSG G:AS B:S staying_area_name: own_protect_mid_robot_area
+[INFO] [1772886366.203214665]: Present time:0 C:CSG G:YSR B:S
+[INFO] [1772886366.203573294]: Present time:0 Chassis:CSG Gimbal:YSR Booster:R
+[INFO] [1772886366.522784557]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 switch=auto state=auto
+[INFO] [1772886366.532634063]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 revive=done
+[INFO] [1772886366.532726867]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.532820290]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.542807687]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area
+[INFO] [1772886366.542899160]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00 area=own_protect_mid_robot_area desired=0 mode=3 acc_sec=1 degraded=0 change=0
+[INFO] [1772886366.543085887]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.543134327]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.543195038]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.543234082]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:bl[WARN] [1772886366.712878103]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886366.713018068]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886366.856142146]: action not connect
+ue Time:0.00
+[INFO] [1772886366.543445088]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.543485904]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.543531466]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(2.85,3.76)@own_protect_mid_robot_area Enemy:blue Time:0.00
+[INFO] [1772886366.842796016]: Waiting for configuration...
+[INFO] [1772886366.842846344]: 0
+[INFO] [1772886366.845951343]: Present time:0 C:PMR G:YSR B:R staying_area_name: own_protect_mid_robot_area
+[INFO] [1772886366.962402793]: Present time:0 C:PMR G:TE B:R
+[INFO] [1772886366.962522029]: Present time:0 Chassis:PMR Gimbal:TE Booster:P
+[INFO] [1772886367.023079643]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00 switch=auto state=auto
+[INFO] [1772886367.032922490]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00 revive=done
+[INFO] [1772886367.033014604]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.033084706]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043148839]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00 area=own_leisure_area
+[INFO] [1772886367.043248577]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00 area=own_leisure_area desired=0 mode=3 acc_sec=2 degraded=0 change=0
+[INFO] [1772886367.043417751]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043496171]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043545274]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043602155]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043652331]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043712130]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.043763688]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:1.00
+[INFO] [1772886367.523083069]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:2.00 switch=auto state=auto
+[INFO] [1772886367.532979499]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00 revive=done
+[INFO] [1772886367.533069588]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.533142180]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.552931021]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00 area=own_leisure_area
+[INFO] [1772886367.553031752]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00 area=own_leisure_area desired=0 mode=3 acc_sec=2 degraded=0 change=0
+[INFO] [1772886367.553207182]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553275265]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553315997]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553354051]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553417195]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553527436]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886367.553584569]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:3.00
+[INFO] [1772886368.023123829]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00 switch=auto state=auto
+[INFO] [1772886368.043024955]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00 revive=done
+[INFO] [1772886368.043095957]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.043181738]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.052953014]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00 area=own_leisure_area
+[INFO] [1772886368.053041013]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00 area=own_leisure_area desired=0 mode=3 acc_sec=3 degraded=0 change=0
+[INFO] [1772886368.063224028]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063313926]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063345106]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063372314]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063403843]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063459082]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.063491887]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:4.00
+[INFO] [1772886368.532901138]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00 switch=auto state=auto
+[INFO] [1772886368.543094454]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00 revive=done
+[INFO] [1772886368.543189075]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.543252754]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.553082482]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00 area=own_leisure_area
+[INFO] [1772886368.553192751]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00 area=own_leisure_area desired=0 mode=3 acc_sec=3 degraded=0 change=0
+[INFO] [1772886368.563297524]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563432205]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563483519]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563526212]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563591071]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563636930]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886368.563685884]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:6.00
+[INFO] [1772886369.043006386]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00 switch=auto state=auto
+[INFO] [1772886369.043100767]: [BT] ReviveIfDead SUCCESS C:C G:TE[WARN] [1772886369.533582592]: action not connect
+[WARN] [1772886370.038772676]: action not connect
+ B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00 revive=done
+[INFO] [1772886369.043239233]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.043292848]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.063127464]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00 area=own_leisure_area
+[INFO] [1772886369.063208700]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00 area=own_leisure_area desired=0 mode=3 acc_sec=4 degraded=0 change=0
+[INFO] [1772886369.063334981]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.065672802]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.065734940]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.065781464]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.065819396]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.065887382]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.073181629]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:7.00
+[INFO] [1772886369.523386945]: Present time:9 C:PMR G:TE B:P staying_area_name: own_leisure_area
+[INFO] [1772886369.544938762]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00 switch=auto state=auto
+[INFO] [1772886369.545041310]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00 revive=done
+[INFO] [1772886369.545089432]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.545148330]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566310599]: [BT] SendChassisCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566430597]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566486863]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566528516]: [BT] GetShooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566594026]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.566983204]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00 area=own_leisure_area
+[INFO] [1772886369.567036045]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00 area=own_leisure_area desired=0 mode=3 acc_sec=4 degraded=0 change=0
+[INFO] [1772886369.567216747]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886369.577904575]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:9.00
+[INFO] [1772886370.050030043]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00 switch=auto state=auto
+[INFO] [1772886370.050110602]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00 revive=done
+[INFO] [1772886370.050149071]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.050209620]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.071261800]: [BT] SendChassis[WARN] [1772886370.541981329]: action not connect
+[WARN] [1772886371.046484625]: action not connect
+Command SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.071477124]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.071576000]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.071625867]: [BT] GetShooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.071677789]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.072136206]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00 area=own_leisure_area
+[INFO] [1772886370.072203623]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00 area=own_leisure_area desired=0 mode=3 acc_sec=5 degraded=0 change=0
+[INFO] [1772886370.072409822]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.083396458]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:10.00
+[INFO] [1772886370.189508920]: 0
+[INFO] [1772886370.553370163]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00 switch=auto state=auto
+[INFO] [1772886370.553474198]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00 revive=done
+[INFO] [1772886370.553556997]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.553661349]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575022074]: [BT] SendChassisCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575113822]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575161910]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575198826]: [BT] GetShooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575239965]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.575407343]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00 area=own_leisure_area
+[INFO] [1772886370.575453530]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00 area=own_leisure_area desired=0 mode=3 acc_sec=5 degraded=0 change=0
+[INFO] [1772886370.575620560]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886370.586599690]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:12.00
+[INFO] [1772886371.057618196]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00 switch=auto state=auto
+[INFO] [1772886371.057676529]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00 revive=done
+[INFO] [1772886371.057704669]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.057744565]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.078780277]: [BT] SendChassisCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.078863964]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.078900628]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.078931193]: [BT] GetS[WARN] [1772886371.549014800]: action not connect
+[WARN] [1772886372.050448829]: action not connect
+hooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.079030096]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.079167473]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00 area=own_leisure_area
+[INFO] [1772886371.079209293]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00 area=own_leisure_area desired=0 mode=3 acc_sec=6 degraded=0 change=0
+[INFO] [1772886371.079316825]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.090076916]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:13.00
+[INFO] [1772886371.559982682]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00 switch=auto state=auto
+[INFO] [1772886371.560043449]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00 revive=done
+[INFO] [1772886371.560070871]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.560111028]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.581331630]: [BT] SendChassisCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.581469354]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.581528763]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.581588443]: [BT] GetShooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.581643143]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.582037341]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00 area=own_leisure_area
+[INFO] [1772886371.582140127]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00 area=own_leisure_area desired=0 mode=3 acc_sec=6 degraded=0 change=0
+[INFO] [1772886371.582351429]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886371.593192721]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:15.00
+[INFO] [1772886372.061702563]: [BT] OutputRightSwitchState SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00 switch=auto state=auto
+[INFO] [1772886372.061791025]: [BT] ReviveIfDead SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00 revive=done
+[INFO] [1772886372.061830717]: [BT] GetPresentTime SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.061883321]: [BT] GetPosInMap SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.082948641]: [BT] SendChassisCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.083066351]: [BT] GetGimbalDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.083116826]: [BT] SendGimbalCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.083182522]: [BT] GetShooterDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.083243026]: [BT] SendShooterCommand SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.083681777]: [BT] GetPolygonInWhich SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00 area=own_leisure_area
+[INFO] [1772886372.083744684]: [BT] GetSentryCmd SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00 area=own_leisure_area desired=0 mode=3 acc_sec=7 degraded=0 change=0
+[INFO] [1772886372.083947535]: [BT] SetPidPlannerParam SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.094664188]: [BT] GetChassisDecisions SUCCESS C:PMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:16.00
+[INFO] [1772886372.191349233]: Present time:17 C:C G:TE B:P staying_area_name: own_leisure_area
+[INFO] [1772886372.570580454]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00 switch=auto state=auto
+[INFO] [1772886372.570672204]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00 revive=done
+[INFO] [1772886372.570712532]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.570768293]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.590742104]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00 area=own_leisure_area
+[INFO] [1772886372.590841303]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00 area=own_leisure_area desired=0 mode=3 acc_sec=7 degraded=0 change=0
+[INFO] [1772886372.591056499]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.591162016]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.591208331]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.591262208]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.591306489]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.591372046]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886372.600622923]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:18.00
+[INFO] [1772886373.070610222]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00 switch=auto state=auto
+[INFO] [1772886373.070715398]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00 revive=done
+[INFO] [1772886373.070759529]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.070829530]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.100539747]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00 area=own_leisure_area
+[INFO] [1772886373.100690130]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00 area=own_leisure_area desired=0 mode=3 acc_sec=8 degraded=0 change=0
+[INFO] [1772886373.100911693]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101024832]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101072609]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101116510]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101188571]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101231131]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.101280091]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:19.00
+[INFO] [1772886373.580354697]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00 switch=auto state=auto
+[INFO] [1772886373.580450887]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00 revive=done
+[INFO] [1772886373.580768325]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.580836757]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.602478922]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.602585246]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.602639268]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.602677465]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.602733942]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.610707955]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00 area=own_leisure_area
+[INFO] [1772886373.610802464]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00 area=own_leisure_area desired=0 mode=3 acc_sec=8 degraded=0 change=0
+[INFO] [1772886373.611024843]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886373.611118576]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:21.00
+[INFO] [1772886374.080403429]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00 switch=auto state=auto
+[INFO] [1772886374.080523629]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00 revive=done
+[INFO] [1772886374.090641726]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.090764390]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.110902141]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.111013606]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.111107027]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.111155943]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.111205373]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.120493773]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00 area=own_leisure_area
+[INFO] [1772886374.120623328]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00 area=own_leisure_area desired=0 mode=3 acc_sec=9 degraded=0 change=0
+[INFO] [1772886374.120799152]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.120887807]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:22.00
+[INFO] [1772886374.580421259]: [BT] OutputRightSwitchState SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00 switch=auto state=auto
+[INFO] [1772886374.580562633]: [BT] ReviveIfDead SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00 revive=done
+[INFO] [1772886374.590732336]: [BT] GetPresentTime SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [177288[WARN] [1772886374.881057272]: action not connect
+[WARN] [1772886375.385131982]: action not connect
+6374.590836413]: [BT] GetPosInMap SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.610952915]: [BT] SendChassisCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.611057287]: [BT] GetGimbalDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.611110619]: [BT] SendGimbalCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.611157009]: [BT] GetShooterDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.620515154]: [BT] GetPolygonInWhich SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00 area=own_leisure_area
+[INFO] [1772886374.620654248]: [BT] GetSentryCmd SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00 area=own_leisure_area desired=0 mode=3 acc_sec=9 degraded=0 change=0
+[INFO] [1772886374.620855090]: [BT] SetPidPlannerParam SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.620948677]: [BT] GetChassisDecisions SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.621073322]: [BT] SendShooterCommand SUCCESS C:C G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:24.00
+[INFO] [1772886374.870868627]: Present time:25 C:AMR G:TE B:P staying_area_name: own_leisure_area
+[INFO] [1772886375.084407283]: [BT] OutputRightSwitchState SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00 switch=auto state=auto
+[INFO] [1772886375.084520627]: [BT] ReviveIfDead SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00 revive=done
+[INFO] [1772886375.095266748]: [BT] GetPresentTime SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.095366921]: [BT] GetPosInMap SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.116690103]: [BT] SendChassisCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.116842871]: [BT] GetGimbalDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.116900656]: [BT] SendGimbalCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.116947065]: [BT] GetShooterDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.127777028]: [BT] SendShooterCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.128376112]: [BT] GetPolygonInWhich SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00 area=own_leisure_area
+[INFO] [1772886375.128521878]: [BT] GetSentryCmd SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00 area=own_leisure_area desired=0 mode=3 acc_sec=10 degraded=0 change=0
+[INFO] [1772886375.128724011]: [BT] SetPidPlannerParam SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.128786196]: [BT] GetChassisDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:25.00
+[INFO] [1772886375.589643461]: [BT] OutputRightSwitchState SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00 switch=auto state=auto
+[INFO] [1772886375.589733770]: [BT] ReviveIfDead SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00 revive=done
+[INFO] [1772886375.600471377]: [BT] GetPresentTime SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.600600612]: [BT] GetPosInMap SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.621967559]: [BT] SendChassisCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.622088507]: [BT] GetGimbalDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_le[WARN] [1772886375.890033427]: action not connect
+[WARN] [1772886376.400619106]: action not connect
+isure_area Enemy:blue Time:27.00
+[INFO] [1772886375.622253922]: [BT] SendGimbalCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.622304166]: [BT] GetShooterDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.633304813]: [BT] SendShooterCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.633606135]: [BT] GetPolygonInWhich SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00 area=own_leisure_area
+[INFO] [1772886375.633669501]: [BT] GetSentryCmd SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00 area=own_leisure_area desired=0 mode=3 acc_sec=10 degraded=0 change=0
+[INFO] [1772886375.633866294]: [BT] SetPidPlannerParam SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886375.633928502]: [BT] GetChassisDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:27.00
+[INFO] [1772886376.094266772]: [BT] OutputRightSwitchState SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00 switch=auto state=auto
+[INFO] [1772886376.094340862]: [BT] ReviveIfDead SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00 revive=done
+[INFO] [1772886376.105054806]: [BT] GetPresentTime SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.105136877]: [BT] GetPosInMap SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.126006077]: [BT] SendChassisCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.126098655]: [BT] GetGimbalDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.126134148]: [BT] SendGimbalCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.126160191]: [BT] GetShooterDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.136899384]: [BT] SendShooterCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.137120006]: [BT] GetPolygonInWhich SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00 area=own_leisure_area
+[INFO] [1772886376.137164682]: [BT] GetSentryCmd SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00 area=own_leisure_area desired=0 mode=3 acc_sec=11 degraded=0 change=0
+[INFO] [1772886376.137308675]: [BT] SetPidPlannerParam SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.137365436]: [BT] GetChassisDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:28.00
+[INFO] [1772886376.604239594]: [BT] OutputRightSwitchState SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00 switch=auto state=auto
+[INFO] [1772886376.604327702]: [BT] ReviveIfDead SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00 revive=done
+[INFO] [1772886376.615039890]: [BT] GetPresentTime SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.615146360]: [BT] GetPosInMap SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.636399732]: [BT] SendChassisCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.636505716]: [BT] GetGimbalDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.636552382]: [BT] SendGimbalCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.636603580]: [BT] GetShooterDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.647451622]: [BT] SendShooterCommand SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue T[WARN] [1772886376.851396813]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886376.851516427]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886377.354938285]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886377.355051246]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+ime:30.00
+[INFO] [1772886376.647977169]: [BT] GetPolygonInWhich SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00 area=own_leisure_area
+[INFO] [1772886376.648037063]: [BT] GetSentryCmd SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00 area=own_leisure_area desired=0 mode=3 acc_sec=11 degraded=0 change=0
+[INFO] [1772886376.648198541]: [BT] SetPidPlannerParam SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.648253811]: [BT] GetChassisDecisions SUCCESS C:AMR G:TE B:P pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:30.00
+[INFO] [1772886376.851178704]: Present time:31 C:CSG G:TE B:P staying_area_name: own_leisure_area
+[INFO] [1772886376.851307964]: Present time:31 C:CSG G:YSR B:P
+[INFO] [1772886376.851601476]: Present time:31 Chassis:CSG Gimbal:YSR Booster:R
+[INFO] [1772886377.104636042]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886377.104735289]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886377.124684397]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.124788777]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.144913145]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.144996577]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.145110235]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.145158675]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.154530043]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886377.154637730]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=12 degraded=0 change=0
+[INFO] [1772886377.154835161]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.154902859]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.155101937]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.604973887]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886377.605070968]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886377.634601224]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.634718960]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.645079307]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.645161734]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.645258502]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.645290201]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.664674330]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886377.664738412]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 [WARN] [1772886377.865156698]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886377.865240594]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886378.374689696]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886378.374778707]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+area=own_leisure_area desired=0 mode=3 acc_sec=12 degraded=0 change=0
+[INFO] [1772886377.664917533]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.664963265]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886377.665145608]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.114496884]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886378.114667244]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886378.144612470]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.144706954]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.154698736]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.154763194]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.154849287]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.154878551]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.164775728]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886378.164856431]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=13 degraded=0 change=0
+[INFO] [1772886378.165015835]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.165081403]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.165253262]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.624690034]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886378.624780216]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886378.644696393]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.644811882]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.654862380]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.654973968]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.655131518]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.655186304]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.664789785]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886378.664879514]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=13 degraded=0 change=0
+[INFO] [1772886378.674531071]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.674616167]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886378.674778097]: [BT] SendShooterCommand SU[WARN] [1772886378.884849001]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886378.884981079]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886379.384992776]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886379.385128709]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886379.894493159]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886379.894596502]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+CCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.124746071]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886379.124857187]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886379.154504695]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.154634544]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.154890078]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.165059421]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.165199110]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.165231616]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.174523356]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886379.174651218]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=14 degraded=0 change=0
+[INFO] [1772886379.174774716]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.174820765]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.174996776]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.634501585]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886379.634641761]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886379.664683184]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.664772771]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.664973613]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.665006314]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.674621020]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886379.674716152]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=14 degraded=0 change=0
+[INFO] [1772886379.674899594]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.674967290]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.675154037]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.675202294]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886379.675253178]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.134501049]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886380.144686566]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886380[WARN] [1772886380.394523036]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886380.394649112]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886380.894672093]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886380.894777773]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+.164713426]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.164923933]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.165213203]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.165269545]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.184737034]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886380.184837942]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=15 degraded=0 change=0
+[INFO] [1772886380.185027123]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.185093501]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.185252098]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.185295877]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.185344658]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.644699748]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886380.644815291]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886380.664816965]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.664930334]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.674748574]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.674838553]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.684761196]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886380.684869862]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=15 degraded=0 change=0
+[INFO] [1772886380.685047998]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.685119144]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.685290315]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.685336455]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886380.685387766]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.154511097]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886381.154650254]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886381.174443142]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.174531689]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.174736399]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.1848[WARN] [1772886381.394750643]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886381.394905694]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886381.904918998]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886381.905013245]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+58596]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.194638135]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886381.194740056]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=16 degraded=0 change=0
+[INFO] [1772886381.194890296]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.194946277]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.195097284]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.195136759]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.195174416]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.664725487]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886381.664870485]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886381.674530368]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.674702018]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.675005547]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.684939291]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.704746934]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886381.704826515]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=16 degraded=0 change=0
+[INFO] [1772886381.704951090]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.704997193]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.705116780]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.705148239]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886381.705177730]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.174453852]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886382.174595459]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886382.174644905]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.174713045]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.175004591]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.194816050]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.204782379]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886382.204889557]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 ar[WARN] [1772886382.414992657]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886382.415113370]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886382.915002244]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886382.925049262]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+ea=own_leisure_area desired=0 mode=3 acc_sec=17 degraded=0 change=0
+[INFO] [1772886382.205171664]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.205247786]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.205413079]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.205458570]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.205505608]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.684621533]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886382.684729652]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886382.684775905]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.684852590]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.685097713]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.705028192]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.714571647]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886382.714676705]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=17 degraded=0 change=0
+[INFO] [1772886382.714870764]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.714943165]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.715129695]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.715177973]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886382.715224544]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.194458387]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886383.194554408]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886383.194601644]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.194651302]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.195214870]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.214724588]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.224702028]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886383.224781415]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=18 degraded=0 change=0
+[INFO] [1772886383.224935892]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.224979453]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.225124546]: [BT] SendGimbalCommand SUCCE[WARN] [1772886383.424959322]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886383.425101307]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886383.934708709]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886383.934821176]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886384.434747046]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886384.434861257]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+SS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.225214172]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.225280292]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.694478527]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886383.694593128]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886383.694783194]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.694871956]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.704995304]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.714825007]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.724923993]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886383.725011256]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=18 degraded=0 change=0
+[INFO] [1772886383.725159538]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.725209844]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.725340244]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.725375520]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886383.725413117]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.194514641]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886384.194662923]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886384.204676563]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.204783618]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.205047540]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.224987413]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.234527163]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886384.234646117]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=19 degraded=0 change=0
+[INFO] [1772886384.234799044]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.234846648]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.234984991]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.235019531]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.235052711]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.704697822]: [BT] OutputRightSwitch[WARN] [1772886384.934784562]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886384.934920935]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886385.444863475]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886385.444984364]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+State SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886384.704846284]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886384.704879349]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.704927676]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.705133515]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.734736142]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.744812721]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886384.744900706]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=19 degraded=0 change=0
+[INFO] [1772886384.745045938]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.745111525]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.745280531]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.745316388]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886384.745348589]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.214452129]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886385.214544905]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886385.214591712]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.214701266]: [BT] GetPosInMap SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.214909884]: [BT] SendChassisCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.234781270]: [BT] GetGimbalDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.254496255]: [BT] GetPolygonInWhich SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area
+[INFO] [1772886385.254608012]: [BT] GetSentryCmd SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 area=own_leisure_area desired=0 mode=3 acc_sec=20 degraded=0 change=0
+[INFO] [1772886385.254814303]: [BT] SetPidPlannerParam SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.254865404]: [BT] GetChassisDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.255003115]: [BT] SendGimbalCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.255031401]: [BT] GetShooterDecisions SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.255093252]: [BT] SendShooterCommand SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385.714491462]: [BT] OutputRightSwitchState SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 switch=auto state=auto
+[INFO] [1772886385.714622978]: [BT] ReviveIfDead SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00 revive=done
+[INFO] [1772886385.714665005]: [BT] GetPresentTime SUCCESS C:CSG G:YSR B:R pos=(0.85,1.05)@own_leisure_area Enemy:blue Time:31.00
+[INFO] [1772886385[WARN] [1772886385.954821383]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886385.954950281]: "yaw" passed to lookupTransform argument target_frame does not exist. 
+[WARN] [1772886386.464967710]: "yaw" passed to lookupTransform argument source_frame does not exist. 
+[WARN] [1772886386.465068500]: "yaw" passed to lookupTransform argument target_frame does not exist. 

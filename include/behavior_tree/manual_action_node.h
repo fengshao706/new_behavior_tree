@@ -7,6 +7,7 @@
 
 #include <ros/ros.h>
 #include "common/tools.h"
+#include "common/behavior_base.h"
 #include "perception_layer.h"
 #include <behaviortree_cpp/action_node.h>
 
@@ -139,6 +140,29 @@ namespace manual
     double gyro_move_reduction_{1.};
     double gyro_rotate_reduction_{1.};
     double still_gyro_vel_{1.};
+  };
+
+  class RemoteControlTurnOff : public BT::SyncActionNode
+  {
+  public:
+    RemoteControlTurnOff(const std::string &name , const BT::NodeConfig &config , BehaviorBase &behavior_base , tools::CmdTools &cmd_tools) : SyncActionNode(name , config) , behavior_base_(behavior_base) , cmd_tools_(cmd_tools)
+    {
+
+    }
+
+    BT::NodeStatus tick() override
+    {
+    //  behavior_base_.controller_manager_.stopMainControllers();
+    //  behavior_base_.controller_manager_.stopCalibrationControllers();
+      cmd_tools_.vel_2d_cmd_sender_->setZero();
+      cmd_tools_.union_cmd_sender_->gimbal_cmd_sender_->setZero();
+      cmd_tools_.union_cmd_sender_->double_barrel_cmd_sender_->setZero();
+      return BT::NodeStatus::SUCCESS;
+    }
+
+  private:
+    BehaviorBase &behavior_base_;
+    tools::CmdTools &cmd_tools_;
   };
 }
 
