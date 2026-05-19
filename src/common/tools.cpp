@@ -3,8 +3,6 @@
 //
 #include "common/tools.h"
 
-#include <common/types.h>
-
 namespace tools
 {
   EnableGyroServiceCaller::EnableGyroServiceCaller(ros::NodeHandle& nh) : ServiceCallerBase<rm_msgs::EnableGyro>(
@@ -560,6 +558,28 @@ namespace tools
     bt_nh_.getParam("shooter_calibration",shooter_calibration_config_);
     controller_manager_ = std::make_unique<rm_common::ControllerManager>(bt_nh_);
     shooter_calibration_queue_ = std::make_unique<rm_common::CalibrationQueue>(shooter_calibration_config_,bt_nh_,*controller_manager_);
+
+    XmlRpc::XmlRpcValue controllers_list;
+    bt_nh_.getParam("controllers_list",controllers_list);
+    ROS_ASSERT(controllers_list.getType() == XmlRpc::XmlRpcValue::TypeStruct);
+    if (!controllers_list.hasMember("main_controllers"))
+    {
+      ROS_ERROR("ROS can not access key name [main_controllers] in ControllerTools");
+      return;
+    }
+    XmlRpc::XmlRpcValue  main_ctrls_xml = controllers_list["main_controllers"];
+    ROS_ASSERT(main_ctrls_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    for (int i = 0; i < main_ctrls_xml.size(); ++i)
+    {
+      if (main_ctrls_xml[i].getType() == XmlRpc::XmlRpcValue::TypeString)
+      {
+        main_controllers_.push_back(static_cast<std::string>(main_ctrls_xml[i]));
+      }
+      else
+      {
+        ROS_ERROR("Element at index %d in main_controllers is not a string!", i);
+      }
+    }
   }
 
   [[nodiscard]]rm_common::ControllerManager* ControllerTools::getControllerManager() const
@@ -589,13 +609,128 @@ namespace tools
     controller_manager_->update();
   }
 
-  void ControllerTools::startMainController() //TODO : 未完成
+  void ControllerTools::startMainController()
   {
-
+    for (const auto & controller : main_controllers_)
+    {
+      controller_manager_->startController(controller);
+    }
   }
 
-  void ControllerTools::stopMainController() //TODO : 未完成
+  void ControllerTools::stopMainController()
   {
+    for (const auto & controller : main_controllers_)
+    {
+      controller_manager_->stopController(controller);
+    }
+  }
 
+  GimbalTools::GimbalTools(perception::TfAccessor& tf_accessor , CmdTools &cmd_tools , ros::NodeHandle &bt_nh) : tf_accessor_(tf_accessor) , cmd_tools_(cmd_tools) , bt_nh(bt_nh)
+  {
+    ros::NodeHandle pitch_nh = ros::NodeHandle(bt_nh,"pitch");
+    if (!pitch_nh.getParam("max_pitch_angle",max_pitch_angle_))
+    {
+      ROS_ERROR("GimbalTools can not get param named [max_pitch_angle]");
+    }
+    if (!pitch_nh.getParam("min_pitch_angle",min_pitch_angle_))
+    {
+      ROS_ERROR("GimbalTools can not get param names [min_pitch_angle]");
+    }
+  }
+
+  void GimbalTools::updatePitchStrafeDirect(double min_angel , double max_angle , double pitch_outside_vel , double pitch_inside_vel , double breach_threshold)
+  {
+    geometry_msgs::TransformStamped yaw2pitch_;
+    try
+    {
+      yaw2pitch_ = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::YAW,perception::TfAccessor::FrameId::BASE_LINK);
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_WARN_THROTTLE(0.5, "%s", ex.what());
+      return;
+    }
+    double roll_temp, pitch, yaw_temp;
+    quatToRPY(yaw2pitch_.transform.rotation, roll_temp, pitch, yaw_temp);
+
+    if (pitch >= max_angle)
+    {
+      pitch_direct_ = -pitch_inside_vel;
+      if (pitch - max_angle >= breach_threshold)
+        pitch_direct_ = -pitch_outside_vel;
+    }
+    else if (pitch <= min_angel)
+    {
+      pitch_direct_ = pitch_inside_vel;
+      if (pitch - min_angel <= -breach_threshold)
+        pitch_direct_ = pitch_outside_vel;
+    }
+  }
+
+  void GimbalTools::setStackGimbalRate(double scale_yaw, double scale_pitch)
+  {
+    cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRAJ);
+    cmd_tools_.getSenders()->gimbal_command_sender_->setRate(scale_yaw, scale_pitch);
+    traj_pitch_ = cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_pitch * 0.01 + traj_pitch_; //原pitch加上速度等于本次pitch
+    if (traj_pitch_ > max_pitch_angle_)
+      traj_pitch_ = max_pitch_angle_;
+    if (traj_pitch_ < min_pitch_angle_)
+      traj_pitch_ = min_pitch_angle_; //做保护
+    cmd_tools_.getSenders()->gimbal_command_sender_->setTrajFrameId("base_yaw");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(scale_yaw, 0.);
+    cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->sendCommand(ros::Time::now());
+  }
+
+  void GimbalTools::setStackGimbalRate()
+  {
+    cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRAJ);
+    cmd_tools_.getSenders()->gimbal_command_sender_->setRate(yaw_direct_, pitch_direct_);
+    traj_pitch_ = cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_pitch * 0.01 + traj_pitch_; //原pitch加上速度等于本次pitch
+    if (traj_pitch_ > max_pitch_angle_)
+      traj_pitch_ = max_pitch_angle_;
+    if (traj_pitch_ < min_pitch_angle_)
+      traj_pitch_ = min_pitch_angle_; //做保护
+    cmd_tools_.getSenders()->gimbal_command_sender_->setTrajFrameId("base_yaw");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(yaw_direct_, 0.);
+    cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->sendCommand(ros::Time::now());
+  }
+
+  void GimbalTools::lidarTwist(double yaw_vel , double scan_range_circles)
+  {
+    geometry_msgs::TransformStamped map2yaw_;
+    try
+    {
+      map2yaw_ = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::YAW);
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_WARN_THROTTLE(0.5, "%s", ex.what());
+      return;
+    }
+    double yaw = yawFromQuat(map2yaw_.transform.rotation);
+
+    if (circle_count_ <= 0)
+      yaw_direct_ = cmd_tools_.smoothlyYawOutput(yaw_vel); //实际上就是限制加速度
+    if (circle_count_ > scan_range_circles) //通过圈数计数器，使得其能够在0圈到指定圈数中来回正反转
+      yaw_direct_ = cmd_tools_.smoothlyYawOutput(-yaw_vel);
+
+    if (yaw_direct_ == yaw_vel || yaw_direct_ == -yaw_vel)
+    {
+      if (yaw - lidar_twist_last_yaw_ > M_PI) //处理计数器
+      {
+        circle_count_--;
+      }
+      else if (yaw - lidar_twist_last_yaw_ < -M_PI)
+      {
+        circle_count_++;
+      }
+      lidar_twist_last_yaw_ = yaw;
+    }
   }
 }

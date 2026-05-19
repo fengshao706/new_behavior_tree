@@ -68,7 +68,11 @@ add_executable(${PROJECT_NAME} include/behavior_tree/chassis_action_node.h
 include/behavior_tree/chassis_condition_node.h include/behavior_tree/gimbal_action_node.h include/behavior_tree/gimbal_condition_node.h
 include/behavior_tree/manual_action_node.h include/behavior_tree/manual_condition_node.h include/behavior_tree/shooter_action_node.h
 include/behavior_tree/shooter_condition_node.h include/perception_layer.h include/register_node.h src/common/tools.cpp src/main.cpp
-src/perception_layer.cpp src/register_node.cpp)
+src/perception_layer.cpp src/register_node.cpp include/behavior_tree/common/action_node.h
+        include/behavior_tree/common/action_node.cpp
+        include/behavior_tree/common/action_node.h
+
+)
 
 
 #add_dependencies(${PROJECT_NAME}

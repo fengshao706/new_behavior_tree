@@ -14,6 +14,8 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "common/types.h"
 
+//TODO : 该文件有较大漏洞，需重新编写
+
 class SentryParamLoader  //需在main函数中构造
 {
 public:

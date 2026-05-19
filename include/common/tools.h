@@ -34,6 +34,9 @@
 #include <rm_common/decision/controller_manager.h>
 #include <rm_common/decision/calibration_queue.h>
 #include "behaviortree_cpp/blackboard.h"
+#include <XmlRpcValue.h>
+#include <common/types.h>
+#include <rm_common/ori_tool.h>
 
 namespace tools
 {
@@ -262,8 +265,12 @@ namespace tools
      * **/
     void ControllerUpdate();
 
+    /**@brief 用于从参数文件中列出来的main_controllers中启动对应的控制器
+     * **/
     void startMainController();
 
+    /**@brief 用于从参数文件中列出来的main_controllers中停止对应的控制器
+     * **/
     void stopMainController();
 
   private:
@@ -271,6 +278,52 @@ namespace tools
     std::unique_ptr<rm_common::ControllerManager> controller_manager_;
     XmlRpc::XmlRpcValue shooter_calibration_config_;
     std::unique_ptr<rm_common::CalibrationQueue> shooter_calibration_queue_;
+    std::vector<std::string> main_controllers_;
+  };
+
+  class GimbalTools
+  {
+  public:
+    GimbalTools(perception::TfAccessor &tf_accessor , CmdTools &cmd_tools , ros::NodeHandle &bt_nh);
+
+    /**@brief 更新pitch轴扫描的pitch指向
+     *@param min_angel pitch轴指向的最小角度
+     *@param max_angle pitch轴指向的最大角度
+     *@param pitch_outside_vel 严重超出给定pitch最大最小角度的pitch回复速度
+     *@param pitch_inside_vel 未超出pitch最大最小角度的pitch回复速度
+     *@param breach_threshold 判定pitch严重超出给定pitch最大最小角度的阈值
+     *
+     * **/
+    void updatePitchStrafeDirect(double min_angel , double max_angle , double pitch_outside_vel , double pitch_inside_vel, double breach_threshold);
+
+    /**@brief 将期望的机器人云台yaw轴速度和pitch轴速度信息填充进gimbal_cmd里面，供后续发布，小yaw使用traj模式，大yaw使用rate模式
+     *@param scale_yaw yaw轴运动速度相对于最大速度的比率
+     *@param scale_pitch pitch轴运动速度相对于最大速度的比率
+     * **/
+    void setStackGimbalRate(double scale_yaw, double scale_pitch);
+
+    /**@brief 将期望的机器人云台yaw轴速度和pitch轴速度信息填充进gimbal_cmd里面，供后续发布，小yaw使用traj模式，大yaw使用rate模式，
+     *该函数直接使用成员变量中存储的direct，因此在调用它时，请先更新成员变量中的direct
+     * **/
+    void setStackGimbalRate();
+
+    /**@brief 让机器人的云台在一定的范围内来回旋转，针对于yaw轴
+     *@param yaw_vel yaw轴旋转的速度
+     *@param scan_range_circles yaw轴将在该圈数限制下来回运动
+     * **/
+    void lidarTwist(double yaw_vel , double scan_range_circles);
+
+  private:
+    perception::TfAccessor &tf_accessor_;
+    CmdTools &cmd_tools_;
+    double pitch_direct_{};
+    double yaw_direct_{};
+    double traj_pitch_{};
+    double max_pitch_angle_{};
+    double min_pitch_angle_{};
+    double circle_count_{};
+    double lidar_twist_last_yaw_{};
+    ros::NodeHandle &bt_nh;
   };
 }
 

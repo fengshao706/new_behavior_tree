@@ -2,14 +2,12 @@
 // Created by root on 2026/3/5.
 //
 
-#ifndef NEW_BEHAVIOR_TREE_ACTION_NODE_H
-#define NEW_BEHAVIOR_TREE_ACTION_NODE_H
+#ifndef NEW_BEHAVIOR_TREE_CHASSIS_ACTION_NODE_H
+#define NEW_BEHAVIOR_TREE_CHASSIS_ACTION_NODE_H
 
-#include "common/navigation_bridge.h"
 #include <rm_common/decision/controller_manager.h>
 
 #include "behaviortree_cpp/action_node.h"
-#include "common/behavior_base.h"
 #include "common/tools.h"
 #include "service_processor/SearchEnablePoint.h"
 
@@ -54,7 +52,7 @@ namespace chassis
   class AbnormalStillStopAllMotion : public BT::SyncActionNode
   {
   public:
-    AbnormalStillStopAllMotion(const std::string & name ,const BT::NodeConfig & config , BehaviorBase & behavior_base , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , behavior_base_(behavior_base) , cmd_tools_(cmd_tools)
+    AbnormalStillStopAllMotion(const std::string & name ,const BT::NodeConfig & config , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , cmd_tools_(cmd_tools)
     {
 
     }
@@ -690,4 +688,4 @@ namespace chassis
 
 }
 
-#endif //NEW_BEHAVIOR_TREE_ACTION_NODE_H
+#endif //NEW_BEHAVIOR_TREE_CHASSIS_ACTION_NODE_H

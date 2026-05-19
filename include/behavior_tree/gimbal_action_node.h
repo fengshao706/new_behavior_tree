@@ -12,7 +12,6 @@
 #include "behaviortree_cpp/blackboard.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "rm_common/ori_tool.h"
-#include "common/behavior_base.h"
 
 namespace gimbal
 {
@@ -40,29 +39,63 @@ namespace gimbal
     BT::Blackboard &blackboard_;
   };
 
-  class YawSlowRound : public BT::SyncActionNode
+  class YawSlowRound : public BT::StatefulActionNode
   {
   public:
-    YawSlowRound(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard , tools::CmdTools &cmd_tools ,BehaviorBase &behavior_base) : SyncActionNode(name , config) , blackboard_(blackboard) , cmd_tools_(cmd_tools) , behavior_base_(behavior_base)
+    YawSlowRound(const std::string &name ,const BT::NodeConfig &config ,tools::GimbalTools &gimbal_tools) : StatefulActionNode(name , config) , gimbal_tools_(gimbal_tools)
     {
 
     }
 
-    BT::NodeStatus tick() override
+    BT::PortsList providedPorts()
     {
-      XmlRpc::XmlRpcValue gimbal_vel_coeff = blackboard_.get<XmlRpc::XmlRpcValue>("gimbal_vel_coeff");
+      return {
+        BT::InputPort("yaw_vel"), //yaw轴旋转速度
+        BT::InputPort("scan_range_circles"),
+        BT::InputPort("pitch_inside_vel"),
+        BT::InputPort("pitch_outside_vel"),
+        BT::InputPort("pitch_min"),
+        BT::InputPort("pitch_max"),
+        BT::InputPort("breach_thresholds")
+      }; //yaw每转多少圈就回复
+    }
 
-      behavior_base_.lidarTwist(gimbal_vel_coeff[1]);
-      behavior_base_.pitchStrafe(cmd_tools_.union_cmd_sender_->pitch_min_, cmd_tools_.union_cmd_sender_->pitch_max_,
-                  cmd_tools_.union_cmd_sender_->pitch_outside_vel_, cmd_tools_.union_cmd_sender_->pitch_inside_vel_,
-                  cmd_tools_.union_cmd_sender_->breach_threshold_);
-      behavior_base_.setGimbalRate();
-      return BT::NodeStatus::SUCCESS;
+    BT::NodeStatus onStart() override
+    {
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      BT::Expected<double> yaw_vel;
+      BT::Expected<double> scan_range_circles;
+      BT::Expected<double> pitch_inside_vel;
+      BT::Expected<double> pitch_outside_vel;
+      BT::Expected<double> pitch_min;
+      BT::Expected<double> pitch_max;
+      BT::Expected<double> breach_thresholds;
+
+      getInput("yaw_vel",yaw_vel);
+      getInput("scan_range_circles",scan_range_circles);
+      getInput("pitch_inside_vel",pitch_inside_vel);
+      getInput("pitch_outside_vel",pitch_outside_vel);
+      getInput("pitch_min",pitch_min);
+      getInput("pitch_max",pitch_max);
+      getInput("breach_thresholds",breach_thresholds);
+      gimbal_tools_.lidarTwist(yaw_vel.value(),scan_range_circles.value());
+      gimbal_tools_.updatePitchStrafeDirect(pitch_min.value(), pitch_max.value(),
+                  pitch_outside_vel.value(), pitch_inside_vel.value(),
+                  breach_thresholds.value());
+      gimbal_tools_.setStackGimbalRate();
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+
     }
   private:
-    BT::Blackboard &blackboard_;
-    tools::CmdTools &cmd_tools_;
-    BehaviorBase &behavior_base_;
+    tools::GimbalTools &gimbal_tools_;
   };
 
   class LidarTowardsFront : public BT::SyncActionNode
