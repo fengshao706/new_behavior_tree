@@ -102,9 +102,21 @@ namespace perception
     return has_back_camera_detected_.load(std::memory_order_acquire);
   }
 
+  geometry_msgs::PointStamped Subscriber::getBackCameraDetection()
+  {
+    std::lock_guard<std::mutex> lock(back_camera_mutex_);
+    return back_of_camera_;
+  }
+
   void Subscriber::setBackCameraDetected(bool detected)
   {
     has_back_camera_detected_.store(detected, std::memory_order_release);
+  }
+
+  [[nodiscard]]int Subscriber::getBackCameraDetectionId()
+  {
+    std::lock_guard<std::mutex> lock(back_camera_detection_id_mutex_);
+    return back_camera_detection_id_;
   }
 
   bool Subscriber::hasEngineerMarked() const
@@ -241,7 +253,8 @@ namespace perception
     if (!data->detections.empty() && !hasBackCameraDetected())
     {
       setBackCameraDetected(true);
-      back_camera_detection_id_ = data->detections[0].id;
+      std::lock_guard<std::mutex> lock(back_camera_mutex_);
+      setBackCameraDetectionId(data->detections[0].id);
       back_of_camera_.header.frame_id = "back_camera_optical_frame";
       back_of_camera_.point.x = data->detections[0].pose.position.x;
       back_of_camera_.point.y = data->detections[0].pose.position.y;
@@ -418,6 +431,12 @@ namespace perception
   {
     std::lock_guard<std::mutex> lock(odom_data_mutex_);
     odom_ = *msg;
+  }
+
+  void Subscriber::setBackCameraDetectionId(int id)
+  {
+    std::lock_guard<std::mutex> lock(back_camera_detection_id_mutex_);
+    back_camera_detection_id_ = id;
   }
 
   TfAccessor::TfAccessor(ros::NodeHandle &bt_nh , Subscriber &subscriber) : tf_listener_(tf_buffer_) , bt_nh_(bt_nh) , subscriber_(subscriber)

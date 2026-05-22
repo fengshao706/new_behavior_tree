@@ -313,6 +313,15 @@ namespace tools
      * **/
     void lidarTwist(double yaw_vel , double scan_range_circles);
 
+    /**@brief 该函数用于让云台指向map坐标系下的某个点
+     *@param point_of_map map坐标系下的点坐标
+     * **/
+    void setGimbalDirectPoint(geometry_msgs::PointStamped point_of_map);
+
+    /**@brief 用于给云台设置为track模式，并填充cmdGimbal中的bullet_speed字段
+     * **/
+    void setStackGimbalTrack();
+
   private:
     perception::TfAccessor &tf_accessor_;
     CmdTools &cmd_tools_;

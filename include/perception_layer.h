@@ -57,7 +57,13 @@ namespace perception{
 
     bool hasBackCameraDetected() const;
 
+    geometry_msgs::PointStamped getBackCameraDetection();
+
     void setBackCameraDetected(bool detected);
+
+    [[nodiscard]]int getBackCameraDetectionId();
+
+    void setBackCameraDetectionId(int id);
 
     bool hasEngineerMarked() const;
 
@@ -213,7 +219,7 @@ namespace perception{
     mutable std::mutex front_camera_mutex_, dbus_mutex_, game_robot_status_mutex_, track_mutex_, game_status_mutex_, buff_data_mutex_,
                        game_robot_hp_mutex_, power_heat_data_mutex_, client_map_send_data_mutex_, odom_data_mutex_, robot_hurt_data_mutex_,
                        shoot_cmd_mutex_ , event_data_mutex_ , bullet_allowance_mutex_ , robot_position_mutex_ , global_planner_mutex_,
-                        rfid_status_mutex_ , sentry_info_data_mutex_ , power_management_sample_and_status_data_mutex_;
+                        rfid_status_mutex_ , sentry_info_data_mutex_ , power_management_sample_and_status_data_mutex_ , back_camera_mutex_ , back_camera_detection_id_mutex_;
   };
 
   class TfAccessor
@@ -228,7 +234,8 @@ namespace perception{
       YAW,
       PITCH,
       CAMERA_OPTICAL_FRAME,
-      TRACK
+      TRACK,
+      LIVOX
     };
 
     TfAccessor(ros::NodeHandle &bt_nh , Subscriber &subscriber);
@@ -253,7 +260,8 @@ namespace perception{
       {FrameId::ODOM, "odom"},
       {FrameId::YAW, "yaw"},
       {FrameId::PITCH, "pitch"},
-      {FrameId::CAMERA_OPTICAL_FRAME, "camera_optical_frame"}
+      {FrameId::CAMERA_OPTICAL_FRAME, "camera_optical_frame"},
+      {FrameId::LIVOX, "livox_frame"}
     };
   };
 

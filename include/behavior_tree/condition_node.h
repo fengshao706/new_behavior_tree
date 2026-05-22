@@ -2,8 +2,8 @@
 // Created by root on 2026/3/19.
 //
 
-#ifndef NEW_BEHAVIOR_TREE_CHASSIS_CONDITION_NODE_H
-#define NEW_BEHAVIOR_TREE_CHASSIS_CONDITION_NODE_H
+#ifndef NEW_BEHAVIOR_TREE_CONDITION_NODE_H
+#define NEW_BEHAVIOR_TREE_CONDITION_NODE_H
 
 #include <behaviortree_cpp/condition_node.h>
 #include "common/types.h"
@@ -384,26 +384,24 @@ namespace condition_node
   class IsTrackLoss : public BT::ConditionNode
   {
   public:
-    IsTrackLoss(const std::string& name, const BT::NodeConfig& config,
-                BT::Blackboard& blackboard) : ConditionNode(name, config), blackboard_(blackboard)
+    IsTrackLoss(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config)
     {
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {
+        BT::InputPort<ros::Time>("last_track_time"), //该值应当在进入track的时候被更新
+          BT::InputPort<double>("lost_track_tolerant_sec") //该值应在参数文件中加载
+      };
     }
 
     BT::NodeStatus tick() override
     {
-      ros::Time last_track_time;
-      double lost_track_tolerant_sec;
-      try
-      {
-        last_track_time = blackboard_.get<ros::Time>("last_track_time");
-      }
-      catch (BT::RuntimeError& e)
-      {
-        ROS_ERROR("BT can not access key name [last_track_time] , default value is ros::Time(0)");
-        last_track_time = ros::Time(0);
-      }
-
-      lost_track_tolerant_sec = blackboard_.get<double>("lost_track_tolerant_sec");
+      BT::Expected<ros::Time> last_track_time_value = getInput<ros::Time>("last_track_time");
+      ros::Time last_track_time = last_track_time_value.value();
+      BT::Expected<double> lost_track_tolerant_sec_value = getInput<double>("lost_track_tolerant_sec");
+      double lost_track_tolerant_sec = lost_track_tolerant_sec_value.value();
 
       if (ros::Time::now() - last_track_time > ros::Duration(lost_track_tolerant_sec))
       {
@@ -414,9 +412,7 @@ namespace condition_node
         return BT::NodeStatus::FAILURE;
       }
     }
-
   private:
-    BT::Blackboard& blackboard_;
   };
 
   //TODO : gimbal_mode需保证在gimbal_action_node中正确设定
@@ -424,29 +420,23 @@ namespace condition_node
   {
   public:
     CheckGimbalMode(const std::string& name, const BT::NodeConfig& config,
-                    BT::Blackboard& blackboard) : ConditionNode(name, config), blackboard_(blackboard)
+                    BT::Blackboard& blackboard) : ConditionNode(name, config)
     {
     }
 
     static BT::PortsList providedPorts()
     {
-      return {BT::InputPort<int>("gimbal_mode_id")};
+      return {BT::InputPort<int>("gimbal_mode"),  //该端口应绑定到实际的mode上面
+                BT::InputPort<int>("expected_gimbal_mode")}; //该端口应绑定到期望的mode上面，一般为动态输入
     }
 
     BT::NodeStatus tick() override
     {
-      try
-      {
-        gimbal_mode_ = static_cast<int>(blackboard_.get<types::GimbalMode>("gimbal_mode"));
-      }
-      catch (BT::RuntimeError& e)
-      {
-        ROS_WARN("BT can not access key name [gimbal_mode] , default is types::GimbalMode::YawSlowRound");
-        gimbal_mode_ = static_cast<int>(types::GimbalMode::YawSlowRound);
-      }
+      BT::Expected<int> gimbal_mode = getInput<int>("gimbal_mode");
+      gimbal_mode_ = gimbal_mode.value();
 
-      BT::Expected<int> gimbal_mode_id = getInput<int>("gimbal_mode_id");
-      if (gimbal_mode_id.value() == gimbal_mode_)
+      BT::Expected<int> expected_gimbal_mode = getInput<int>("expected_gimbal_mode");
+      if (expected_gimbal_mode.value() == gimbal_mode_)
       {
         return BT::NodeStatus::SUCCESS;
       }
@@ -457,7 +447,6 @@ namespace condition_node
     }
 
   private:
-    BT::Blackboard& blackboard_;
     int gimbal_mode_;
   };
 
@@ -465,27 +454,33 @@ namespace condition_node
   {
   public:
     IsNeedInverseGimbal(const std::string& name, const BT::NodeConfig& config, BT::Blackboard& blackboard,
-                        perception::Subscriber& subscriber) : BT::ConditionNode(name, config), blackboard_(blackboard),
+                        perception::Subscriber& subscriber) : BT::ConditionNode(name, config),
                                                               subscriber_(subscriber)
     {
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<std::vector<int>>("default_aim_rank")}; //需要绑定到实际的值
     }
 
     BT::NodeStatus tick() override
     {
       std::vector<int> default_aim_rank;
-      default_aim_rank = blackboard_.get<std::vector<int>>("default_aim_rank");
-      if (subscriber_.has_back_camera_detected_ &&
-        subscriber_.back_camera_detection_id_ != 0)
+      BT::Expected<std::vector<int>> default_aim_rank_value = getInput<std::vector<int>>("default_aim_rank");
+      default_aim_rank = default_aim_rank_value.value();
+      if (subscriber_.hasBackCameraDetected() &&
+        subscriber_.getBackCameraDetectionId() != 0)
       {
-        if (default_aim_rank[subscriber_.back_camera_detection_id_] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
+        if (default_aim_rank[subscriber_.getBackCameraDetectionId()] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
         {
           return BT::NodeStatus::FAILURE;
         }
         else
         {
-          subscriber_.has_back_camera_detected_ = false;
-          subscriber_.back_camera_detection_id_ = 0;
-          return BT::NodeStatus::SUCCESS; //如果不是等于0的优先级（无效），就把云台反过来
+          subscriber_.setBackCameraDetected(false);
+          subscriber_.setBackCameraDetectionId(0);
+          return BT::NodeStatus::SUCCESS; //如果不是等于0的优先级（有效），就把云台反过来
         }
       }
       else
@@ -495,7 +490,6 @@ namespace condition_node
     }
 
   private:
-    BT::Blackboard& blackboard_;
     perception::Subscriber& subscriber_;
   };
 
@@ -524,7 +518,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      return subscriber_.track_data_.id != 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+      return subscriber_.getTrackData().id != 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 
   private:
@@ -534,14 +528,14 @@ namespace condition_node
   class IsRemoteControlTurnOn : public BT::ConditionNode
   {
   public:
-    IsRemoteControlTurnOn(const std::string &name , const BT::NodeConfig &config , perception::Subscriber &subscriber , BehaviorBase &behavior_base) : ConditionNode(name , config) , subscriber_(subscriber)
+    IsRemoteControlTurnOn(const std::string &name , const BT::NodeConfig &config , perception::Subscriber &subscriber) : ConditionNode(name , config) , subscriber_(subscriber)
     {
 
     }
 
     BT::NodeStatus tick() override
     {
-      if (ros::Time::now() - subscriber_.dbus_.stamp < ros::Duration(0.3))
+      if (ros::Time::now() - subscriber_.getDbusData().stamp < ros::Duration(0.3))
       {
         return BT::NodeStatus::SUCCESS;
       }else
@@ -555,4 +549,4 @@ namespace condition_node
   };
 }
 
-#endif //NEW_BEHAVIOR_TREE_CHASSIS_CONDITION_NODE_H
+#endif //NEW_BEHAVIOR_TREE_CONDITION_NODE_H

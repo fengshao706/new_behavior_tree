@@ -733,4 +733,28 @@ namespace tools
       lidar_twist_last_yaw_ = yaw;
     }
   }
+
+  void GimbalTools::setGimbalDirectPoint(geometry_msgs::PointStamped point_of_map)
+  {
+    geometry_msgs::PointStamped point_of_odom;
+    ros::Time time = ros::Time::now();
+    geometry_msgs::TransformStamped odom2map;
+    odom2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,perception::TfAccessor::FrameId::MAP);
+    tf2::doTransform(point_of_map, point_of_odom, odom2map); //中文语义：将map坐标系的物体转换到odom下
+    cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
+    cmd_tools_.getSenders()->gimbal_command_sender_->setPoint(point_of_odom);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setPoint(point_of_odom);
+    cmd_tools_.sendStackGimbalCommand(time);
+  }
+
+  void GimbalTools::setStackGimbalTrack()
+  {
+    cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRACK);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRACK);
+    // double bullet_speed = union_cmd_sender_->double_barrel_cmd_sender_->getSpeed();
+    double bullet_speed = cmd_tools_.getSenders()->shooter_command_sender_->getSpeed();
+    cmd_tools_.getSenders()->gimbal_command_sender_->setBulletSpeed(bullet_speed);
+    cmd_tools_.getSenders()->base_gimbal_command_sender_->setBulletSpeed(bullet_speed);
+  }
 }
