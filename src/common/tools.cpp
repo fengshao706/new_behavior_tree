@@ -64,7 +64,7 @@ namespace tools
     senders_->base_gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(base_gimbal_nh);
     ros::NodeHandle gimbal_nh(nh, "gimbal");
     senders_->gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(gimbal_nh);
-    ros::NodeHandle shooter_nh(nh, "shooter");
+    ros::NodeHandle shooter_nh(nh, "switcher");
     senders_->shooter_command_sender_ = std::make_unique<rm_common::ShooterCommandSender>(shooter_nh);
     dClient_ = std::make_unique<dynamic_reconfigure::Client<global_planner::GlobalPlannerConfig>>("/move_base_flex/GlobalPlanner");
 
@@ -567,6 +567,9 @@ namespace tools
       ROS_ERROR("ROS can not access key name [main_controllers] in ControllerTools");
       return;
     }
+
+    //----------------------main controllers-------------------
+
     XmlRpc::XmlRpcValue  main_ctrls_xml = controllers_list["main_controllers"];
     ROS_ASSERT(main_ctrls_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
     for (int i = 0; i < main_ctrls_xml.size(); ++i)
@@ -578,6 +581,22 @@ namespace tools
       else
       {
         ROS_ERROR("Element at index %d in main_controllers is not a string!", i);
+      }
+    }
+
+    //--------------------calibration controllers------------------------
+
+    XmlRpc::XmlRpcValue  calibration_ctrls_xml = controllers_list["calibration_controllers"];
+    ROS_ASSERT(main_ctrls_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
+    for (int i = 0; i < calibration_ctrls_xml.size(); ++i)
+    {
+      if (calibration_ctrls_xml[i].getType() == XmlRpc::XmlRpcValue::TypeString)
+      {
+        calibration_controllers_.push_back(static_cast<std::string>(calibration_ctrls_xml[i]));
+      }
+      else
+      {
+        ROS_ERROR("Element at index %d in calibration_controllers is not a string!", i);
       }
     }
   }
@@ -620,6 +639,14 @@ namespace tools
   void ControllerTools::stopMainController()
   {
     for (const auto & controller : main_controllers_)
+    {
+      controller_manager_->stopController(controller);
+    }
+  }
+
+  void ControllerTools::stopCalibrationController()
+  {
+    for (const auto & controller : calibration_controllers_)
     {
       controller_manager_->stopController(controller);
     }
@@ -680,8 +707,7 @@ namespace tools
     cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(scale_yaw, 0.);
-    cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->sendCommand(ros::Time::now());
+    cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
   void GimbalTools::setStackGimbalRate()
@@ -697,8 +723,7 @@ namespace tools
     cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(yaw_direct_, 0.);
-    cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->sendCommand(ros::Time::now());
+    cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
   void GimbalTools::lidarTwist(double yaw_vel , double scan_range_circles)
@@ -737,7 +762,6 @@ namespace tools
   void GimbalTools::setGimbalDirectPoint(geometry_msgs::PointStamped point_of_map)
   {
     geometry_msgs::PointStamped point_of_odom;
-    ros::Time time = ros::Time::now();
     geometry_msgs::TransformStamped odom2map;
     odom2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,perception::TfAccessor::FrameId::MAP);
     tf2::doTransform(point_of_map, point_of_odom, odom2map); //中文语义：将map坐标系的物体转换到odom下
@@ -745,7 +769,7 @@ namespace tools
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
     cmd_tools_.getSenders()->gimbal_command_sender_->setPoint(point_of_odom);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setPoint(point_of_odom);
-    cmd_tools_.sendStackGimbalCommand(time);
+    cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
   void GimbalTools::setStackGimbalTrack()
@@ -756,5 +780,6 @@ namespace tools
     double bullet_speed = cmd_tools_.getSenders()->shooter_command_sender_->getSpeed();
     cmd_tools_.getSenders()->gimbal_command_sender_->setBulletSpeed(bullet_speed);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setBulletSpeed(bullet_speed);
+    cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 }

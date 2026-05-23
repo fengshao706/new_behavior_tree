@@ -30,16 +30,33 @@
 #include "rm_msgs/RadarToSentry.h"
 #include "rm_msgs/DartRemainingTime.h"
 #include <mbf_msgs/MoveBaseAction.h>
-#include "common/tools.h"
 #include "visualization_msgs/Marker.h"
+#include "rm_msgs/ShootCmd.h"
+#include <rm_msgs/ShootBeforehandCmd.h>
+#include <rm_msgs/PowerHeatData.h>
+#include <rm_msgs/PowerManagementSampleAndStatusData.h>
+#include <geometry_msgs/PointStamped.h>
+#include <nav_msgs/Path.h>
+#include <nav_msgs//Odometry.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include "common/tools.h"
+
+namespace tools
+{
+  class CmdTools;
+  class NavigationTools;
+  class MiniMapTools;
+  class GimbalTools;
+}
 
 namespace perception{
-
   class Subscriber
   {
   public:
-    explicit Subscriber(tools::CmdTools& cmd_tools, ros::NodeHandle& nh);
+    Subscriber(tools::CmdTools& cmd_tools , ros::NodeHandle& nh);
 
+    void setNavigationTools(tools::NavigationTools* nav_tools);
     // Thread-safe data access methods
     rm_msgs::TrackData getTrackData() const;
 
@@ -107,8 +124,6 @@ namespace perception{
 
     rm_msgs::SentryInfo getSentryInfoData() const;
 
-    rm_msgs::PowerManagementSampleAndStatusData getPowerManagementSampleAndStatusData_() const;
-
   private:
     void backCameraDetectionCallback(const rm_msgs::TargetDetectionArray::ConstPtr& data);
 
@@ -162,6 +177,7 @@ namespace perception{
     void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
 
     tools::CmdTools& cmd_tools_;
+    tools::NavigationTools* navigation_tools_{nullptr};
 
     ros::Subscriber dbus_sub_;
     ros::Subscriber track_sub_;
@@ -277,6 +293,7 @@ namespace perception{
       ros::Publisher conduct_point_pub_;
       ros::Publisher attacking_target_pub_;
       ros::Publisher marker_pub_;
+      ros::Publisher manual_to_referee_pub_;
     };
 
     Publisher(ros::NodeHandle& bt_nh);

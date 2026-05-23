@@ -3,11 +3,8 @@
 //
 #include <register_node.h>
 #include <behavior_tree/chassis_action_node.h>
-#include "behavior_tree/chassis_condition_node.h"
 #include "behavior_tree/gimbal_action_node.h"
-#include "behavior_tree/gimbal_condition_node.h"
 #include "behavior_tree/shooter_action_node.h"
-#include "behavior_tree/shooter_condition_node.h"
 
 #include "ros/ros.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -20,25 +17,35 @@
 int main(int argc,char * argv[])
 {
   ros::init(argc,argv,"rm_behavior_tree");
-  ros::NodeHandle bt_nh;
-  ros::NodeHandle behavior_tree_nh(bt_nh,"rm_behavior_tree");
+  ros::NodeHandle nh;
+  ros::NodeHandle bt_nh(nh,"rm_behavior_tree");
 
   double wait_time = 3.0;
   std::string file_path = bt_nh.param("xml_file_path", std::string(" "));
   auto blackboard = BT::Blackboard::create();
   SentryParamLoader sentry_param_loader(bt_nh,blackboard);
 
-  tools::CmdTools cmd_tools(behavior_tree_nh);
-  perception::Subscriber subscriber(cmd_tools,bt_nh,*blackboard);
-  BehaviorBase behavior_base(behavior_tree_nh,cmd_tools,subscriber,*blackboard);
+  perception::Publisher publisher(bt_nh);
+  tools::CmdTools cmd_tools(bt_nh , *blackboard);
+  ROS_INFO("---------------------TEST-----------------------");
+  tools::ControllerTools controller_tools(bt_nh);
 
-  manual::SimpleAction manual_action(behavior_tree_nh,cmd_tools,subscriber);
+  perception::Subscriber subscriber(cmd_tools,bt_nh);
+  tools::MiniMapTools mini_map_tools(*blackboard , publisher , subscriber);
+  perception::TfAccessor tf_accessor(bt_nh,subscriber);
+  tools::GimbalTools gimbal_tools(tf_accessor,cmd_tools,bt_nh);
+  tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools);
+  tools::EnableGyroServiceCaller enable_gyro_service_caller(bt_nh);
+  subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
+
+
+  manual::SimpleAction manual_action(bt_nh,cmd_tools,subscriber);
   ROS_INFO("------------------complete------------------------");
   BT::BehaviorTreeFactory factory;
 
-  register_node::register_node(bt_nh,wait_time,blackboard,cmd_tools,subscriber,behavior_base,manual_action,factory);
+  register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,enable_gyro_service_caller, tf_accessor,publisher);
 
-  BT::Tree tree = factory.createTreeFromFile("/home/wjr/2026_rm_ws/src/rm_sentry/decision/new_behavior_tree/config/new_tree.xml",blackboard);
+  BT::Tree tree = factory.createTreeFromFile("/home/wjr/2026_rm_ws/src/rm_sentry/decision/new_behavior_tree/config/untitled_1.xml",blackboard);
   BT::Groot2Publisher groot2_publisher(tree,5555);
   ros::AsyncSpinner spinner(4);
   spinner.start();
@@ -47,6 +54,7 @@ int main(int argc,char * argv[])
   while (ros::ok())
   {
     tree.tickExactlyOnce();
+    controller_tools.ControllerUpdate();
     test += 1;
     if (test >= 50)
     {

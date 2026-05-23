@@ -6,12 +6,8 @@
 #define NEW_BEHAVIOR_TREE_REGITER_NODE_H
 
 #include "behavior_tree/chassis_action_node.h"
-#include "behavior_tree/chassis_condition_node.h"
 #include "behavior_tree/gimbal_action_node.h"
-#include "behavior_tree/gimbal_condition_node.h"
 #include "behavior_tree/shooter_action_node.h"
-#include "behavior_tree/shooter_condition_node.h"
-#include "behavior_tree/manual_condition_node.h"
 #include "behavior_tree/manual_action_node.h"
 #include "ros/ros.h"
 #include "behaviortree_cpp/bt_factory.h"
@@ -20,10 +16,15 @@
 #include "behavior_tree/manual_action_node.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "common/sentry_param_loader.h"
+#include "behavior_tree/common/action_node.h"
+#include "behavior_tree/condition_node.h"
 
 namespace register_node
 {
-  void register_node(ros::NodeHandle &bt_nh , double &wait_time , BT::Blackboard::Ptr &blackboard , tools::CmdTools &cmd_tools , perception::Subscriber &subscriber , BehaviorBase &behavior_base , manual::SimpleAction &manual_action , BT::BehaviorTreeFactory &factory);
+  void register_node(ros::NodeHandle &bt_nh , tools::CmdTools& cmd_tools, perception::Subscriber& subscriber, BT::BehaviorTreeFactory& factory,
+                     tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
+                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools,tools::EnableGyroServiceCaller &enable_gyro_service_caller,
+                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher);
 }
 
 #endif //NEW_BEHAVIOR_TREE_REGITER_NODE_H

@@ -58,6 +58,11 @@ namespace shooter
       cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(time);
       return BT::NodeStatus::RUNNING;
     }
+
+    void onHalted() override
+    {
+
+    }
   private:
     tools::CmdTools &cmd_tools_;
   };
@@ -81,6 +86,13 @@ namespace shooter
       cmd_tools_.getSenders()->shooter_command_sender_->checkError(ros::Time::now());
       cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(ros::Time::now());
       return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      cmd_tools_.getSenders()->shooter_command_sender_->setMode(rm_msgs::ShootCmd::STOP);
+      cmd_tools_.getSenders()->shooter_command_sender_->checkError(ros::Time::now());
+      cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(ros::Time::now());
     }
   private:
     tools::CmdTools &cmd_tools_;
@@ -106,6 +118,13 @@ namespace shooter
       cmd_tools_.getSenders()->shooter_command_sender_->checkError(ros::Time::now());
       cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(time);
       return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      cmd_tools_.getSenders()->shooter_command_sender_->setMode(rm_msgs::ShootCmd::STOP);
+      cmd_tools_.getSenders()->shooter_command_sender_->checkError(ros::Time::now());
+      cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(ros::Time::now());
     }
   private:
     tools::CmdTools &cmd_tools_;

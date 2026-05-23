@@ -209,6 +209,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
+      return BT::NodeStatus::SUCCESS;
     }
 
   private:
@@ -528,17 +529,21 @@ namespace condition_node
   class IsRemoteControlTurnOn : public BT::ConditionNode
   {
   public:
-    IsRemoteControlTurnOn(const std::string &name , const BT::NodeConfig &config , perception::Subscriber &subscriber) : ConditionNode(name , config) , subscriber_(subscriber)
+    IsRemoteControlTurnOn(const std::string &name , const BT::NodeConfig &config , perception::Subscriber &subscriber , tools::ControllerTools &controller_tools) : ConditionNode(name , config) , subscriber_(subscriber) , controller_tools_(controller_tools)
     {
 
     }
 
     BT::NodeStatus tick() override
     {
-      if (ros::Time::now() - subscriber_.getDbusData().stamp < ros::Duration(0.3))
+      if (ros::Time::now() - subscriber_.getDbusData().stamp < ros::Duration(1.0))
       {
+          if (controller_tools_.getControllerManager())//std::unique_ptr类型，当该指针持有对象时返回true，该对象在BasicControl中的构造函数被唯一赋值
+            controller_tools_.startMainController();
+          controller_tools_.calibrate();
         return BT::NodeStatus::SUCCESS;
-      }else
+      }
+      else
       {
         return BT::NodeStatus::FAILURE;
       }
@@ -546,6 +551,7 @@ namespace condition_node
 
   private:
     perception::Subscriber &subscriber_;
+    tools::ControllerTools &controller_tools_;
   };
 }
 

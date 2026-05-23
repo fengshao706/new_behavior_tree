@@ -658,101 +658,101 @@ rm_behavior_tree:
     min_pitch_angle: -0.55
     max_pitch_angle: 0.55
 
-  union:
-    gimbal:
-      topic: "/controllers/gimbal_controller/command"
-      max_yaw_vel: 4.0
-      max_pitch_vel: 1.0
-      track_timeout: 0.5
-      target_cost_function:
-        k_pos: 1.0
-        k_vel: 1.0
-        k_hp: 1.0
-        k_freq: 1.0
-        timeout: 0.05
-    base_gimbal:
-      topic: "/controllers/base_gimbal_controller/command"
-      max_yaw_vel: 4.0
-      max_pitch_vel: 1.0
-      track_timeout: 0.5
-      target_cost_function:
-        k_pos: 1.0
-        k_vel: 1.0
-        k_hp: 1.0
-        k_freq: 1.0
-        timeout: 0.05
-    switcher:
+
+  gimbal:
+    topic: "/controllers/gimbal_controller/command"
+    max_yaw_vel: 4.0
+    max_pitch_vel: 1.0
+    track_timeout: 0.5
+    target_cost_function:
+      k_pos: 1.0
+      k_vel: 1.0
+      k_hp: 1.0
+      k_freq: 1.0
+      timeout: 0.05
+  base_gimbal:
+    topic: "/controllers/base_gimbal_controller/command"
+    max_yaw_vel: 4.0
+    max_pitch_vel: 1.0
+    track_timeout: 0.5
+    target_cost_function:
+      k_pos: 1.0
+      k_vel: 1.0
+      k_hp: 1.0
+      k_freq: 1.0
+      timeout: 0.05
+  switcher:
+    topic: "/controllers/shooter_controller/command"
+    auto_wheel_speed: true
+    target_acceleration_tolerance: 99.0
+    track_armor_error_tolerance: 0.12
+    track_buff_error_tolerance: 0.05
+    speed_30m_per_speed: 23.5
+    wheel_speed_30: 720.0
+    speed_oscillation: 1.0
+    heat_limit:
+      low_shoot_frequency: 20
+      high_shoot_frequency: 20
+      burst_shoot_frequency: 20
+      minimal_shoot_frequency: 10
+      safe_shoot_frequency: 10
+      heat_coeff: 20.0
+      use_local_heat: true
+      type: "ID1_17MM"
+    barrel:
+      topic: "/controllers/barrel_controller/command"
+      joint: "barrel_joint"
+      id1_point: 0.0
+      id2_point: 0.02
+      is_double_barrel: false
+      check_switch_threshold: 0.02
+      check_launch_threshold: 0.02
+      frequency_threshold: 17.0
+      ready_duration: 0.5
+      switching_duration: 0.5
+
+    shooter_ID1:
       topic: "/controllers/shooter_controller/command"
-      auto_wheel_speed: true
-      target_acceleration_tolerance: 99.0
       track_armor_error_tolerance: 0.12
       track_buff_error_tolerance: 0.05
+      target_acceleration_tolerance: 99.0
+      accleration_moving_average_num: 10
       speed_30m_per_speed: 23.5
       wheel_speed_30: 720.0
       speed_oscillation: 1.0
+      auto_wheel_speed: true
       heat_limit:
+        safe_speed_limit: 1
         low_shoot_frequency: 20
         high_shoot_frequency: 20
         burst_shoot_frequency: 20
-        minimal_shoot_frequency: 10
         safe_shoot_frequency: 10
+        heat_tor: 105.0
+        heat_buffer: 22.0
         heat_coeff: 20.0
         use_local_heat: true
         type: "ID1_17MM"
-      barrel:
-        topic: "/controllers/barrel_controller/command"
-        joint: "barrel_joint"
-        id1_point: 0.0
-        id2_point: 0.02
-        is_double_barrel: false
-        check_switch_threshold: 0.02
-        check_launch_threshold: 0.02
-        frequency_threshold: 17.0
-        ready_duration: 0.5
-        switching_duration: 0.5
-
-      shooter_ID1:
-        topic: "/controllers/shooter_controller/command"
-        track_armor_error_tolerance: 0.12
-        track_buff_error_tolerance: 0.05
-        target_acceleration_tolerance: 99.0
-        accleration_moving_average_num: 10
-        speed_30m_per_speed: 23.5
-        wheel_speed_30: 720.0
-        speed_oscillation: 1.0
-        auto_wheel_speed: true
-        heat_limit:
-          safe_speed_limit: 1
-          low_shoot_frequency: 20
-          high_shoot_frequency: 20
-          burst_shoot_frequency: 20
-          safe_shoot_frequency: 10
-          heat_tor: 105.0
-          heat_buffer: 22.0
-          heat_coeff: 20.0
-          use_local_heat: true
-          type: "ID1_17MM"
-      shooter_ID2:
-        topic: "/controllers/shooter_controller/command"
-        track_armor_error_tolerance: 0.12
-        track_buff_error_tolerance: 0.05
-        target_acceleration_tolerance: 99.0
-        accleration_moving_average_num: 10
-        speed_30m_per_speed: 23.5
-        wheel_speed_30: 720.0
-        speed_oscillation: 1.0
-        auto_wheel_speed: true
-        heat_limit:
-          safe_speed_limit: 1
-          low_shoot_frequency: 20
-          high_shoot_frequency: 20
-          burst_shoot_frequency: 20
-          safe_shoot_frequency: 10
-          heat_tor: 105.0
-          heat_buffer: 22.0
-          heat_coeff: 20.0
-          use_local_heat: true
-          type: "ID2_17MM"                                         #upper_limit,lower_limit,up_down_vel,round_vel
+    shooter_ID2:
+      topic: "/controllers/shooter_controller/command"
+      track_armor_error_tolerance: 0.12
+      track_buff_error_tolerance: 0.05
+      target_acceleration_tolerance: 99.0
+      accleration_moving_average_num: 10
+      speed_30m_per_speed: 23.5
+      wheel_speed_30: 720.0
+      speed_oscillation: 1.0
+      auto_wheel_speed: true
+      heat_limit:
+        safe_speed_limit: 1
+        low_shoot_frequency: 20
+        high_shoot_frequency: 20
+        burst_shoot_frequency: 20
+        safe_shoot_frequency: 10
+        heat_tor: 105.0
+        heat_buffer: 22.0
+        heat_coeff: 20.0
+        use_local_heat: true
+        type: "ID2_17MM"                                         #upper_limit,lower_limit,up_down_vel,round_vel
     auto: { pitch: [ 0.0, 0.2, 1.0, 0.8 ],  circle: 2 , breach_threshold: 0.08 }   #0.255438, 0.28, 0.01, 1.0(old)     -0.45438, 0.2, 0.05, 0.8
     #max_small,min_
   detection_switch:

@@ -118,6 +118,11 @@ namespace gimbal
       gimbal_tools_.setGimbalDirectPoint(back_of_map_);
       return BT::NodeStatus::RUNNING;
     }
+
+    void onHalted() override
+    {
+
+    }
   private:
     tools::GimbalTools &gimbal_tools_;
     perception::TfAccessor &tf_accessor_;
@@ -135,15 +140,18 @@ namespace gimbal
 
     BT::NodeStatus onStart() override
     {
-      bullet_speed_ = cmd_tools_.getSenders()->shooter_command_sender_->getSpeed();
       return BT::NodeStatus::RUNNING;
     }
 
     BT::NodeStatus onRunning() override
     {
       gimbal_tools_.setStackGimbalTrack();
-      cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
       return BT::NodeStatus::SUCCESS;
+    }
+
+    void onHalted() override
+    {
+
     }
   private:
     tools::CmdTools &cmd_tools_;

@@ -38,6 +38,13 @@
 #include <common/types.h>
 #include <rm_common/ori_tool.h>
 
+namespace perception
+{
+  class Publisher;
+  class Subscriber;
+  class TfAccessor;
+}
+
 namespace tools
 {
   class EnableGyroServiceCaller : public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
@@ -79,8 +86,6 @@ namespace tools
     CmdTools(ros::NodeHandle& nh , BT::Blackboard &blackboard);
 
     Senders * getSenders() const;
-
-    auto getMbfClient() const;
 
     auto getDClient() const;
 
@@ -273,12 +278,17 @@ namespace tools
      * **/
     void stopMainController();
 
+    /**@brief 用于从参数文件中列出来的calibration_controllers中停止对应的控制器
+     * **/
+    void stopCalibrationController();
+
   private:
     ros::NodeHandle &bt_nh_;
     std::unique_ptr<rm_common::ControllerManager> controller_manager_;
     XmlRpc::XmlRpcValue shooter_calibration_config_;
     std::unique_ptr<rm_common::CalibrationQueue> shooter_calibration_queue_;
     std::vector<std::string> main_controllers_;
+    std::vector<std::string> calibration_controllers_;
   };
 
   class GimbalTools

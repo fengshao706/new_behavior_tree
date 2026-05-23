@@ -546,8 +546,8 @@ namespace chassis
   {
   public:
     ReviveIfDead(const std::string& name, const BT::NodeConfiguration& config, tools::CmdTools &cmd_tools ,perception::Subscriber &subscriber ,
-                 double wait_time , rm_common::ControllerManager &controller_manager , tools::NavigationTools &navigation_tools , tools::ControllerTools &controller_tools)
-      : BT::SyncActionNode(name, config),cmd_tools_(cmd_tools), subscriber_(subscriber) ,wait_time_(wait_time) , controller_manager_(controller_manager) , navigation_tools_(navigation_tools) , controller_tools_(controller_tools) {}
+                   tools::NavigationTools &navigation_tools , tools::ControllerTools &controller_tools)
+      : BT::SyncActionNode(name, config),cmd_tools_(cmd_tools), subscriber_(subscriber)  , navigation_tools_(navigation_tools) , controller_tools_(controller_tools) {}
 
     static BT::PortsList providedPorts()
     {
@@ -567,7 +567,7 @@ namespace chassis
       const ros::Time now = ros::Time::now();
       if (subscriber_.getGameRobotStatus().remain_hp == 0)  // 如果订阅到哨兵的剩余血量为0，则关闭主要控制器
       {
-        controller_manager_.stopMainControllers();
+        controller_tools_.stopMainController();
         is_dead_=true;  // 若血量为零则判定为死亡
         revival_time_ = ros::Time(0.);                    // 等待检测到复活瞬间后重新计时
         setOutput("confirm_respawn",true); // 挂到共享 sentry_cmd，等待后续统一发布
@@ -585,9 +585,9 @@ namespace chassis
           setOutput("self_is_weak",true);//使用黑板向外传值
           setOutput("self_weak_until",now + ros::Duration(30.0));
         }
-        if (now - revival_time_ < ros::Duration(wait_time_))  // 复活后短暂等待+校准
+        if (now - revival_time_ < ros::Duration(0.8))  // 复活后短暂等待+校准
         {
-          controller_tools_.getControllerManager()->startMainControllers();  // 重启主要控制器
+          controller_tools_.startMainController();  // 重启主要控制器
           controller_tools_.calibrate();                                    // 执行校准函数
           cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
           cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame =
@@ -606,8 +606,6 @@ namespace chassis
     perception::Subscriber &subscriber_;
     bool is_dead_{ false };
     ros::Time revival_time_{ 0. };
-    double wait_time_;
-    rm_common::ControllerManager &controller_manager_;
     tools::NavigationTools &navigation_tools_;
     tools::ControllerTools &controller_tools_;
   };

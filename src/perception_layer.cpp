@@ -57,6 +57,10 @@ namespace perception
     game_robot_status_.remain_hp = 400;
   }
 
+  void Subscriber::setNavigationTools(tools::NavigationTools* nav_tools) {
+    navigation_tools_ = nav_tools;
+  }
+
   rm_msgs::TrackData Subscriber::getTrackData() const
   {
     std::lock_guard<std::mutex> lock(track_mutex_);
@@ -242,12 +246,6 @@ namespace perception
     return sentry_info_;
   }
 
-  rm_msgs::PowerManagementSampleAndStatusData Subscriber::getPowerManagementSampleAndStatusData_() const
-  {
-    std::lock_guard<std::mutex> lock(power_management_sample_and_status_data_mutex_);
-    return power_management_sample_and_status_data_;
-  }
-
   void Subscriber::backCameraDetectionCallback(const rm_msgs::TargetDetectionArray::ConstPtr& data)
   {
     if (!data->detections.empty() && !hasBackCameraDetected())
@@ -423,7 +421,7 @@ namespace perception
     mbf_msgs::MoveBaseGoal mbf_goal;
     mbf_goal.target_pose = goal;
     //    cmd_tools_.mbf_client_->waitForServer();
-    cmd_tools_.getMbfClient()->sendGoal(mbf_goal);
+    navigation_tools_->getMbfClient()->sendGoal(mbf_goal);
     //  Debug in rviz
   }
 
@@ -470,6 +468,7 @@ namespace perception
     publishers_->conduct_point_pub_ = bt_nh.advertise<geometry_msgs::PoseStamped>("/conduct_point_in_map", 1);
     publishers_->attacking_target_pub_ = bt_nh.advertise<rm_msgs::SentryAttackingTarget>(
       "/sentry_target_to_referee", 1);
+    publishers_->manual_to_referee_pub_ = bt_nh.advertise<rm_msgs::ManualToReferee>("/manual_to_referee", 1);
   }
 
   Publisher::Pubs* Publisher::getPublishers()

@@ -164,6 +164,11 @@ namespace manual
       return BT::NodeStatus::RUNNING;
     }
 
+    void onHalted() override
+    {
+
+    }
+
   private:
     tools::CmdTools &cmd_tools_;
   };

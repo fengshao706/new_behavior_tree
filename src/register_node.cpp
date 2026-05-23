@@ -6,342 +6,451 @@
 
 namespace register_node
 {
-  void register_node(ros::NodeHandle &bt_nh, double &wait_time ,BT::Blackboard::Ptr& blackboard, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber, BehaviorBase& behavior_base, manual::SimpleAction &manual_action ,BT::BehaviorTreeFactory& factory)
+  void register_node(ros::NodeHandle& bt_nh, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber,
+                     BT::BehaviorTreeFactory& factory,
+                     tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
+                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools, tools::EnableGyroServiceCaller &enable_gyro_service_caller,
+                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher)
   {
-    factory.registerBuilder<chassis::ChassisSlowGyro>("ChassisSlowGyro",
-    [&behavior_base , &cmd_tools](const std::string &name , const BT::NodeConfig &config)
-    {return std::make_unique<chassis::ChassisSlowGyro>(name , config ,behavior_base,cmd_tools);});
-
-    factory.registerBuilder<chassis::AbnormalStillStopAllMotion>("AbnormalStillStopAllMotion",
-      [&behavior_base , &cmd_tools](const std::string &name ,const BT::NodeConfig &config)
-      {return std::make_unique<chassis::AbnormalStillStopAllMotion>(name , config , behavior_base , cmd_tools);});
-
-    factory.registerBuilder<chassis::PatrolAbnormalBackHomeGoal>("PatrolAbnormalBackHomeGoal",
-      [&behavior_base , blackboard , &cmd_tools](const std::string &name ,const BT::NodeConfig &config)
-      {return std::make_unique<chassis::PatrolAbnormalBackHomeGoal>(name , config , behavior_base , *blackboard , cmd_tools);});
-
-    factory.registerBuilder<chassis::PatrolAttackEnemyPositiveArea>("PatrolAttackEnemyPositiveArea" ,
-      [&behavior_base , blackboard ,&cmd_tools](const std::string &name , const BT::NodeConfig &config)
-      {return std::make_unique<chassis::PatrolAttackEnemyPositiveArea>(name , config , behavior_base , *blackboard , cmd_tools);});
-
-      // PatrolOwnOutputArea
-    factory.registerBuilder<chassis::PatrolOwnOutpostArea>("PatrolOwnOutpostArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::PatrolOwnOutpostArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // PatrolEnemyOutpostArea
-    factory.registerBuilder<chassis::PatrolEnemyOutpostArea>("PatrolEnemyOutpostArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::PatrolEnemyOutpostArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // PatrolSentryPatrolArea
-    factory.registerBuilder<chassis::PatrolSentryPatrolArea>("PatrolSentryPatrolArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::PatrolSentryPatrolArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // GotoReturnBloodArea
-    factory.registerBuilder<chassis::GotoReturnBloodArea>("GotoReturnBloodArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GotoReturnBloodArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // PatrolHoleUpArea
-    factory.registerBuilder<chassis::PatrolHoleUpArea>("PatrolHoleUpArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::PatrolHoleUpArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // GotoEnemyBaseArea
-    factory.registerBuilder<chassis::GotoEnemyBaseArea>("GotoEnemyBaseArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GotoEnemyBaseArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // GotoAttackEnemyEngineer
-    factory.registerBuilder<chassis::GotoAttackEnemyEngineer>("GotoAttackEnemyEngineer",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GotoAttackEnemyEngineer>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // PatrolAfterRevivePatrolArea
-    factory.registerBuilder<chassis::PatrolAfterRevivePatrolArea>("PatrolAfterRevivePatrolArea",
-      [&behavior_base, blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::PatrolAfterRevivePatrolArea>(name, config, behavior_base, *blackboard, cmd_tools); });
-
-    // GotoConductPoint
-    factory.registerBuilder<chassis::GotoConductPoint>("GotoConductPoint",
-      [&behavior_base, &cmd_tools, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GotoConductPoint>(name, config, behavior_base, cmd_tools, subscriber); });
-
-    // CreateMbfClient
-    factory.registerBuilder<chassis::CreateMbfClient>("CreateMbfClient",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::CreateMbfClient>(name, config, cmd_tools); });
-
-    // ChaseEnemy
-    factory.registerBuilder<chassis::ChaseEnemy>("ChaseEnemy",
-      [blackboard, &subscriber, &cmd_tools, &bt_nh, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::ChaseEnemy>(name, config, *blackboard, subscriber, cmd_tools, bt_nh, behavior_base); });
-
-    // SetChassisMode
-    factory.registerBuilder<chassis::SetChassisMode>("SetChassisMode",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::SetChassisMode>(name, config, *blackboard); });
-
-    // ReviveIfDead
-    factory.registerBuilder<chassis::ReviveIfDead>("ReviveIfDead",
-      [&cmd_tools, &subscriber, wait_time, blackboard, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::ReviveIfDead>(name, config, cmd_tools, subscriber, wait_time, *blackboard, behavior_base); });
-
-    // SetIsEnableFight
-    factory.registerBuilder<chassis::SetIsEnableFight>("SetIsEnableFight",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::SetIsEnableFight>(name, config, *blackboard); });
-
-    // GetPresentTime
-    factory.registerBuilder<chassis::GetPresentTime>("GetPresentTime",
-      [blackboard, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GetPresentTime>(name, config, *blackboard, subscriber); });
-
-    // GetKeyboardCommand
-    factory.registerBuilder<chassis::GetKeyboardCommand>("GetKeyboardCommand",
-      [blackboard, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::GetKeyboardCommand>(name, config, *blackboard, subscriber); });
-
-    // SetGyroInCombat
-    factory.registerBuilder<chassis::SetGyroInCombat>("SetGyroInCombat",
-      [blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::SetGyroInCombat>(name, config, *blackboard, cmd_tools); });
-
-    // ==================== Condition Nodes Registration ====================
-
-    // IsNavigationReady
-    factory.registerBuilder<chassis::IsNavigationReady>("IsNavigationReady",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsNavigationReady>(name, config, cmd_tools); });
-
-    // IsRefereeOnline
-    factory.registerBuilder<chassis::IsRefereeOnline>("IsRefereeOnline",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsRefereeOnline>(name, config, subscriber); });
-
-    // IsGameInBattle
-    factory.registerBuilder<chassis::IsGameInBattle>("IsGameInBattle",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsGameInBattle>(name, config, subscriber); });
-
-    // IsClientMapUpdate
-    factory.registerBuilder<chassis::IsClientMapUpdate>("IsClientMapUpdate",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsClientMapUpdate>(name, config, subscriber); });
-
-    // IsSentryHpUrgent
-    factory.registerBuilder<chassis::IsSentryHpUrgent>("IsSentryHpUrgent",
-      [&subscriber, blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsSentryHpUrgent>(name, config, subscriber, *blackboard); });
-
-    // IsSentryHpReturnMax
-    factory.registerBuilder<chassis::IsSentryHpReturnMax>("IsSentryHpReturnMax",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsSentryHpReturnMax>(name, config, subscriber); });
-
-    // IsNeedAvoidDrone
-    factory.registerBuilder<chassis::IsNeedAvoidDrone>("IsNeedAvoidDrone",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsNeedAvoidDrone>(name, config, *blackboard); });
-
-    // IsNeedDefenseBase
-    factory.registerBuilder<chassis::IsNeedDefenseBase>("IsNeedDefenseBase",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsNeedDefenseBase>(name, config, *blackboard); });
-
-    // IsTimeRangeCondition
-    factory.registerBuilder<chassis::IsTimeRangeCondition>("IsTimeRangeCondition",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsTimeRangeCondition>(name, config, *blackboard); });
-
-    // IsDefenseBuffBelowTheThreshold
-    factory.registerBuilder<chassis::IsDefenseBuffBelowTheThreshold>("IsDefenseBuffBelowTheThreshold",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsDefenseBuffBelowTheThreshold>(name, config, *blackboard); });
-
-    // IsChasePathFinished
-    factory.registerBuilder<chassis::IsChasePathFinished>("IsChasePathFinished",
-      [blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsChasePathFinished>(name, config, *blackboard, cmd_tools); });
-
-    // IsOwnOutpostHpBeyondTheValue
-    factory.registerBuilder<chassis::IsOwnOutpostHpBeyondTheValue>("IsOwnOutpostHpBeyondTheValue",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsOwnOutpostHpBeyondTheValue>(name, config, *blackboard); });
-
-    // IsInOwnHalfArea
-    factory.registerBuilder<chassis::IsInOwnHalfArea>("IsInOwnHalfArea",
-      [blackboard, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsInOwnHalfArea>(name, config, *blackboard, cmd_tools); });
-
-    // IsBulletsRemain
-    factory.registerBuilder<chassis::IsBulletsRemain>("IsBulletsRemain",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsBulletsRemain>(name, config, subscriber); });
-
-    // CheckTargetType
-    factory.registerBuilder<chassis::CheckTargetType>("CheckTargetType",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::CheckTargetType>(name, config, *blackboard); });
-
-    // CheckGimbalMode
-    factory.registerBuilder<chassis::CheckGimbalMode>("CheckGimbalMode",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::CheckGimbalMode>(name, config, *blackboard); });
-
-    // IsHasRevived
-    factory.registerBuilder<chassis::IsHasRevived>("IsHasRevived",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsHasRevived>(name, config, *blackboard); });
-
-    // IsEnableFight
-    factory.registerBuilder<chassis::IsEnableFight>("IsEnableFight",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsEnableFight>(name, config, *blackboard); });
-
-    // IsEnableHoleUp
-    factory.registerBuilder<chassis::IsEnableHoleUp>("IsEnableHoleUp",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsEnableHoleUp>(name, config, *blackboard); });
-
-    // IsHasEngineerMarked
-    factory.registerBuilder<chassis::IsHasEngineerMarked>("IsHasEngineerMarked",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsHasEngineerMarked>(name, config, subscriber); });
-
-    // IsEngineerAlive
-    factory.registerBuilder<chassis::IsEngineerAlive>("IsEngineerAlive",
-      [blackboard, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsEngineerAlive>(name, config, *blackboard, subscriber); });
-
-    // IsOutpostAlive
-    factory.registerBuilder<chassis::IsOutpostAlive>("IsOutpostAlive",
-      [blackboard, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsOutpostAlive>(name, config, *blackboard, subscriber); });
-
-    // IsReachGoal
-    factory.registerBuilder<chassis::IsReachGoal>("IsReachGoal",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<chassis::IsReachGoal>(name, config, cmd_tools); });
-
-    // ==================== Gimbal Action Nodes Registration ====================
-
-    // SetGimbalMode
-    factory.registerBuilder<gimbal::SetGimbalMode>("SetGimbalMode",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::SetGimbalMode>(name, config, *blackboard); });
-
-    // YawSlowRound
-    factory.registerBuilder<gimbal::YawSlowRound>("YawSlowRound",
-      [blackboard, &cmd_tools, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::YawSlowRound>(name, config, *blackboard, cmd_tools, behavior_base); });
-
-    // LidarTowardsFront
-    factory.registerBuilder<gimbal::LidarTowardsFront>("LidarTowardsFront",
-      [&cmd_tools, &subscriber, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::LidarTowardsFront>(name, config, cmd_tools, subscriber, behavior_base); });
-
-    // RoundSearchEnemy
-    factory.registerBuilder<gimbal::RoundSearchEnemy>("RoundSearchEnemy",
-      [blackboard, &cmd_tools, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::RoundSearchEnemy>(name, config, *blackboard, cmd_tools, behavior_base); });
-
-    // InverseGimbal
-    factory.registerBuilder<gimbal::InverseGimbal>("InverseGimbal",
-      [&behavior_base, &subscriber, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::InverseGimbal>(name, config, behavior_base, subscriber, cmd_tools); });
-
-    // AimOutpost
-    factory.registerBuilder<gimbal::AimOutpost>("AimOutpost",
-      [blackboard, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::AimOutpost>(name, config, *blackboard, behavior_base); });
-
-    // AimBase
-    factory.registerBuilder<gimbal::AimBase>("AimBase",
-      [blackboard, &behavior_base, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::AimBase>(name, config, *blackboard, behavior_base, subscriber); });
-
-    // TrackEnemy
-    factory.registerBuilder<gimbal::TrackEnemy>("TrackEnemy",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::TrackEnemy>(name, config, cmd_tools); });
-
-    // ==================== Gimbal Condition Nodes Registration ====================
-
-    // IsTrackLoss
-    factory.registerBuilder<gimbal::IsTrackLoss>("IsTrackLoss",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::IsTrackLoss>(name, config, *blackboard); });
-
-    // IsNeedInverseGimbal
-    factory.registerBuilder<gimbal::IsNeedInverseGimbal>("IsNeedInverseGimbal",
-      [blackboard, &subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<gimbal::IsNeedInverseGimbal>(name, config, *blackboard, subscriber); });
-
-    // ==================== Shooter Action Nodes Registration ====================
-
-    // SetShooterMode
-    factory.registerBuilder<shooter::SetShooterMode>("SetShooterMode",
-      [blackboard](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::SetShooterMode>(name, config, *blackboard); });
-
-    // ShooterStop
-    factory.registerBuilder<shooter::ShooterStop>("ShooterStop",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::ShooterStop>(name, config, cmd_tools); });
-
-    // ShooterReady
-    factory.registerBuilder<shooter::ShooterReady>("ShooterReady",
-      [&behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::ShooterReady>(name, config, behavior_base); });
-
-    // ShooterPush
-    factory.registerBuilder<shooter::ShooterPush>("ShooterPush",
-      [&cmd_tools](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::ShooterPush>(name, config, cmd_tools); });
-
-    // ==================== Shooter Condition Nodes Registration ====================
-
-    // IsTargetNotInvincible
-    factory.registerBuilder<shooter::IsTargetNotInvincible>("IsTargetNotInvincible",
-      [](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::IsTargetNotInvincible>(name, config); });
-
-    // IsTargetEffective
-    factory.registerBuilder<shooter::IsTargetEffective>("IsTargetEffective",
-      [&subscriber](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<shooter::IsTargetEffective>(name, config, subscriber); });
-
-    // Chassis Control Node
+    factory.registerBuilder<chassis::ChassisSlowGyro>(
+      "ChassisSlowGyro",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::ChassisSlowGyro>(name, config, cmd_tools);
+      });
+
+    factory.registerBuilder<chassis::AbnormalStillStopAllMotion>(
+      "AbnormalStillStopAllMotion",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::AbnormalStillStopAllMotion>(name, config, cmd_tools);
+      });
+
+    factory.registerBuilder<chassis::SetGyroInCombat>(
+      "SetGyroInCombat",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::SetGyroInCombat>(name, config, cmd_tools);
+      });
+
+    // ==================== 2. 依赖 blackboard 和 navigation_tools 的异步/状态节点 ====================
+    // 注：由于构造函数需要传入 BT::Blackboard& 引用，我们通过 *config.blackboard 动态获取当前树实例的黑板。
+
+    factory.registerBuilder<chassis::PatrolAbnormalBackHomeGoal>(
+      "PatrolAbnormalBackHomeGoal",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<
+          chassis::PatrolAbnormalBackHomeGoal>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::PatrolAttackEnemyPositiveArea>(
+      "PatrolAttackEnemyPositiveArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolAttackEnemyPositiveArea>(name, config, *config.blackboard,
+                                                                        navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::PatrolOwnOutpostArea>(
+      "PatrolOwnOutpostArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolOwnOutpostArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::PatrolEnemyOutpostArea>(
+      "PatrolEnemyOutpostArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolEnemyOutpostArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::PatrolSentryPatrolArea>(
+      "PatrolSentryPatrolArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolSentryPatrolArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GotoReturnBloodArea>(
+      "GotoReturnBloodArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoReturnBloodArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::PatrolHoleUpArea>(
+      "PatrolHoleUpArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolHoleUpArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GotoEnemyBaseArea>(
+      "GotoEnemyBaseArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoEnemyBaseArea>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GotoAttackEnemyEngineer>(
+      "GotoAttackEnemyEngineer",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoAttackEnemyEngineer>(name, config, *config.blackboard, navigation_tools);
+      });
+
+    // ==================== 3. 其他混合依赖的导航与感知节点 ====================
+
+    factory.registerBuilder<chassis::GotoConductPoint>(
+      "GotoConductPoint",
+      [&subscriber, &navigation_tools, &mini_map_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoConductPoint>(name, config, subscriber, navigation_tools, mini_map_tools);
+      });
+
+    factory.registerBuilder<chassis::ChaseEnemy>(
+      "ChaseEnemy",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::ChaseEnemy>(name, config, navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GetKeyboardCommand>(
+      "GetKeyboardCommand",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GetKeyboardCommand>(name, config, subscriber);
+      });
+
+    // ==================== 4. 仅依赖黑板的控制节点 ====================
+
+    factory.registerBuilder<chassis::SetChassisMode>(
+      "SetChassisMode",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::SetChassisMode>(name, config, *config.blackboard);
+      });
+
+    factory.registerBuilder<chassis::SetIsEnableFight>(
+      "SetIsEnableFight",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::SetIsEnableFight>(name, config, *config.blackboard);
+      });
+
+    // ==================== 5. 高度复杂依赖节点 (ReviveIfDead) ====================
+
+    factory.registerBuilder<chassis::ReviveIfDead>(
+      "ReviveIfDead",
+      [&cmd_tools, &subscriber, &navigation_tools, &controller_tools](
+      const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::ReviveIfDead>(
+          name, config, cmd_tools, subscriber, navigation_tools, controller_tools);
+      });
+
+    // ==================== 1. 仅依赖黑板的云台控制节点 ====================
+
+    factory.registerBuilder<gimbal::SetGimbalMode>(
+      "SetGimbalMode",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::SetGimbalMode>(name, config, *config.blackboard);
+      });
+
+    // ==================== 2. 依赖 gimbal_tools 的扫描/控制节点 ====================
+
+    factory.registerBuilder<gimbal::YawSlowRound>(
+      "YawSlowRound",
+      [&gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::YawSlowRound>(name, config, gimbal_tools);
+      });
+
+    // ==================== 3. 依赖感知与坐标变换的对敌节点 ====================
+
+    factory.registerBuilder<gimbal::InverseGimbal>(
+      "InverseGimbal",
+      [&gimbal_tools, &subscriber, &tf_accessor](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::InverseGimbal>(name, config, gimbal_tools, subscriber, tf_accessor);
+      });
+
+    factory.registerBuilder<gimbal::TrackEnemy>(
+      "TrackEnemy",
+      [&cmd_tools, &gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::TrackEnemy>(name, config, cmd_tools, gimbal_tools);
+      });
+
+    // ==================== 1. 仅依赖树配置的同步节点 ====================
+
+    factory.registerBuilder<shooter::SetShooterMode>(
+      "SetShooterMode",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<shooter::SetShooterMode>(name, config);
+      });
+
+    // ==================== 2. 依赖 cmd_tools 的异步状态节点 ====================
+
+    factory.registerBuilder<shooter::ShooterStop>(
+      "ShooterStop",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<shooter::ShooterStop>(name, config, cmd_tools);
+      });
+
+    factory.registerBuilder<shooter::ShooterReady>(
+      "ShooterReady",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<shooter::ShooterReady>(name, config, cmd_tools);
+      });
+
+    factory.registerBuilder<shooter::ShooterPush>(
+      "ShooterPush",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<shooter::ShooterPush>(name, config, cmd_tools);
+      });
+
+    // ==================== 1. 注册 状态节点 (StatefulActionNode) ====================
+
+    factory.registerBuilder<manual::RemoteControlTurnOff>(
+      "RemoteControlTurnOff",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<manual::RemoteControlTurnOff>(name, config, cmd_tools);
+      });
+
+    // ==================== 2. 注册 SimpleAction 的成员函数为独立节点 ====================
+    // 提示：需要在注册函数外部或内部先实例化出单例对象 manual_action
+    auto manual_action = std::make_shared<manual::SimpleAction>(bt_nh, cmd_tools, subscriber);
+
+    // 直接将类方法映射为行为树中的 Action 节点
     factory.registerSimpleAction("ManualSendChassisCmd",
-      [&manual_action](BT::TreeNode& leaf) {
-        return manual_action.sendChassisCmd();
-      });
+                                 std::bind(&manual::SimpleAction::sendChassisCmd, manual_action));
 
-    // Gimbal Control Node
     factory.registerSimpleAction("ManualSendGimbalCmd",
-      [&manual_action](BT::TreeNode& leaf) {
-        return manual_action.sendGimbalCmd();
-      });
+                                 std::bind(&manual::SimpleAction::sendGimbalCmd, manual_action));
 
-    // Shooter Control Node
     factory.registerSimpleAction("ManualSendShooterCmd",
-      [&manual_action](BT::TreeNode& leaf) {
-        return manual_action.sendShooterCmd();
+                                 std::bind(&manual::SimpleAction::sendShooterCmd, manual_action));
+
+    // ==================== 仅依赖 controller_tools 的核心控制器节点 ====================
+
+    factory.registerBuilder<StartMainControllers>(
+      "StartMainControllers",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StartMainControllers>(name, config, controller_tools);
       });
 
-    factory.registerBuilder<manual::RemoteControlTurnOff>("RemoteControlTurnOff",
-  [&behavior_base, &cmd_tools](const std::string &name, const BT::NodeConfig &config)
-  { return std::make_unique<manual::RemoteControlTurnOff>(name, config, behavior_base, cmd_tools); });
+    factory.registerBuilder<StopMainControllers>(
+      "StopMainControllers",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StopMainControllers>(name, config, controller_tools);
+      });
 
-    // ==================== Manual Condition Nodes Registration ====================
+    // ==================== 1. 仅依赖 subscriber 的条件节点 ====================
 
-    // IsRemoteControlTurnOn
-    factory.registerBuilder<manual::IsRemoteControlTurnOn>("IsRemoteControlTurnOn",
-      [&subscriber, &behavior_base](const std::string &name, const BT::NodeConfig &config)
-      { return std::make_unique<manual::IsRemoteControlTurnOn>(name, config, subscriber, behavior_base); });
+    factory.registerBuilder<condition_node::IsRefereeOnline>(
+      "IsRefereeOnline",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsRefereeOnline>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsGameInBattle>(
+      "IsGameInBattle",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsGameInBattle>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsClientMapUpdate>(
+      "IsClientMapUpdate",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsClientMapUpdate>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsSentryHpUrgent>(
+      "IsSentryHpUrgent",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsSentryHpUrgent>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsSentryHpReturnMax>(
+      "IsSentryHpReturnMax",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsSentryHpReturnMax>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsTimeRangeCondition>(
+      "IsTimeRangeCondition",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsTimeRangeCondition>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsOwnOutpostHpBeyondTheValue>(
+      "IsOwnOutpostHpBeyondTheValue",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsOwnOutpostHpBeyondTheValue>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsBulletsRemain>(
+      "IsBulletsRemain",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsBulletsRemain>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::CheckTargetType>(
+      "CheckTargetType",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::CheckTargetType>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsHasEngineerMarked>(
+      "IsHasEngineerMarked",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsHasEngineerMarked>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsEngineerAlive>(
+      "IsEngineerAlive",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsEngineerAlive>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsOutpostAlive>(
+      "IsOutpostAlive",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsOutpostAlive>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsTargetEffective>(
+      "IsTargetEffective",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsTargetEffective>(name, config, subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsRemoteControlTurnOn>(
+      "IsRemoteControlTurnOn",
+      [&subscriber , &controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsRemoteControlTurnOn>(name, config, subscriber, controller_tools);
+      });
+
+    // ==================== 2. 依赖黑板的条件节点 ====================
+
+    factory.registerBuilder<condition_node::CheckGimbalMode>(
+      "CheckGimbalMode",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::CheckGimbalMode>(name, config, *config.blackboard);
+      });
+
+    factory.registerBuilder<condition_node::IsNeedInverseGimbal>(
+      "IsNeedInverseGimbal",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsNeedInverseGimbal>(name, config, *config.blackboard, subscriber);
+      });
+
+    // ==================== 3. 无外部依赖（或暂未完工）的条件节点 ====================
+
+    factory.registerBuilder<condition_node::IsNeedAvoidDrone>(
+      "IsNeedAvoidDrone",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsNeedAvoidDrone>(name, config);
+      });
+
+    factory.registerBuilder<condition_node::IsNeedDefenseBase>(
+      "IsNeedDefenseBase",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsNeedDefenseBase>(name, config);
+      });
+
+    factory.registerBuilder<condition_node::IsDefenseBuffBelowTheThreshold>(
+      "IsDefenseBuffBelowTheThreshold",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsDefenseBuffBelowTheThreshold>(name, config);
+      });
+
+    factory.registerBuilder<condition_node::IsInOwnHalfArea>(
+      "IsInOwnHalfArea",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsInOwnHalfArea>(name, config);
+      });
+
+    factory.registerBuilder<condition_node::IsTrackLoss>(
+      "IsTrackLoss",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsTrackLoss>(name, config);
+      });
+
+    factory.registerBuilder<condition_node::IsTargetNotInvincible>(
+      "IsTargetNotInvincible",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsTargetNotInvincible>(name, config);
+      });
+
+    factory.registerBuilder<VisionCalibrate>(
+      "VisionCalibrate",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<VisionCalibrate>(name, config,subscriber);
+      });
+
+    factory.registerBuilder<OutputRightSwitchState>(
+      "OutputRightSwitchState",
+      [&subscriber , &navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<OutputRightSwitchState>(name, config,subscriber,navigation_tools);
+      });
+
+    factory.registerBuilder<SetIdle>(
+      "SetIdle",
+      [&controller_tools , &cmd_tools , &publisher , &enable_gyro_service_caller](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<SetIdle>(name, config,controller_tools,cmd_tools,enable_gyro_service_caller,publisher);
+      });
+
+    factory.registerBuilder<Test1>(
+      "Test1",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<Test1>(name, config);
+      });
+
+    factory.registerBuilder<Test2>(
+      "Test2",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<Test2>(name, config);
+      });
+
   }
 }
 

@@ -21,22 +21,30 @@ class SentryParamLoader  //需在main函数中构造
 public:
   SentryParamLoader(ros::NodeHandle &nh , BT::Blackboard::Ptr & blackboard) : nh(nh) , blackboard_(blackboard)
   {
+    ROS_INFO("1");
     load_robot_color();
+    ROS_INFO("2");
     chassis_behavior_param_load();
+    ROS_INFO("3");
     gimbal_behavior_param_load();
+    ROS_INFO("4");
     chassis_vel_param_load();
+    ROS_INFO("5");
     planner_param_load();
+    ROS_INFO("6");
     get_region_key_points();
+    ROS_INFO("7");
     load_zone_configs();
+    ROS_INFO("8");
     load_default_aim_rank();
+    ROS_INFO("9");
     param_initialization();
   }
 
   void chassis_behavior_param_load()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
-    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(rm_behavior_tree_nh,"chassis_behavior");
-    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
+    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(nh,"chassis_behavior");
+    ros::NodeHandle auto_nh(nh,"auto");
     int trigger_blood_return_hp;
     int trigger_blood_return_hp_without_buff;
     int trigger_run_away_outpost_hp;
@@ -92,10 +100,9 @@ public:
 
   void gimbal_behavior_param_load()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
-    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
-    ros::NodeHandle yaw_nh(rm_behavior_tree_nh, "yaw");
-    ros::NodeHandle gimbal_behavior_nh(rm_behavior_tree_nh, "gimbal_behavior");
+    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle yaw_nh(nh, "yaw");
+    ros::NodeHandle gimbal_behavior_nh(nh, "gimbal_behavior");
 
     double lost_track_tolerant_sec;
     double gimbal_inverse_sec;
@@ -104,14 +111,18 @@ public:
     XmlRpc::XmlRpcValue blue_outpost_positions, red_outpost_positions, red_base_positions, blue_base_positions;
     std::vector<geometry_msgs::PointStamped> blue_outpost_poses, red_outpost_poses, blue_base_poses, red_base_poses;
 
-    auto_nh.getParam("lost_track_tolerant_sec",lost_track_tolerant_sec);
-    yaw_nh.getParam("gimbal_vel_coeff", gimbal_vel_coeff);
-    gimbal_behavior_nh.getParam("blue_outpost_positions", blue_outpost_positions);
-    gimbal_behavior_nh.getParam("red_outpost_positions", red_outpost_positions);
-    gimbal_behavior_nh.getParam("red_base_positions", red_base_positions);
-    gimbal_behavior_nh.getParam("blue_base_positions", blue_base_positions);
-    gimbal_behavior_nh.getParam("gimbal_inverse_sec",gimbal_inverse_sec);
-    gimbal_behavior_nh.getParam("aim_per_point_sec",aim_per_point_sec);
+    if (
+    !auto_nh.getParam("lost_track_tolerant_sec",lost_track_tolerant_sec) ||
+    !yaw_nh.getParam("gimbal_vel_coeff", gimbal_vel_coeff) ||
+    !gimbal_behavior_nh.getParam("blue_outpost_positions", blue_outpost_positions)||
+    !gimbal_behavior_nh.getParam("red_outpost_positions", red_outpost_positions)||
+    !gimbal_behavior_nh.getParam("red_base_positions", red_base_positions)||
+    !gimbal_behavior_nh.getParam("blue_base_positions", blue_base_positions)||
+    !gimbal_behavior_nh.getParam("gimbal_inverse_sec",gimbal_inverse_sec)||
+    !gimbal_behavior_nh.getParam("aim_per_point_sec",aim_per_point_sec))
+    {
+      ROS_ERROR("Gimbal behavior param loader can not access some param");
+    }
 
     for (int i = 0; i < blue_outpost_positions.size(); i++)
     {
@@ -189,8 +200,8 @@ public:
 
   void get_region_key_points() //用于下面的多边形
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
-    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
+
+    ros::NodeHandle auto_nh(nh,"auto");
     XmlRpc::XmlRpcValue region_key_points;
     auto_nh.getParam("region_key_points",region_key_points);
     for (int i = 0; i < region_key_points.size(); i++)
@@ -276,8 +287,7 @@ public:
 
   void load_default_aim_rank()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
-    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
+    ros::NodeHandle auto_nh(nh,"auto");
     XmlRpc::XmlRpcValue default_aim_priority;
     std::vector<int> default_aim_rank;
     auto_nh.getParam("default_aim_priority",default_aim_priority); //TODO : 这里需要使用gtest测试确保类型为数组且=内部的数据为整数
