@@ -3,6 +3,7 @@ rm_behavior_tree:
   init_gyro_state: false
   minimap2map: [ 21.782, 7.478, 3.1415926 ] #----  已更改
   enable_conduct_patrol: true
+  robot_color: "blue"
 
   planner:
     move_gyro_vel: 8.0
@@ -22,13 +23,20 @@ rm_behavior_tree:
       - [ 50.0,99.0 ]
     accel_z:
       - [ 50.0,99.0 ]
+    max_power_limit: 240.0
     safety_power: 100
-    is_new_capacitor: true  #---------
+    standard_power: 80.0
+    disable_cap_gyro_threshold: 0.15
+    enable_cap_gyro_threshold: 0.25
+    enable_use_cap_threshold: 0.25
+    disable_use_cap_threshold: 0.15
+    is_new_capacitor: false  #---------
     capacitor_threshold: 0.3 #---------
     charge_power: 0 #---------
     extra_power: 0 #--------
     burst_power: 220 #---------
     buffer_threshold: 10 #-----------
+    total_burst_time: 5
     power_gain: 0 #------------
   vel:
     topic: "/cmd_vel"
@@ -57,7 +65,7 @@ rm_behavior_tree:
     base_open_time_threshold_after_4min: 15.0
     enemy_urgent_hp: 50
     lost_track_tolerant_sec: 0.18
-    chasing_max_tor_time: 5.0
+    chasing_max_for_time: 5.0
     avoid_drone_time: 30.0
     stop_gyro_delay_time: 1.0
     area_under_stair: [ "rolling_road_area","blue_outpost_area","red_outpost_area" ]
@@ -593,13 +601,9 @@ rm_behavior_tree:
   gimbal_behavior:
     slope_zones: [ ]
     lidar_towards_front_enable: false
-    double_type_params:
-      gimbal_inverse_sec:
-        param: 2.0
-      aim_per_point_sec:
-        param: 0.5
-      fan_aim_sec:
-        param: 8.0
+    gimbal_inverse_sec: 2.0
+    aim_per_point_sec: 0.5
+    fan_aim_sec: 8.0
     blue_outpost_positions: [
       [ 4.554, -5.053, 0.95 ],
       [ 4.554, -5.053, 0.75 ],
@@ -663,6 +667,8 @@ rm_behavior_tree:
     topic: "/controllers/gimbal_controller/command"
     max_yaw_vel: 4.0
     max_pitch_vel: 1.0
+    time_constant_rc: 0.1
+    time_constant_pc: 0.05
     track_timeout: 0.5
     target_cost_function:
       k_pos: 1.0
@@ -675,6 +681,8 @@ rm_behavior_tree:
     max_yaw_vel: 4.0
     max_pitch_vel: 1.0
     track_timeout: 0.5
+    time_constant_rc: 0.1
+    time_constant_pc: 0.05
     target_cost_function:
       k_pos: 1.0
       k_vel: 1.0
@@ -690,6 +698,7 @@ rm_behavior_tree:
     speed_30m_per_speed: 23.5
     wheel_speed_30: 720.0
     speed_oscillation: 1.0
+    max_track_target_vel: 12.0
     heat_limit:
       low_shoot_frequency: 20
       high_shoot_frequency: 20
@@ -698,6 +707,7 @@ rm_behavior_tree:
       safe_shoot_frequency: 10
       heat_coeff: 20.0
       use_local_heat: true
+      local_heat_protect_threshold: 30
       type: "ID1_17MM"
     barrel:
       topic: "/controllers/barrel_controller/command"
@@ -721,6 +731,7 @@ rm_behavior_tree:
       wheel_speed_30: 720.0
       speed_oscillation: 1.0
       auto_wheel_speed: true
+      local_heat_protect_threshold: 30
       heat_limit:
         safe_speed_limit: 1
         low_shoot_frequency: 20
@@ -742,6 +753,7 @@ rm_behavior_tree:
       wheel_speed_30: 720.0
       speed_oscillation: 1.0
       auto_wheel_speed: true
+      local_heat_protect_threshold: 30
       heat_limit:
         safe_speed_limit: 1
         low_shoot_frequency: 20

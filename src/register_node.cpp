@@ -9,7 +9,7 @@ namespace register_node
   void register_node(ros::NodeHandle& bt_nh, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber,
                      BT::BehaviorTreeFactory& factory,
                      tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
-                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools, tools::EnableGyroServiceCaller &enable_gyro_service_caller,
+                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools, tools::PlannerTools &planner_tools,
                      perception::TfAccessor& tf_accessor , perception::Publisher &publisher)
   {
     factory.registerBuilder<chassis::ChassisSlowGyro>(
@@ -219,11 +219,11 @@ namespace register_node
 
     // ==================== 1. 注册 状态节点 (StatefulActionNode) ====================
 
-    factory.registerBuilder<manual::RemoteControlTurnOff>(
+    factory.registerBuilder<RemoteControlTurnOff>(
       "RemoteControlTurnOff",
-      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      [&cmd_tools, &controller_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<manual::RemoteControlTurnOff>(name, config, cmd_tools);
+        return std::make_unique<RemoteControlTurnOff>(name, config, cmd_tools,controller_tools);
       });
 
     // ==================== 2. 注册 SimpleAction 的成员函数为独立节点 ====================
@@ -418,9 +418,9 @@ namespace register_node
 
     factory.registerBuilder<VisionCalibrate>(
       "VisionCalibrate",
-      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      [&subscriber , &bt_nh](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<VisionCalibrate>(name, config,subscriber);
+        return std::make_unique<VisionCalibrate>(name, config,bt_nh , subscriber);
       });
 
     factory.registerBuilder<OutputRightSwitchState>(
@@ -432,9 +432,9 @@ namespace register_node
 
     factory.registerBuilder<SetIdle>(
       "SetIdle",
-      [&controller_tools , &cmd_tools , &publisher , &enable_gyro_service_caller](const std::string& name, const BT::NodeConfig& config)
+      [&controller_tools , &cmd_tools , &publisher , &planner_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<SetIdle>(name, config,controller_tools,cmd_tools,enable_gyro_service_caller,publisher);
+        return std::make_unique<SetIdle>(name, config,controller_tools,cmd_tools,planner_tools,publisher);
       });
 
     factory.registerBuilder<Test1>(

@@ -47,30 +47,6 @@ namespace perception
 
 namespace tools
 {
-  class EnableGyroServiceCaller : public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
-  {
-  public:
-    explicit EnableGyroServiceCaller(ros::NodeHandle& nh);
-
-    void setGyro(double gyro_speed);
-
-    bool isGyro();
-
-    void enable();
-  };
-
-  class SetLimitVelServiceCaller : public rm_common::ServiceCallerBase<rm_msgs::SetLimitVel>
-  {
-  public:
-    explicit SetLimitVelServiceCaller(ros::NodeHandle& nh,const double init_limit_vel);
-
-    void setLimitVel(const double& limit_vel);
-
-    void setSlideWindow(const double slide_window);
-
-    double getLimitVel() const;
-  };
-
   class CmdTools
   {
   public:
@@ -255,6 +231,29 @@ namespace tools
     geometry_msgs::PointStamped track_point_;
     geometry_msgs::PointStamped last_target_at_map_;
     ros::ServiceClient service_client_;
+  };
+
+  class PlannerTools : public rm_common::ServiceCallerBase<rm_msgs::SetLimitVel> , public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
+  {
+  public:
+    PlannerTools(ros::NodeHandle &bt_nh);
+
+    void setLimitVelAndSlideWindow(const float &limit_vel , const float &slide_window);
+
+    double getLimitVel();
+
+    double getSlideWindow();
+
+    void setGyroSpeed(const float& gyro_speed);
+
+    bool isGyro();
+
+  protected:
+    using SetLimitVelBase = rm_common::ServiceCallerBase<rm_msgs::SetLimitVel>;
+    using EnableGyroBase  = rm_common::ServiceCallerBase<rm_msgs::EnableGyro>;
+
+  private:
+
   };
 
   class ControllerTools

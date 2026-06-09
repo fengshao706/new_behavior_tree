@@ -23,7 +23,7 @@ namespace register_node
 {
   void register_node(ros::NodeHandle &bt_nh , tools::CmdTools& cmd_tools, perception::Subscriber& subscriber, BT::BehaviorTreeFactory& factory,
                      tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
-                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools,tools::EnableGyroServiceCaller &enable_gyro_service_caller,
+                     tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools,tools::PlannerTools &planner_tools,
                      perception::TfAccessor& tf_accessor , perception::Publisher &publisher);
 }
 

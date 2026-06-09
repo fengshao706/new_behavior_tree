@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4"
+      main_tree_to_execute="mainTree">
+  <BehaviorTree ID="auto">
+    <AlwaysSuccess/>
+  </BehaviorTree>
+
+  <BehaviorTree ID="mainTree">
+    <ReactiveSequence>
+      <ReactiveFallback>
+        <IsRemoteControlTurnOn/>
+        <RemoteControlTurnOff/>
+      </ReactiveFallback>
+      <IfThenElse>
+        <IsRefereeOnline/>
+        <VisionCalibrate robot_color="{robot_color}"/>
+        <AlwaysSuccess/>
+      </IfThenElse>
+      <OutputRightSwitchState state="{state}"/>
+      <Switch3 case_1="auto"
+               case_2="manual"
+               case_3="idle"
+               variable="{state}">
+        <Test1/>
+        <Parallel failure_count="1"
+                  success_count="-1">
+          <ManualSendChassisCmd/>
+          <ManualSendGimbalCmd/>
+          <ManualSendShooterCmd/>
+        </Parallel>
+        <SetIdle/>
+        <SetIdle/>
+      </Switch3>
+    </ReactiveSequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Condition ID="IsRefereeOnline"
+               editable="true"/>
+    <Condition ID="IsRemoteControlTurnOn"
+               editable="true"/>
+    <Action ID="ManualSendChassisCmd"
+            editable="true"/>
+    <Action ID="ManualSendGimbalCmd"
+            editable="true"/>
+    <Action ID="ManualSendShooterCmd"
+            editable="true"/>
+    <Action ID="OutputRightSwitchState"
+            editable="true">
+      <output_port name="state"
+                   default="{state}"
+                   type="std::string"/>
+    </Action>
+    <Action ID="RemoteControlTurnOff"
+            editable="true"/>
+    <Action ID="SetIdle"
+            editable="true"/>
+    <Action ID="Test1"
+            editable="true"/>
+    <Action ID="VisionCalibrate"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+  </TreeNodesModel>
+
+</root>

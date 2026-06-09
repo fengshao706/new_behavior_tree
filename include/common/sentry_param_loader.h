@@ -19,7 +19,7 @@
 class SentryParamLoader  //需在main函数中构造
 {
 public:
-  SentryParamLoader(ros::NodeHandle &nh , BT::Blackboard::Ptr & blackboard) : nh(nh) , blackboard_(blackboard)
+  SentryParamLoader(ros::NodeHandle & bt_nh , BT::Blackboard::Ptr & blackboard) : bt_nh_(bt_nh) , blackboard_(blackboard)
   {
     ROS_INFO("1");
     load_robot_color();
@@ -43,8 +43,8 @@ public:
 
   void chassis_behavior_param_load()
   {
-    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(nh,"chassis_behavior");
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle chassis_behavior_nh=ros::NodeHandle(bt_nh_,"chassis_behavior");
+    ros::NodeHandle auto_nh(bt_nh_,"auto");
     int trigger_blood_return_hp;
     int trigger_blood_return_hp_without_buff;
     int trigger_run_away_outpost_hp;
@@ -62,23 +62,25 @@ public:
 
     XmlRpc::XmlRpcValue chase_restricted_zones;
     XmlRpc::XmlRpcValue standby_velocity;
-    chassis_behavior_nh.getParam("trigger_blood_return_hp", trigger_blood_return_hp);
-    chassis_behavior_nh.getParam("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
-    chassis_behavior_nh.getParam("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp);//离开前哨站的血量阈值
-    chassis_behavior_nh.getParam("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp);//禁止追击敌人到前哨站区域的血量阈值
-    chassis_behavior_nh.getParam("chase_restricted_zones", chase_restricted_zones);//限制追击的区域
-    chassis_behavior_nh.getParam("max_planning_period",max_planning_period);
-    chassis_behavior_nh.getParam("stand_at_conduct_point_sec",stand_at_conduct_point_sec);
-    chassis_behavior_nh.getParam("chase_freq",chase_freq);
-    chassis_behavior_nh.getParam("chase_distance",chase_distance);
-    chassis_behavior_nh.getParam("chase_tolerance",chase_tolerance);
+    ROS_ASSERT(
+    chassis_behavior_nh.getParam("trigger_blood_return_hp", trigger_blood_return_hp) &&
+    chassis_behavior_nh.getParam("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff) &&
+    chassis_behavior_nh.getParam("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp) &&//离开前哨站的血量阈值
+    chassis_behavior_nh.getParam("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp) &&//禁止追击敌人到前哨站区域的血量阈值
+    chassis_behavior_nh.getParam("chase_restricted_zones", chase_restricted_zones) &&//限制追击的区域
+    chassis_behavior_nh.getParam("max_planning_period",max_planning_period) &&
+    chassis_behavior_nh.getParam("stand_at_conduct_point_sec",stand_at_conduct_point_sec) &&
+    chassis_behavior_nh.getParam("chase_freq",chase_freq) &&
+    chassis_behavior_nh.getParam("chase_distance",chase_distance) &&
+    chassis_behavior_nh.getParam("chase_tolerance",chase_tolerance) == true);
 
-    auto_nh.getParam("avoid_drone_time",avoid_drone_time);
-    auto_nh.getParam("game_total_time",game_total_time);
-    auto_nh.getParam("chasing_max_for_time",chasing_max_for_time);
-    auto_nh.getParam("attack_engineer_enable",attack_engineer_enable);
-    auto_nh.getParam("attack_outpost_enable",attack_outpost_enable);
-    auto_nh.getParam("standby_velocity", standby_velocity);
+    ROS_ASSERT(
+    auto_nh.getParam("avoid_drone_time",avoid_drone_time) &&
+    auto_nh.getParam("game_total_time",game_total_time) &&
+    auto_nh.getParam("chasing_max_for_time",chasing_max_for_time) &&
+    auto_nh.getParam("attack_engineer_enable",attack_engineer_enable) &&
+    auto_nh.getParam("attack_outpost_enable",attack_outpost_enable) &&
+    auto_nh.getParam("standby_velocity", standby_velocity) == true);
 
     blackboard_->set<int>("trigger_blood_return_hp",trigger_blood_return_hp);
     blackboard_->set<int>("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
@@ -100,9 +102,9 @@ public:
 
   void gimbal_behavior_param_load()
   {
-    ros::NodeHandle auto_nh(nh,"auto");
-    ros::NodeHandle yaw_nh(nh, "yaw");
-    ros::NodeHandle gimbal_behavior_nh(nh, "gimbal_behavior");
+    ros::NodeHandle auto_nh(bt_nh_,"auto");
+    ros::NodeHandle yaw_nh(bt_nh_, "yaw");
+    ros::NodeHandle gimbal_behavior_nh(bt_nh_, "gimbal_behavior");
 
     double lost_track_tolerant_sec;
     double gimbal_inverse_sec;
@@ -111,18 +113,15 @@ public:
     XmlRpc::XmlRpcValue blue_outpost_positions, red_outpost_positions, red_base_positions, blue_base_positions;
     std::vector<geometry_msgs::PointStamped> blue_outpost_poses, red_outpost_poses, blue_base_poses, red_base_poses;
 
-    if (
-    !auto_nh.getParam("lost_track_tolerant_sec",lost_track_tolerant_sec) ||
-    !yaw_nh.getParam("gimbal_vel_coeff", gimbal_vel_coeff) ||
-    !gimbal_behavior_nh.getParam("blue_outpost_positions", blue_outpost_positions)||
-    !gimbal_behavior_nh.getParam("red_outpost_positions", red_outpost_positions)||
-    !gimbal_behavior_nh.getParam("red_base_positions", red_base_positions)||
-    !gimbal_behavior_nh.getParam("blue_base_positions", blue_base_positions)||
-    !gimbal_behavior_nh.getParam("gimbal_inverse_sec",gimbal_inverse_sec)||
-    !gimbal_behavior_nh.getParam("aim_per_point_sec",aim_per_point_sec))
-    {
-      ROS_ERROR("Gimbal behavior param loader can not access some param");
-    }
+    ROS_ASSERT(
+    auto_nh.getParam("lost_track_tolerant_sec",lost_track_tolerant_sec) &&
+    yaw_nh.getParam("gimbal_vel_coeff", gimbal_vel_coeff) &&
+    gimbal_behavior_nh.getParam("blue_outpost_positions", blue_outpost_positions) &&
+    gimbal_behavior_nh.getParam("red_outpost_positions", red_outpost_positions) &&
+    gimbal_behavior_nh.getParam("red_base_positions", red_base_positions) &&
+    gimbal_behavior_nh.getParam("blue_base_positions", blue_base_positions) &&
+    gimbal_behavior_nh.getParam("gimbal_inverse_sec",gimbal_inverse_sec) &&
+    gimbal_behavior_nh.getParam("aim_per_point_sec",aim_per_point_sec) == true);
 
     for (int i = 0; i < blue_outpost_positions.size(); i++)
     {
@@ -170,7 +169,7 @@ public:
 
   void chassis_vel_param_load() // TODO : 当前未完成全部参数加载任务
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle rm_behavior_tree_nh(bt_nh_,"rm_behavior_tree");
     ros::NodeHandle chassis_vel_nh=ros::NodeHandle(rm_behavior_tree_nh,"vel");
     double slow_gyro_vel = chassis_vel_nh.param("slow_gyro_vel",0.5);
 
@@ -179,18 +178,21 @@ public:
 
   void planner_param_load()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
-    ros::NodeHandle planner_nh=ros::NodeHandle(rm_behavior_tree_nh,"planner");
+    ros::NodeHandle rm_behavior_tree_nh(bt_nh_,"rm_behavior_tree");
+    ros::NodeHandle planner_nh=ros::NodeHandle(bt_nh_,"planner");
     double default_limit_vel;
     double slope_side_window;
     double default_side_window;
     int neutral_cost;
     int lethal_cost;
-    planner_nh.getParam("default_limit_vel", default_limit_vel);
-    planner_nh.getParam("slope_side_window", slope_side_window);//坡道附近的代价膨胀值
-    planner_nh.getParam("default_side_window", default_side_window);//普通路段的代价膨胀值
-    planner_nh.getParam("neutral_cost", neutral_cost);//可通过区域的代价
-    planner_nh.getParam("lethal_cost", lethal_cost);//不可通过区域的代价
+
+    ROS_ASSERT(
+    planner_nh.getParam("default_limit_vel", default_limit_vel) &&
+    planner_nh.getParam("slope_side_window", slope_side_window) &&//坡道附近的代价膨胀值
+    planner_nh.getParam("default_side_window", default_side_window) &&//普通路段的代价膨胀值
+    planner_nh.getParam("neutral_cost", neutral_cost) &&//可通过区域的代价
+    planner_nh.getParam("lethal_cost", lethal_cost) == true//不可通过区域的代价
+    );
     blackboard_->set<double>("default_limit_vel",default_limit_vel);
     blackboard_->set<double>("slope_side_window",slope_side_window);
     blackboard_->set<double>("default_side_window",default_side_window);
@@ -201,9 +203,9 @@ public:
   void get_region_key_points() //用于下面的多边形
   {
 
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle auto_nh(bt_nh_,"auto");
     XmlRpc::XmlRpcValue region_key_points;
-    auto_nh.getParam("region_key_points",region_key_points);
+    ROS_ASSERT(auto_nh.getParam("region_key_points",region_key_points) == true);
     for (int i = 0; i < region_key_points.size(); i++)
     {
       geometry_msgs::PointStamped region_key_point;
@@ -216,7 +218,7 @@ public:
 
   void load_zone_configs()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
+    ros::NodeHandle rm_behavior_tree_nh(bt_nh_,"rm_behavior_tree");
     ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
     ros::NodeHandle chassis_behavior_nh(rm_behavior_tree_nh,"chassis_behavior");
     XmlRpc::XmlRpcValue zones;
@@ -287,7 +289,7 @@ public:
 
   void load_default_aim_rank()
   {
-    ros::NodeHandle auto_nh(nh,"auto");
+    ros::NodeHandle auto_nh(bt_nh_,"auto");
     XmlRpc::XmlRpcValue default_aim_priority;
     std::vector<int> default_aim_rank;
     auto_nh.getParam("default_aim_priority",default_aim_priority); //TODO : 这里需要使用gtest测试确保类型为数组且=内部的数据为整数
@@ -300,9 +302,9 @@ public:
 
   void load_robot_color()
   {
-    ros::NodeHandle rm_behavior_tree_nh(nh,"rm_behavior_tree");
     std::string color;
-    rm_behavior_tree_nh.getParam("color",color);
+    bt_nh_.getParam("robot_color",color);
+    ROS_ASSERT(color == "blue" || color == "red");
     blackboard_->set<std::string>("robot_color",color);
   }
 
@@ -333,13 +335,13 @@ public:
   void loadMapParam()
   {
     std::vector<double> minimap2map;
-    nh.getParam("minimap2map",minimap2map);
+    bt_nh_.getParam("minimap2map",minimap2map);
     blackboard_->set<std::vector<double>>("minimap2map",minimap2map);
   }
 
 
 private:
-  ros::NodeHandle nh;
+  ros::NodeHandle bt_nh_;
   BT::Blackboard::Ptr blackboard_;
   std::vector<geometry_msgs::PointStamped> region_key_points_;
 };

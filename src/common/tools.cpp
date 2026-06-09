@@ -5,53 +5,6 @@
 
 namespace tools
 {
-  EnableGyroServiceCaller::EnableGyroServiceCaller(ros::NodeHandle& nh) : ServiceCallerBase<rm_msgs::EnableGyro>(
-    nh, "/enable_gyro")
-  {
-    service_.request.gyro_speed = 0.0;
-    callService();
-  }
-
-  void EnableGyroServiceCaller::setGyro(double gyro_speed)
-  {
-    service_.request.gyro_speed = gyro_speed;
-  }
-
-  bool EnableGyroServiceCaller::isGyro()
-  {
-    return service_.response.is_gyro;
-  }
-
-  void EnableGyroServiceCaller::enable()
-  {
-    callService();
-  }
-
-  SetLimitVelServiceCaller::SetLimitVelServiceCaller(ros::NodeHandle& nh, const double init_limit_vel)
-    : ServiceCallerBase<rm_msgs::SetLimitVel>(nh, "/set_limit_vel")
-  {
-    service_.request.limit_vel = init_limit_vel;
-    callService();
-  }
-
-  void SetLimitVelServiceCaller::setLimitVel(const double& limit_vel)
-  {
-    service_.request.limit_vel = limit_vel;
-    //    ROS_INFO("set planner's limit vel: %f", service_.request.limit_vel);
-    callService();
-  }
-
-  void SetLimitVelServiceCaller::setSlideWindow(const double slide_window)
-  {
-    service_.request.slide_window = slide_window;
-    callService();
-  }
-
-  double SetLimitVelServiceCaller::getLimitVel() const
-  {
-    return service_.response.current_limit_vel;
-  }
-
   CmdTools::CmdTools(ros::NodeHandle& nh, BT::Blackboard& blackboard) : tf_listener_(tf_buffer_),
                                                                         blackboard_(blackboard)
   {
@@ -551,6 +504,39 @@ namespace tools
     last_target_at_map_.point.x = 0;
     last_target_at_map_.point.y = 0;
     last_target_at_map_.point.z = 0;
+  }
+
+  PlannerTools::PlannerTools(ros::NodeHandle &bt_nh) : ServiceCallerBase<rm_msgs::SetLimitVel>(bt_nh,"/set_limit_vel") , ServiceCallerBase<rm_msgs::EnableGyro>(bt_nh , "/enable_gyro")
+  {
+
+  }
+
+  void PlannerTools::setLimitVelAndSlideWindow(const float & limit_vel , const float &slide_window)
+  {
+    SetLimitVelBase::service_.request.limit_vel = limit_vel;
+    SetLimitVelBase::service_.request.slide_window = slide_window;
+    SetLimitVelBase::callService();
+  }
+
+  double PlannerTools::getLimitVel()
+  {
+    return SetLimitVelBase::service_.response.current_limit_vel;
+  }
+
+  double PlannerTools::getSlideWindow()
+  {
+    return SetLimitVelBase::service_.response.current_slide_window;
+  }
+
+  void PlannerTools::setGyroSpeed(const float& gyro_speed)
+  {
+    EnableGyroBase::service_.request.gyro_speed = gyro_speed;
+    EnableGyroBase::callService();
+  }
+
+  bool PlannerTools::isGyro()
+  {
+    return EnableGyroBase::service_.response.is_gyro;
   }
 
   ControllerTools::ControllerTools(ros::NodeHandle &bt_nh) : bt_nh_(bt_nh)

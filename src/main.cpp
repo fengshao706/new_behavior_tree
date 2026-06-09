@@ -27,6 +27,7 @@ int main(int argc,char * argv[])
 
   perception::Publisher publisher(bt_nh);
   tools::CmdTools cmd_tools(bt_nh , *blackboard);
+  tools::PlannerTools planner_tools(bt_nh);
   ROS_INFO("---------------------TEST-----------------------");
   tools::ControllerTools controller_tools(bt_nh);
 
@@ -35,7 +36,6 @@ int main(int argc,char * argv[])
   perception::TfAccessor tf_accessor(bt_nh,subscriber);
   tools::GimbalTools gimbal_tools(tf_accessor,cmd_tools,bt_nh);
   tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools);
-  tools::EnableGyroServiceCaller enable_gyro_service_caller(bt_nh);
   subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
 
 
@@ -43,9 +43,9 @@ int main(int argc,char * argv[])
   ROS_INFO("------------------complete------------------------");
   BT::BehaviorTreeFactory factory;
 
-  register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,enable_gyro_service_caller, tf_accessor,publisher);
+  register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,planner_tools, tf_accessor,publisher);
 
-  BT::Tree tree = factory.createTreeFromFile("/home/wjr/2026_rm_ws/src/rm_sentry/decision/new_behavior_tree/config/untitled_1.xml",blackboard);
+  BT::Tree tree = factory.createTreeFromFile("/home/wjr/rmuc_ws/src/rm_sentry/decision/new_behavior_tree/config/untitled_1.xml",blackboard);
   BT::Groot2Publisher groot2_publisher(tree,5555);
   ros::AsyncSpinner spinner(4);
   spinner.start();

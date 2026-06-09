@@ -1,0 +1,28 @@
+<launch>
+    <arg name="robot_type" default="$(env ROBOT_TYPE)" doc="Robot type [standard, hero, engineer , sentry2]"/>
+    <arg name="local_planner_type" default="$(env PLANNER_TYPE)" doc="local planner type [pid, teb]"/>
+    <arg name="enable_controller_manager" default="true"/>
+
+    <rosparam file="$(find new_behavior_tree)/config/sentry2.yaml" command="load" />
+    <rosparam file="$(find rm_config)/config/rm_controllers/$(arg robot_type).yaml" command="load" />
+
+    <node pkg="new_behavior_tree" type="new_behavior_tree" name="new_behavior_tree" output="screen" required="false"
+          respawn="false">
+        <param name="xml_file_path" type="string" value="$(find new_behavior_tree)/config/untitled_1.xml"/>
+        <param name="enable_controller_manager" type="bool" value="$(arg enable_controller_manager)"/>
+    </node>
+
+    <node name="service_processor" pkg="service_processor" type="service_processor">
+
+        <!--        <param name="chase_tolerance" value="0.6"/>-->
+        <param name="trigger_locked_time" value="2.0"/>
+        <param name="trigger_unlocked_time" value="8.0"/>
+        <param name="still_threshold" value="0.2"/>
+        <rosparam file="$(find service_processor)/config/global_costmap.yaml"
+                  command="load"
+                  ns="global_costmap"/>
+        <rosparam file="$(find service_processor)/config/local_costmap.yaml"
+                  command="load"
+                  ns="local_costmap"/>
+    </node>
+</launch>

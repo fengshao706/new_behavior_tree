@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="Project">
+    <include path="untitled_1.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Condition ID="IsRefereeOnline" editable="true"/>
+        <Condition ID="IsRemoteControlTurnOn" editable="true"/>
+        <Action ID="ManualSendChassisCmd" editable="true"/>
+        <Action ID="ManualSendGimbalCmd" editable="true"/>
+        <Action ID="ManualSendShooterCmd" editable="true"/>
+        <Action ID="OutputRightSwitchState" editable="true">
+            <output_port name="state" default="{state}" type="std::string"/>
+        </Action>
+        <Action ID="RemoteControlTurnOff" editable="true"/>
+        <Action ID="SetIdle" editable="true"/>
+        <Action ID="Test1" editable="true"/>
+        <Action ID="Test2" editable="true"/>
+        <Action ID="VisionCalibrate" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+    </TreeNodesModel>
+</root>

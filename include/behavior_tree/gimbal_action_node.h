@@ -108,9 +108,9 @@ namespace gimbal
 
     BT::NodeStatus onStart() override
     {
-      geometry_msgs::TransformStamped map2back_camera;
-      tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::BACK_CAMERA_OPTICAL_FRAME);
+      geometry_msgs::TransformStamped map2back_camera = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::BACK_CAMERA_OPTICAL_FRAME);
       tf2::doTransform(subscriber_.getBackCameraDetection(), back_of_map_, map2back_camera); //获取目标在map上面的位置
+      return BT::NodeStatus::SUCCESS;
     }
 
     BT::NodeStatus onRunning() override

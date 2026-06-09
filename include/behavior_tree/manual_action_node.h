@@ -15,14 +15,14 @@ namespace manual
   class SimpleAction
   {
   public:
-    explicit SimpleAction(ros::NodeHandle& nh, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber)
+    explicit SimpleAction(ros::NodeHandle& bt_nh, tools::CmdTools& cmd_tools, perception::Subscriber& subscriber)
       : cmd_tools_(cmd_tools), subscriber_(subscriber)
     {
-      ros::NodeHandle vel_nh(nh, "vel");
+      ros::NodeHandle vel_nh(bt_nh, "vel");
       if (!vel_nh.getParam("gyro_move_reduction", gyro_move_reduction_))
-        ROS_ERROR("Gyro move reduction no defined (namespace: %s)", nh.getNamespace().c_str());
+        ROS_ERROR("Gyro move reduction no defined (namespace: %s)", bt_nh.getNamespace().c_str());
       if (!vel_nh.getParam("gyro_rotate_reduction", gyro_rotate_reduction_))
-        ROS_ERROR("Gyro rotate reduction no defined (namespace: %s)", nh.getNamespace().c_str());
+        ROS_ERROR("Gyro rotate reduction no defined (namespace: %s)", bt_nh.getNamespace().c_str());
       vel_nh.getParam("still_gyro_vel", still_gyro_vel_);
     }
 
@@ -139,38 +139,6 @@ namespace manual
     double gyro_move_reduction_{1.};
     double gyro_rotate_reduction_{1.};
     double still_gyro_vel_{1.};
-  };
-
-  class RemoteControlTurnOff : public BT::StatefulActionNode
-  {
-  public:
-    RemoteControlTurnOff(const std::string &name , const BT::NodeConfig &config , tools::CmdTools &cmd_tools) : StatefulActionNode(name , config) , cmd_tools_(cmd_tools)
-    {
-
-    }
-
-    BT::NodeStatus onStart() override
-    {
-      return BT::NodeStatus::RUNNING;
-    }
-
-    BT::NodeStatus onRunning() override
-    {
-    //  behavior_base_.controller_manager_.stopMainControllers();
-    //  behavior_base_.controller_manager_.stopCalibrationControllers();
-      cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
-      cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
-      cmd_tools_.getSenders()->shooter_command_sender_->setZero();
-      return BT::NodeStatus::RUNNING;
-    }
-
-    void onHalted() override
-    {
-
-    }
-
-  private:
-    tools::CmdTools &cmd_tools_;
   };
 }
 
