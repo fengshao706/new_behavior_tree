@@ -127,6 +127,39 @@ namespace tools
     //void
   }
 
+  PlannerTools::PlannerTools(ros::NodeHandle &bt_nh) : ServiceCallerBase<rm_msgs::SetLimitVel>(bt_nh,"/set_limit_vel") , ServiceCallerBase<rm_msgs::EnableGyro>(bt_nh , "/enable_gyro")
+  {
+
+  }
+
+  void PlannerTools::setLimitVelAndSlideWindow(const float & limit_vel , const float &slide_window)
+  {
+    SetLimitVelBase::service_.request.limit_vel = limit_vel;
+    SetLimitVelBase::service_.request.slide_window = slide_window;
+    SetLimitVelBase::callService();
+  }
+
+  double PlannerTools::getLimitVel()
+  {
+    return SetLimitVelBase::service_.response.current_limit_vel;
+  }
+
+  double PlannerTools::getSlideWindow()
+  {
+    return SetLimitVelBase::service_.response.current_slide_window;
+  }
+
+  void PlannerTools::setGyroSpeed(const float& gyro_speed)
+  {
+    EnableGyroBase::service_.request.gyro_speed = gyro_speed;
+    EnableGyroBase::callService();
+  }
+
+  bool PlannerTools::isGyro()
+  {
+    return EnableGyroBase::service_.response.is_gyro;
+  }
+
   tf2_ros::Buffer& CmdTools::getTfBuffer()
   {
     return tf_buffer_;
@@ -294,7 +327,7 @@ namespace tools
     return target_pose;
   }
 
-  NavigationTools::NavigationTools(BT::Blackboard& blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools) : blackboard_(blackboard) , subscriber_(subscriber) ,tf_accessor_(tf_viewer), cmd_tools_(cmd_tools)
+  NavigationTools::NavigationTools(BT::Blackboard& blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools , PlannerTools &planner_tools) : blackboard_(blackboard) , subscriber_(subscriber) ,tf_accessor_(tf_viewer), cmd_tools_(cmd_tools) , planner_tools_(planner_tools)
   {
     mbf_client_ = std::make_unique<actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>>("/move_base_flex/move_base", true);
     if (!blackboard_.get<double>("max_planning_period",max_planning_period_))
@@ -335,7 +368,7 @@ namespace tools
     }
   }
 
-  void NavigationTools::patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode)
+  void NavigationTools::patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode , bool move_need_gyro , bool reached_need_gyro)
   {
     ros::Time time = ros::Time::now();
     if (checkMbfClientState())
@@ -351,7 +384,13 @@ namespace tools
                                                              const mbf_msgs::MoveBaseResultConstPtr& result) {
             reachGoalJudgement(state, result);
           });
-
+        if (move_need_gyro == true)
+        {
+          planner_tools_.setGyroSpeed(1.0);
+        }else
+        {
+          planner_tools_.setGyroSpeed(0.0);
+        }
         patrol_state_ = PatrolState::MOVING;
         ROS_INFO_STREAM_THROTTLE(0.5, "Present target point is: " << mbf_goal_.target_pose.pose.position.x << ","
                                                     << mbf_goal_.target_pose.pose.position.y
@@ -362,6 +401,15 @@ namespace tools
       {
         if (patrol_state_ == PatrolState::REACHED) //目标点信息发出去且到达目标，但是没有待够时间以重设has_determined_goal标志位的情况
         {
+          if (reached_need_gyro == true)
+          {
+            cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(0.2);
+            cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(ros::Time::now());
+          }else
+          {
+            cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(0.0);
+            cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(ros::Time::now());
+          }
           if (ros::Time::now() - reach_time_ > ros::Duration(residence_time_at_point))
           {
             if (is_conduct_mode)
@@ -504,39 +552,6 @@ namespace tools
     last_target_at_map_.point.x = 0;
     last_target_at_map_.point.y = 0;
     last_target_at_map_.point.z = 0;
-  }
-
-  PlannerTools::PlannerTools(ros::NodeHandle &bt_nh) : ServiceCallerBase<rm_msgs::SetLimitVel>(bt_nh,"/set_limit_vel") , ServiceCallerBase<rm_msgs::EnableGyro>(bt_nh , "/enable_gyro")
-  {
-
-  }
-
-  void PlannerTools::setLimitVelAndSlideWindow(const float & limit_vel , const float &slide_window)
-  {
-    SetLimitVelBase::service_.request.limit_vel = limit_vel;
-    SetLimitVelBase::service_.request.slide_window = slide_window;
-    SetLimitVelBase::callService();
-  }
-
-  double PlannerTools::getLimitVel()
-  {
-    return SetLimitVelBase::service_.response.current_limit_vel;
-  }
-
-  double PlannerTools::getSlideWindow()
-  {
-    return SetLimitVelBase::service_.response.current_slide_window;
-  }
-
-  void PlannerTools::setGyroSpeed(const float& gyro_speed)
-  {
-    EnableGyroBase::service_.request.gyro_speed = gyro_speed;
-    EnableGyroBase::callService();
-  }
-
-  bool PlannerTools::isGyro()
-  {
-    return EnableGyroBase::service_.response.is_gyro;
   }
 
   ControllerTools::ControllerTools(ros::NodeHandle &bt_nh) : bt_nh_(bt_nh)

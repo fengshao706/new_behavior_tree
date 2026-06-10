@@ -451,6 +451,13 @@ namespace register_node
         return std::make_unique<Test2>(name, config);
       });
 
+    factory.registerBuilder<chassis::PatrolTestArea>(
+      "PatrolTestArea",
+      [&navigation_tools , &planner_tools , &cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::PatrolTestArea>(name, config,navigation_tools , planner_tools,cmd_tools);
+      });
+
   }
 }
 

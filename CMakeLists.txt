@@ -72,6 +72,7 @@ src/perception_layer.cpp src/register_node.cpp include/behavior_tree/common/acti
         include/behavior_tree/common/action_node.h
         include/behavior_tree/condition_node.h
         include/behavior_tree/condition_node.cpp
+        src/common/posture_manager.cpp
 
 )
 

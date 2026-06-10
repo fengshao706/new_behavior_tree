@@ -93,7 +93,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),2.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),2.0,false,false,false);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -139,7 +139,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -178,7 +178,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -224,7 +224,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),10.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),10.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -263,7 +263,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -302,7 +302,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5,false,false,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -341,7 +341,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -387,7 +387,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -433,7 +433,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,true,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -471,7 +471,7 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.patrol(target_pose_,5,true);
+      navigation_tools_.patrol(target_pose_,5,true,false,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -681,6 +681,49 @@ namespace chassis
       return BT::NodeStatus::SUCCESS;
     }
   private:
+    tools::CmdTools &cmd_tools_;
+  };
+
+  class PatrolTestArea : public BT::StatefulActionNode
+  {
+  public:
+    PatrolTestArea(const std::string & name ,const BT::NodeConfig & config  , tools::NavigationTools &navigation_tools , tools::PlannerTools &planner_tools , tools::CmdTools &cmd_tools) : BT::StatefulActionNode(name,config)  , navigation_tools_(navigation_tools) , planner_tools_(planner_tools) , cmd_tools_(cmd_tools)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {  };
+    }
+
+    BT::NodeStatus onStart() override
+    {
+      target_area_name = "test_area";
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      planner_tools_.setLimitVelAndSlideWindow(8.2,0.2);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,false,false);
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      planner_tools_.setLimitVelAndSlideWindow(5.5, 0.2);
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(ros::Time::now());
+    }
+
+  private:
+    std::string robot_color;
+    std::string target_area_name;
+    tools::NavigationTools &navigation_tools_;
+    tools::PlannerTools &planner_tools_;
     tools::CmdTools &cmd_tools_;
   };
 

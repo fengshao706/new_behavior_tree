@@ -2,7 +2,7 @@
 <root BTCPP_format="4"
       main_tree_to_execute="mainTree">
   <BehaviorTree ID="auto">
-    <AlwaysSuccess/>
+    <PatrolTestArea/>
   </BehaviorTree>
 
   <BehaviorTree ID="mainTree">
@@ -21,7 +21,8 @@
                case_2="manual"
                case_3="idle"
                variable="{state}">
-        <Test1/>
+        <SubTree ID="auto"
+                 _autoremap="true"/>
         <Parallel failure_count="1"
                   success_count="-1">
           <ManualSendChassisCmd/>
@@ -52,11 +53,11 @@
                    default="{state}"
                    type="std::string"/>
     </Action>
+    <Action ID="PatrolTestArea"
+            editable="true"/>
     <Action ID="RemoteControlTurnOff"
             editable="true"/>
     <Action ID="SetIdle"
-            editable="true"/>
-    <Action ID="Test1"
             editable="true"/>
     <Action ID="VisionCalibrate"
             editable="true">

@@ -35,7 +35,7 @@ int main(int argc,char * argv[])
   tools::MiniMapTools mini_map_tools(*blackboard , publisher , subscriber);
   perception::TfAccessor tf_accessor(bt_nh,subscriber);
   tools::GimbalTools gimbal_tools(tf_accessor,cmd_tools,bt_nh);
-  tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools);
+  tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools,planner_tools);
   subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
 
 
@@ -47,21 +47,19 @@ int main(int argc,char * argv[])
 
   BT::Tree tree = factory.createTreeFromFile("/home/wjr/rmuc_ws/src/rm_sentry/decision/new_behavior_tree/config/untitled_1.xml",blackboard);
   BT::Groot2Publisher groot2_publisher(tree,5555);
-  ros::AsyncSpinner spinner(4);
-  spinner.start();
-  ros::Rate rate(50);
+  ros::Rate rate(200);
   int test = 0;
   while (ros::ok())
   {
+    ros::spinOnce();
     tree.tickExactlyOnce();
     controller_tools.ControllerUpdate();
     test += 1;
-    if (test >= 50)
+    if (test >= 200)
     {
       ROS_INFO("---------complete a circle------------");
       test = 0;
     }
     rate.sleep();
   }
-  spinner.stop();
 }

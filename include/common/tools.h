@@ -47,6 +47,29 @@ namespace perception
 
 namespace tools
 {
+  class PlannerTools : public rm_common::ServiceCallerBase<rm_msgs::SetLimitVel> , public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
+  {
+  public:
+    PlannerTools(ros::NodeHandle &bt_nh);
+
+    void setLimitVelAndSlideWindow(const float &limit_vel , const float &slide_window);
+
+    double getLimitVel();
+
+    double getSlideWindow();
+
+    void setGyroSpeed(const float& gyro_speed);
+
+    bool isGyro();
+
+  protected:
+    using SetLimitVelBase = rm_common::ServiceCallerBase<rm_msgs::SetLimitVel>;
+    using EnableGyroBase  = rm_common::ServiceCallerBase<rm_msgs::EnableGyro>;
+
+  private:
+
+  };
+
   class CmdTools
   {
   public:
@@ -170,7 +193,7 @@ namespace tools
       TIMEOUT,
     };
 
-    NavigationTools(BT::Blackboard &blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools);
+    NavigationTools(BT::Blackboard &blackboard , perception::Subscriber &subscriber ,perception::TfAccessor &tf_viewer, CmdTools &cmd_tools , PlannerTools &planner_tools);
 
     actionlib::SimpleActionClient<mbf_msgs::MoveBaseAction>* getMbfClient() const;
 
@@ -178,8 +201,10 @@ namespace tools
      *@param point 导航点，常通过getPatrolPoint获得
      *@param residence_time_at_point 在单个点中的停留时间
      *@param is_conduct_mode 是否为云台手指引的点位，该参数影响client map update状态的维护
+     *@param move_need_gyro 导航运动到指定目标的过程中是否需要开启小陀螺
+     *@param reached_need_gyro 哨兵到达目标点并停留的时候是否需要开启小陀螺
      * **/
-    void patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode);
+    void patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode , bool move_need_gyro , bool reached_need_gyro);
 
     /**@brief 用于从all_zones中获取指定patrol_area_name中的巡航点，该函数维护patrol_sequential_index_，
      *通过更改index的方式实现多点巡航
@@ -231,29 +256,7 @@ namespace tools
     geometry_msgs::PointStamped track_point_;
     geometry_msgs::PointStamped last_target_at_map_;
     ros::ServiceClient service_client_;
-  };
-
-  class PlannerTools : public rm_common::ServiceCallerBase<rm_msgs::SetLimitVel> , public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
-  {
-  public:
-    PlannerTools(ros::NodeHandle &bt_nh);
-
-    void setLimitVelAndSlideWindow(const float &limit_vel , const float &slide_window);
-
-    double getLimitVel();
-
-    double getSlideWindow();
-
-    void setGyroSpeed(const float& gyro_speed);
-
-    bool isGyro();
-
-  protected:
-    using SetLimitVelBase = rm_common::ServiceCallerBase<rm_msgs::SetLimitVel>;
-    using EnableGyroBase  = rm_common::ServiceCallerBase<rm_msgs::EnableGyro>;
-
-  private:
-
+    PlannerTools &planner_tools_;
   };
 
   class ControllerTools
