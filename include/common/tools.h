@@ -47,6 +47,12 @@ namespace perception
 
 namespace tools
 {
+  template <typename T>
+  constexpr bool isBetween(const T& x, const T& min, const T& max)
+  {
+    return (x >= min && x < max);
+  }
+
   class PlannerTools : public rm_common::ServiceCallerBase<rm_msgs::SetLimitVel> , public rm_common::ServiceCallerBase<rm_msgs::EnableGyro>
   {
   public:

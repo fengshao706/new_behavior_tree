@@ -2,13 +2,14 @@
 
 namespace posture
 {
-  PostureManager::PostureManager(ros::NodeHandle& nh , BT::Blackboard &blackboard) : blackboard_(blackboard)
+  PostureManager::PostureManager(ros::NodeHandle& bt_nh , BT::Blackboard &blackboard , perception::Publisher &publisher) : blackboard_(blackboard) , publisher_(publisher)
   {
-    ros::NodeHandle posture_nh(nh, "posture_manager");
+    ros::NodeHandle posture_nh(bt_nh, "posture_manager");
     posture_nh.param("switch_cooldown_sec", switch_cooldown_sec_, 5.0);
     posture_nh.param("posture_decay_threshold_sec", posture_decay_threshold_sec_, 180.0);
     posture_nh.param("track_enemy_attack_delay_sec", track_enemy_attack_delay_sec_, 0.0);
     posture_nh.param("track_enemy_attack_hold_after_exit_sec", track_enemy_attack_hold_after_exit_sec_, 5.0);
+    posture_context_ = std::make_unique<PostureContext>();
   }
 
   void PostureManager::makeEffect()
@@ -31,12 +32,7 @@ namespace posture
     }
   }
 
-  bool isRoadArea(const std::string& area)
-  {
-    return area == "road" || area == "rolling_road_area";
-  }
-
-  void PostureManager::update(const PostureContext& ctx)
+  void PostureManager::update()
   {
     const ros::Time now = ros::Time::now();
 
@@ -72,7 +68,7 @@ namespace posture
     }
     posture_state_.was_track_enemy_active = track_enemy_active;
 
-    posture_state_.desired = decideDesired(ctx); //TODO : 需要进一步检查
+    posture_state_.desired = decideDesired();
 
     // 用独立计时器累积当前姿态持续时间，不随冷却时钟重置
     const double elapsed = (now - posture_state_.time_entered_current_mode_).toSec();
@@ -93,13 +89,18 @@ namespace posture
     fillSentryCmd();
   }
 
-  PostureMode PostureManager::decideDesired(const PostureContext& ctx) const
+  PostureContext* PostureManager::getPostureContext()
   {
-    if (!ctx.in_battle || ctx.is_dead)
+    return posture_context_.get();
+  }
+
+  PostureMode PostureManager::decideDesired() const
+  {
+    if (!posture_context_->in_battle || posture_context_->is_dead)
       return PostureMode::Move;
 
-    if (ctx.operator_request_valid)
-      return ctx.operator_requested;
+    if (posture_context_->operator_request_valid)
+      return posture_context_->operator_requested;
 
     if (chassis_mode_ == static_cast<int>(types::ChassisMode::GotoHpReturnArea))
       return PostureMode::Move;
@@ -112,7 +113,7 @@ namespace posture
         return PostureMode::Move;
       return PostureMode::Attack;
     }
-    if (ctx.present_time < 20.0 || ctx.is_in_road_area) //开局和在崎岖路段的时候需要更大的底盘功率
+    if (posture_context_->present_time < 20.0 || posture_context_->is_in_road_area) //开局和在崎岖路段的时候需要更大的底盘功率
       return PostureMode::Move;
     return PostureMode::Defense;
   }
@@ -141,6 +142,6 @@ namespace posture
     // 2026 协议：1=Attack, 2=Defense, 3=Move
     // PostureMode: Move=0, Attack=1, Defense=2
     static constexpr uint8_t kProtocolValue[] = {3, 1, 2};
-    info.sentry_cmd_.posture_cmd = kProtocolValue[postureIndex(info.posture_state_.current)];
+    publisher_.getPublishMsgs()->sentry_cmd.posture_cmd = kProtocolValue[postureIndex(posture_state_.current)];//将姿态命令填充到posture_cmd中，等待并行节点统一发布
   }
 } // namespace posture

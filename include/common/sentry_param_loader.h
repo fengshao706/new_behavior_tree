@@ -337,6 +337,11 @@ public:
     std::vector<double> minimap2map;
     bt_nh_.getParam("minimap2map",minimap2map);
     blackboard_->set<std::vector<double>>("minimap2map",minimap2map);
+
+    ros::NodeHandle pose_sanity_nh(bt_nh_,"pose_sanity");
+    std::vector<double> map_bounds;
+    ROS_ASSERT(pose_sanity_nh.getParam("map_bounds",map_bounds) == true);
+    blackboard_->set<std::vector<double>>("map_bounds",map_bounds);
   }
 
 

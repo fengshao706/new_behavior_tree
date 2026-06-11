@@ -296,12 +296,20 @@ namespace perception{
       ros::Publisher manual_to_referee_pub_;
     };
 
+    struct Msgs
+    {
+      rm_msgs::SentryCmd sentry_cmd;
+    };
+
     Publisher(ros::NodeHandle& bt_nh);
 
     Pubs* getPublishers();
 
+    Msgs* getPublishMsgs();
+
   private:
     std::unique_ptr<Pubs> publishers_;
+    std::unique_ptr<Msgs> publish_msgs;
   };
 
 }

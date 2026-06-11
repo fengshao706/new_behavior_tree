@@ -6,6 +6,7 @@
 #define NEW_BEHAVIOR_TREE_ACTION_NODE_H
 
 #include <ros/ros.h>
+#include <std_srvs/Empty.h>
 #include <behaviortree_cpp/action_node.h>
 #include "common/tools.h"
 #include <rm_common/decision/service_caller.h>
@@ -208,6 +209,75 @@ private:
   tools::CmdTools &cmd_tools_;
   tools::PlannerTools &planner_tools_;
   perception::Publisher &publisher_;
+};
+
+class Relocate : public BT::StatefulActionNode
+{
+public:
+  Relocate(const std::string &name , const BT::NodeConfig &config , ros::NodeHandle &bt_nh) : StatefulActionNode(name , config)
+  {
+    shinji_query_client_ = bt_nh.serviceClient<std_srvs::Empty>("/shinji/query");
+  }
+
+  BT::NodeStatus onStart() override
+  {
+    relocate_status_.store(IDLE);
+    canceled_signal_ = std::make_shared<std::atomic_bool>(false);
+
+    std::thread([this , thread_cancel_signal = canceled_signal_]()
+    {
+      std_srvs::Empty srv;
+      if (!shinji_query_client_.exists())
+      {
+        relocate_status_.store(FAILURE);
+        return;
+      }
+      relocate_status_.store(RUNNING);
+      const bool ok = shinji_query_client_.call(srv);
+      if (thread_cancel_signal->load() == true) //call完之后，若被外部取消，直接返回，不继续传递状态
+      {
+        return;
+      }
+      if (!ok)
+      {
+        relocate_status_.store(FAILURE);
+        ROS_ERROR("shinji_query_client can not get the service respond in Relocate");
+      }
+      else
+      {
+        relocate_status_.store(SUCCESS);
+      }
+    }).detach();
+    return BT::NodeStatus::RUNNING;
+  }
+
+  BT::NodeStatus onRunning() override
+  {
+    switch (relocate_status_)
+    {
+    case IDLE:
+      return BT::NodeStatus::RUNNING;
+    case SUCCESS:
+      return BT::NodeStatus::SUCCESS;
+    case FAILURE:
+      return BT::NodeStatus::FAILURE;
+    case RUNNING:
+      return BT::NodeStatus::RUNNING;
+    }
+    return BT::NodeStatus::SUCCESS;
+  }
+
+  void onHalted() override
+  {
+    relocate_status_.store(IDLE);
+    canceled_signal_->store(true);
+  }
+
+private:
+  enum Status { IDLE, RUNNING, SUCCESS, FAILURE };
+  std::shared_ptr<std::atomic_bool> canceled_signal_;//线程安全
+  std::atomic<Status> relocate_status_{IDLE};
+  ros::ServiceClient shinji_query_client_;
 };
 
 class Test1 : public BT::SyncActionNode

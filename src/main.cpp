@@ -13,6 +13,7 @@
 #include "behavior_tree/manual_action_node.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "common/sentry_param_loader.h"
+#include "common/posture_manager.h"
 
 int main(int argc,char * argv[])
 {
@@ -38,8 +39,8 @@ int main(int argc,char * argv[])
   tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools,planner_tools);
   subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
 
-
   manual::SimpleAction manual_action(bt_nh,cmd_tools,subscriber);
+  posture::PostureManager posture_manager(bt_nh,*blackboard,publisher);
   ROS_INFO("------------------complete------------------------");
   BT::BehaviorTreeFactory factory;
 
@@ -54,6 +55,7 @@ int main(int argc,char * argv[])
     ros::spinOnce();
     tree.tickExactlyOnce();
     controller_tools.ControllerUpdate();
+    posture_manager.update();
     test += 1;
     if (test >= 200)
     {

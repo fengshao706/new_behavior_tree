@@ -5,6 +5,7 @@
 #ifndef NEW_BEHAVIOR_TREE_CHASSIS_ACTION_NODE_H
 #define NEW_BEHAVIOR_TREE_CHASSIS_ACTION_NODE_H
 
+#include <behaviortree_cpp/condition_node.h>
 #include <rm_common/decision/controller_manager.h>
 
 #include "behaviortree_cpp/action_node.h"

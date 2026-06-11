@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <behaviortree_cpp/blackboard.h>
 #include "types.h"
+#include "perception_layer.h"
 
 namespace posture
 {
@@ -67,22 +68,29 @@ namespace posture
   class PostureManager
   {
   public:
-    explicit PostureManager(ros::NodeHandle& nh , BT::Blackboard &blackboard);
+    explicit PostureManager(ros::NodeHandle& bt_nh , BT::Blackboard &blackboard , perception::Publisher &publisher);
 
-    /**@brief 根据当前姿态计算出所处姿态对于机器人性能的影响
+    /**@brief 实时更新姿态，需要在主循环中调用
      * **/
-    void makeEffect();
+    void update();
 
-    void update(const PostureContext& ctx);
-    [[nodiscard]] PostureMode decideDesired(const PostureContext& ctx) const;
-    [[nodiscard]] bool canSwitch(PostureMode from, PostureMode to) const;
-    void fillSentryCmd() const;
+    /**@brief 用于修改posture context的值
+     * **/
+    PostureContext* getPostureContext();
 
   private:
     static constexpr std::size_t postureIndex(const PostureMode mode)
     {
       return static_cast<std::size_t>(mode);
     }
+
+    /**@brief 根据当前姿态计算出所处姿态对于机器人性能的影响
+ * **/
+    void makeEffect();
+
+    [[nodiscard]] PostureMode decideDesired() const;
+    [[nodiscard]] bool canSwitch(PostureMode from, PostureMode to) const;
+    void fillSentryCmd() const;
 
     PostureEffect posture_effect_;
     PostureState posture_state_;
@@ -91,7 +99,9 @@ namespace posture
     double track_enemy_attack_delay_sec_{ 0.0 }; //跟踪到替人敌人后切attack模式的延迟时间
     double track_enemy_attack_hold_after_exit_sec_{ 5.0 };
     BT::Blackboard &blackboard_;
+    perception::Publisher &publisher_;
     int gimbal_mode_{};
     int chassis_mode_{};
+    std::unique_ptr<PostureContext> posture_context_;
   };
 }

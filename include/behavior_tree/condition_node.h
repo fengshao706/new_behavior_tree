@@ -6,6 +6,7 @@
 #define NEW_BEHAVIOR_TREE_CONDITION_NODE_H
 
 #include <behaviortree_cpp/condition_node.h>
+#include <fstream>
 #include "common/types.h"
 
 #include "behaviortree_cpp/action_node.h"
@@ -524,6 +525,44 @@ namespace condition_node
 
   private:
     perception::Subscriber& subscriber_;
+  };
+
+  class IsPoseValid : public BT::ConditionNode
+  {
+  public:
+    IsPoseValid(const std::string &name , const BT::NodeConfig &config ,perception::TfAccessor &tf_accessor) : ConditionNode(name,config) , tf_accessor_(tf_accessor)
+    {
+
+    }
+
+    BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<std::vector<double>>("map_bounds")};
+    }
+
+    BT::NodeStatus tick() override
+    {
+      std::vector<double> map_bounds;
+      getInput("map_bounds",map_bounds);
+      geometry_msgs::TransformStamped cur_in_map =  tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::BASE_LINK,perception::TfAccessor::FrameId::MAP);
+      for (int i = 0; i < map_bounds.size(); i++)
+      {
+        if (!std::isfinite(map_bounds[i]))
+        {
+          ROS_ERROR("map_bounds[%d] must be in finite", i);
+          return BT::NodeStatus::FAILURE;
+        }
+      }
+      if ((tools::isBetween(cur_in_map.transform.translation.x,map_bounds[0],map_bounds[1]) ||
+        tools::isBetween(cur_in_map.transform.translation.y,map_bounds[2],map_bounds[3]) ||
+        tools::isBetween(cur_in_map.transform.translation.z,map_bounds[4],map_bounds[5])) == false)
+      {
+        return BT::NodeStatus::FAILURE;
+      }
+      return BT::NodeStatus::SUCCESS;
+    }
+  private:
+    perception::TfAccessor &tf_accessor_;
   };
 
   class IsRemoteControlTurnOn : public BT::ConditionNode

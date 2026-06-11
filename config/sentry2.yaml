@@ -5,6 +5,18 @@ rm_behavior_tree:
   enable_conduct_patrol: true
   robot_color: "blue"
 
+  pose_sanity:
+    enable: true
+    map_frame: "map"
+    base_frame: "base_link"
+    # Effective valid map bounds in map frame. This is checked before BT area
+    # detection, so obviously corrupt localization such as x=-765 is rejected.
+    # Format: [min_x, max_x, min_y, max_y, min_z, max_z].
+    map_bounds: [ -100.0, 100.0, -100.0, 100.0, -10.0, 10.0 ]
+    bounds_margin: 0.5
+    max_jump_distance: 0.0
+    trigger_relocate: true
+
   planner:
     move_gyro_vel: 8.0
     limit_vel: 0.8

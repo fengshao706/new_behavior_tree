@@ -469,10 +469,17 @@ namespace perception
     publishers_->attacking_target_pub_ = bt_nh.advertise<rm_msgs::SentryAttackingTarget>(
       "/sentry_target_to_referee", 1);
     publishers_->manual_to_referee_pub_ = bt_nh.advertise<rm_msgs::ManualToReferee>("/manual_to_referee", 1);
+
+    publish_msgs = std::make_unique<Msgs>();
   }
 
   Publisher::Pubs* Publisher::getPublishers()
   {
     return publishers_.get();
+  }
+
+  Publisher::Msgs* Publisher::getPublishMsgs()
+  {
+    return publish_msgs.get();
   }
 }

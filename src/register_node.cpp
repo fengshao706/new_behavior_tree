@@ -458,6 +458,19 @@ namespace register_node
         return std::make_unique<chassis::PatrolTestArea>(name, config,navigation_tools , planner_tools,cmd_tools);
       });
 
+    factory.registerBuilder<condition_node::IsPoseValid>(
+      "IsPoseValid",
+      [&tf_accessor](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsPoseValid>(name, config,tf_accessor);
+      });
+
+    factory.registerBuilder<Relocate>(
+      "Relocate",
+      [&bt_nh](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<Relocate>(name, config,bt_nh);
+      });
   }
 }
 
