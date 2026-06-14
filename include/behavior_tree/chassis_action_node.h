@@ -521,95 +521,28 @@ namespace chassis
   class SetChassisMode : public BT::SyncActionNode
   {
   public:
-    SetChassisMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name,config) , blackboard_(blackboard)
+    SetChassisMode(const std::string &name ,const BT::NodeConfig &config) : SyncActionNode(name,config)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return { BT::InputPort<int>("chassis_mode_id") };
+      return { BT::InputPort<int>("input_chassis_mode_id"),
+                BT::OutputPort<int>("chassis_mode")};
     }
 
     BT::NodeStatus tick() override
     {
-      BT::Expected<int> chassis_mode_id = getInput<int>("chassis_mode_id");
-      blackboard_.set<types::ChassisMode>("chassis_mode",static_cast<types::ChassisMode>(chassis_mode_id.value()));
+      BT::Expected<int> input_chassis_mode_id = getInput<int>("input_chassis_mode_id");
+      setOutput<int>("chassis_mode",input_chassis_mode_id.value());
       return BT::NodeStatus::SUCCESS;
     }
 
   private:
-    BT::Blackboard &blackboard_;
+
   };
 
-
-  class ReviveIfDead : public BT::SyncActionNode
-  {
-  public:
-    ReviveIfDead(const std::string& name, const BT::NodeConfiguration& config, tools::CmdTools &cmd_tools ,perception::Subscriber &subscriber ,
-                   tools::NavigationTools &navigation_tools , tools::ControllerTools &controller_tools)
-      : BT::SyncActionNode(name, config),cmd_tools_(cmd_tools), subscriber_(subscriber)  , navigation_tools_(navigation_tools) , controller_tools_(controller_tools) {}
-
-    static BT::PortsList providedPorts()
-    {
-      return {
-        BT::OutputPort<bool>("self_is_weak"),
-        BT::OutputPort<ros::Time>("self_weak_until"),
-        BT::OutputPort<bool>("need_supply"),
-        BT::OutputPort<bool>("has_revived"),
-        BT::OutputPort<bool>("confirm_respawn")
-      };
-
-    }
-
-    BT::NodeStatus tick() override
-    {
-      BT::NodeStatus status = BT::NodeStatus::SUCCESS;
-      const ros::Time now = ros::Time::now();
-      if (subscriber_.getGameRobotStatus().remain_hp == 0)  // 如果订阅到哨兵的剩余血量为0，则关闭主要控制器
-      {
-        controller_tools_.stopMainController();
-        is_dead_=true;  // 若血量为零则判定为死亡
-        revival_time_ = ros::Time(0.);                    // 等待检测到复活瞬间后重新计时
-        setOutput("confirm_respawn",true); // 挂到共享 sentry_cmd，等待后续统一发布
-        setOutput("need_supply",true);  // 死亡后复活是残血，表明复活后需要回家补血
-        navigation_tools_.getMbfClient()->cancelGoal();  // 在机器人"死亡"或复活时，取消之前设定的目标，以防止机器人执行与当前状态不一致的动作例如继续追击等等
-        ROS_INFO_THROTTLE(0.5, "Reviving...");
-        return BT::NodeStatus::FAILURE;
-      }
-      else if (is_dead_ == true) //首次检测到HP从0恢复
-      {
-        setOutput("has_revived",true);  // 设置一个标志表明哨兵的复活过程已经完成
-        if (revival_time_.isZero())
-        {
-          revival_time_ = now;  // 首次检测到 HP 从 0 恢复，开始复活后等待窗口
-          setOutput("self_is_weak",true);//使用黑板向外传值
-          setOutput("self_weak_until",now + ros::Duration(30.0));
-        }
-        if (now - revival_time_ < ros::Duration(0.8))  // 复活后短暂等待+校准
-        {
-          controller_tools_.startMainController();  // 重启主要控制器
-          controller_tools_.calibrate();                                    // 执行校准函数
-          cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
-          cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame =
-              "base_link";                                                                 // 指定命令坐标系为base_link
-          cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(now, false);  // 发送底盘命令
-          ROS_INFO_THROTTLE(0.5, "Calibrating...");
-          return BT::NodeStatus::FAILURE;
-        }
-        is_dead_ = false;
-      }
-      return BT::NodeStatus::SUCCESS;
-    }
-
-  private:
-    tools::CmdTools &cmd_tools_;
-    perception::Subscriber &subscriber_;
-    bool is_dead_{ false };
-    ros::Time revival_time_{ 0. };
-    tools::NavigationTools &navigation_tools_;
-    tools::ControllerTools &controller_tools_;
-  };
 
   class SetIsEnableFight : public BT::SyncActionNode
   {

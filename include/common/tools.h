@@ -149,11 +149,6 @@ namespace tools
 
   geometry_msgs::PoseStamped getZonesPosition(const std::string& area_name,BT::Blackboard &blackboard,int &last_patrol_position_index , bool sequential_patrol_enable , bool & is_complete);
 
-  bool isPointInPolygon(const geometry_msgs::TransformStamped& point,
-                        const std::vector<geometry_msgs::PointStamped>& polygon);
-
-  std::string determinePolygonInWhich(const geometry_msgs::TransformStamped& point , std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>> pos_detection_polygons);
-
   class MiniMapTools
   {
   public:
@@ -223,6 +218,11 @@ namespace tools
      * **/
     void resetPatrolState();
 
+    bool isPointInPolygon(const geometry_msgs::Point& point,
+                        const std::vector<geometry_msgs::PointStamped>& polygon);
+
+    [[nodiscard]]std::string determinePolygonInWhich(const geometry_msgs::Point& point);
+
     /**@brief 用于获取Track所标记的目标在地图上面的位置，并给mbf发送该位置坐标用于追击敌人
      * **/
     bool chase();
@@ -259,6 +259,7 @@ namespace tools
     std::string last_patrol_area_name_{};
     PatrolState patrol_state_ = PatrolState::IDLE;
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
+    std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>> pos_detection_polygons;
     geometry_msgs::PointStamped track_point_;
     geometry_msgs::PointStamped last_target_at_map_;
     ros::ServiceClient service_client_;
@@ -329,7 +330,7 @@ namespace tools
      *@param yaw_vel yaw轴旋转的速度
      *@param scan_range_circles yaw轴将在该圈数限制下来回运动
      * **/
-    void lidarTwist(double yaw_vel , double scan_range_circles);
+    void lidarTwist(double yaw_vel , int scan_range_circles);
 
     /**@brief 该函数用于让云台指向map坐标系下的某个点
      *@param point_of_map map坐标系下的点坐标
@@ -348,7 +349,7 @@ namespace tools
     double traj_pitch_{};
     double max_pitch_angle_{};
     double min_pitch_angle_{};
-    double circle_count_{};
+    int circle_count_{};
     double lidar_twist_last_yaw_{};
     ros::NodeHandle &bt_nh;
   };

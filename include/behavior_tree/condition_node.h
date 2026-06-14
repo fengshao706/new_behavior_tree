@@ -60,9 +60,32 @@ namespace condition_node
     {
     }
 
+    static BT::PortsList providedPorts()
+    {
+      return {BT::OutputPort<int>("chassis_mode")};
+    }
+
     BT::NodeStatus tick() override
     {
       bool is_update = subscriber_.isClientMapUpdate();
+      subscriber_.clearClientMapUpdateState();
+      if (is_update == true)
+      {
+        switch (subscriber_.getClientMapSendData().command_keyboard)
+        {
+        case rm_msgs::ClientMapSendData::KEY_A :
+          setOutput("chassis_mode",19);
+          break;
+        case rm_msgs::ClientMapSendData::KEY_S :
+          setOutput("chassis_mode",14);
+          break;
+        case rm_msgs::ClientMapSendData::KEY_D :
+          setOutput("chassis_mode",13);
+          break;
+        default :
+          ROS_ERROR("input keyboard command is wrong in IsClientMapUpdate");
+        }
+      }
       BT::NodeStatus status = is_update ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
       return status;
     }
@@ -79,7 +102,7 @@ namespace condition_node
     {
     }
 
-    BT::PortsList providedPorts()
+    static BT::PortsList providedPorts()
     {
       return {BT::InputPort<int>("trigger_blood_return_hp")};
     }
@@ -96,26 +119,6 @@ namespace condition_node
       bool is_urgent = subscriber_.getGameRobotStatus().remain_hp < trigger_hp;
       BT::NodeStatus status = is_urgent == true ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 
-      return status;
-    }
-
-  private:
-    perception::Subscriber& subscriber_;
-  };
-
-  class IsSentryHpReturnMax : public BT::ConditionNode
-  {
-  public:
-    IsSentryHpReturnMax(const std::string& name, const BT::NodeConfig& config,
-                        perception::Subscriber& subscriber) : ConditionNode(name, config), subscriber_(subscriber)
-    {
-    }
-
-    BT::NodeStatus tick() override
-    {
-      BT::NodeStatus status = subscriber_.getGameRobotStatus().remain_hp >= subscriber_.getGameRobotStatus().max_hp
-                                ? BT::NodeStatus::SUCCESS
-                                : BT::NodeStatus::FAILURE;
       return status;
     }
 
@@ -357,6 +360,89 @@ namespace condition_node
 
   private:
     perception::Subscriber& subscriber_;
+  };
+
+  class IsHeroInTrapezoid : public BT::ConditionNode
+  {
+  public:
+    IsHeroInTrapezoid(const std::string &name , const BT::NodeConfig &config , perception::Subscriber &subscriber , tools::MiniMapTools &mini_map_tools , tools::NavigationTools &navigation_tools) : ConditionNode(name,config) , subscriber_(subscriber) , mini_map_tools_(mini_map_tools) , navigation_tools_(navigation_tools)
+    {
+
+    }
+
+    BT::NodeStatus tick() override
+    {
+      geometry_msgs::PoseStamped hero_pose;
+      geometry_msgs::Point hero_point;
+      mini_map_tools_.targetPoseTransform(subscriber_.getRobotPositionData().hero_x,subscriber_.getRobotPositionData().hero_y,&hero_pose);
+      hero_point.x = hero_pose.pose.position.x;
+      hero_point.y = hero_pose.pose.position.y;
+      std::string area_name = navigation_tools_.determinePolygonInWhich(hero_point);
+      if (area_name == "trapezoid_area")
+      {
+        return BT::NodeStatus::SUCCESS;
+      }else
+      {
+        return BT::NodeStatus::FAILURE;
+      }
+    }
+  private:
+    perception::Subscriber &subscriber_;
+    tools::MiniMapTools &mini_map_tools_;
+    tools::NavigationTools &navigation_tools_;
+  };
+
+  class IsOwnFortressBeenCap : public BT::ConditionNode
+  {
+  public:
+    IsOwnFortressBeenCap(const std::string &name ,const BT::NodeConfig &config , perception::Subscriber &subscriber) : ConditionNode(name , config) , subscriber_(subscriber)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<int>("capture_status")};
+    }
+
+    BT::NodeStatus tick() override
+    {
+      BT::Expected<int> input_value =  getInput<int>("capture_status");
+      int is_our_robot_capture = input_value.value();
+      if (is_our_robot_capture == 1)//被己方占领
+      {
+        if (subscriber_.getEventData().fortress_point_state == 1)
+        {
+          return BT::NodeStatus::SUCCESS;
+        }else
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+      }else if (is_our_robot_capture == 2)//被对方占领
+      {
+        if (subscriber_.getEventData().fortress_point_state == 2)
+        {
+          return BT::NodeStatus::SUCCESS;
+        }else
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+      }else if (is_our_robot_capture == 3)//被双方占领
+      {
+        if (subscriber_.getEventData().fortress_point_state == 3)
+        {
+          return BT::NodeStatus::SUCCESS;
+        }else
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+      }else
+      {
+        return BT::NodeStatus::SKIPPED;
+      }
+    }
+  private:
+    perception::Subscriber &subscriber_;
   };
 
   class IsOutpostAlive : public BT::ConditionNode

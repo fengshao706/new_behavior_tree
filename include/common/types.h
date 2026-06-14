@@ -11,25 +11,29 @@ namespace types
 {
   enum class ChassisMode
   {
-    ChassisSlowGyro,
-    AbnormalStill,
-    AbnormalBackHome,
-    GotoFirstArea,
-    GotoOwnOutpost,
-    GotoEnemyOutpost,
-    GotoSentryPatrolArea,
-    GotoHpReturnArea,
-    GotoHoleUpArea,
-    GotoAttackEngineer,
-    GotoConductPoint,
-    GotoConductPointAndStand,
-    PatrolAnyArea,
-    GotoBaseDefenseArea,
-    GotoEnemyBase,
-    ConductAbnormalGyro,
-    AvoidDrone,
-    Chase,
-    UnChase
+    ChassisSlowGyro = 0,
+    AbnormalStill = 1,
+    AbnormalBackHome = 2,
+    GotoFirstArea = 3,
+    GotoOwnOutpost = 4,
+    GotoEnemyOutpost = 5,
+    GotoSentryPatrolArea = 6,
+    GotoHpReturnArea = 7,
+    GotoHoleUpArea = 8,
+    GotoAttackEngineer = 9,
+    GotoConductPoint = 10,
+    GotoConductPointAndStand = 11,
+    PatrolAnyArea = 12,
+    GotoBaseDefenseArea = 13,
+    GotoEnemyBase = 14,
+    ConductAbnormalGyro = 15,
+    AvoidDrone = 16,
+    Chase = 17,
+    UnChase = 18,
+    GotoHitEnemyOutpostArea = 19 ,
+    GotoTrapezoidalHighland = 20 ,
+    GotoOwnFortress = 21
+
   };
 
   enum class GimbalMode

@@ -22,14 +22,14 @@ namespace shooter
 
     static BT::PortsList providedPorts()
     {
-      return { BT::InputPort<int>("shooter_mode_id_input"),
-      BT::OutputPort<int>("shooter_mode_id_output")};
+      return { BT::InputPort<int>("input_shooter_mode_id"),
+      BT::OutputPort<int>("shooter_mode")};
     }
 
     BT::NodeStatus tick() override
     {
-      BT::Expected<int> shooter_mode_id = getInput<int>("shooter_mode_id_input");
-      setOutput("shooter_mode_id_output",shooter_mode_id.value());
+      BT::Expected<int> input_shooter_mode_id = getInput<int>("input_shooter_mode_id");
+      setOutput<int>("shooter_mode",input_shooter_mode_id.value());
       return BT::NodeStatus::SUCCESS;
     }
 

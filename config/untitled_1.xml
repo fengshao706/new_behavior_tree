@@ -2,18 +2,65 @@
 <root BTCPP_format="4"
       main_tree_to_execute="mainTree">
   <BehaviorTree ID="auto">
-    <PatrolTestArea/>
+    <IfThenElse>
+      <IsGameInBattle/>
+      <ReactiveSequence>
+        <Sequence>
+          <ReviveIfDead self_is_weak="{self_is_weak}"
+                        self_weak_until="{self_weak_until}"
+                        need_supply="{need_supply}"
+                        has_revived="{has_revived}"
+                        confirm_respawn="{confirm_respawn}"/>
+          <RelieveWeakState need_supply="{need_supply}"
+                            chassis_mode="{chassis_mode}"
+                            need_supply_output="{need_supply}"/>
+        </Sequence>
+        <Inverter>
+          <IsClientMapUpdate chassis_mode="{chassis_mode}"/>
+        </Inverter>
+        <IfThenElse>
+          <Fallback>
+            <IsSentryHpUrgent trigger_blood_return_hp="30"/>
+            <Inverter>
+              <IsBulletsRemain/>
+            </Inverter>
+          </Fallback>
+          <Sequence>
+            <SetChassisMode input_chassis_mode_id="7"
+                            chassis_mode="{chassis_mode}"/>
+            <AlwaysFailure/>
+          </Sequence>
+          <AlwaysSuccess/>
+        </IfThenElse>
+        <SubTree ID="timeBasedDecision"
+                 _autoremap="true"/>
+      </ReactiveSequence>
+      <Sequence>
+        <SetChassisMode input_chassis_mode_id="0"
+                        chassis_mode="{chassis_mode}"/>
+        <SetGimbalMode input_gimbal_mode_id="0"
+                       gimbal_mode="{gimbal_mode}"/>
+        <SetShooterMode input_shooter_mode_id="1"
+                        shooter_mode="{shooter_mode}"/>
+      </Sequence>
+    </IfThenElse>
   </BehaviorTree>
 
   <BehaviorTree ID="mainTree">
     <ReactiveSequence>
       <ReactiveFallback>
-        <IsRemoteControlTurnOn/>
+        <ForceSuccess>
+          <IsRemoteControlTurnOn/>
+        </ForceSuccess>
         <RemoteControlTurnOff/>
       </ReactiveFallback>
       <IfThenElse>
-        <IsRefereeOnline/>
-        <VisionCalibrate robot_color="{robot_color}"/>
+        <ForceSuccess>
+          <IsRefereeOnline/>
+        </ForceSuccess>
+        <RunOnce then_skip="true">
+          <VisionCalibrate robot_color="{robot_color}"/>
+        </RunOnce>
         <AlwaysSuccess/>
       </IfThenElse>
       <OutputRightSwitchState state="{state}"/>
@@ -21,26 +68,110 @@
                case_2="manual"
                case_3="idle"
                variable="{state}">
-        <SubTree ID="auto"
-                 _autoremap="true"/>
-        <Parallel failure_count="1"
-                  success_count="-1">
-          <ManualSendChassisCmd/>
-          <ManualSendGimbalCmd/>
-          <ManualSendShooterCmd/>
-        </Parallel>
+        <SequenceWithMemory>
+          <StartMainControllers/>
+          <SubTree ID="auto"
+                   _autoremap="true"/>
+        </SequenceWithMemory>
+        <SequenceWithMemory>
+          <StartMainControllers/>
+          <Parallel failure_count="1"
+                    success_count="-1">
+            <ManualSendChassisCmd/>
+            <ManualSendGimbalCmd/>
+            <ManualSendShooterCmd/>
+          </Parallel>
+        </SequenceWithMemory>
         <SetIdle/>
         <SetIdle/>
       </Switch3>
     </ReactiveSequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="timeBasedDecision">
+    <ReactiveSequence>
+      <IfThenElse>
+        <IsTimeRangeCondition min_time="0"
+                              max_time="120"
+                              game_total_time="420"/>
+        <ForceFailure>
+          <IfThenElse>
+            <IsOutpostAlive/>
+            <SetChassisMode input_chassis_mode_id="19"
+                            chassis_mode="{chassis_mode}"/>
+            <SetChassisMode input_chassis_mode_id="20"
+                            chassis_mode="{chassis_mode}"/>
+          </IfThenElse>
+        </ForceFailure>
+        <AlwaysSuccess/>
+      </IfThenElse>
+      <IfThenElse>
+        <IsOutpostAlive/>
+        <SetChassisMode input_chassis_mode_id="6"
+                        chassis_mode="{chassis_mode}"/>
+        <IfThenElse>
+          <Fallback>
+            <IsOwnFortressBeenCap capture_status="2"/>
+            <IsOwnFortressBeenCap capture_status="3"/>
+          </Fallback>
+          <SetChassisMode input_chassis_mode_id="13"
+                          chassis_mode="{chassis_mode}"/>
+          <IfThenElse>
+            <IsHeroInTrapezoid/>
+            <SetChassisMode input_chassis_mode_id="20"
+                            chassis_mode="{chassis_mode}"/>
+            <IfThenElse>
+              <IsOwnFortressBeenCap capture_status="1"/>
+              <SetChassisMode input_chassis_mode_id="6"
+                              chassis_mode="{chassis_mode}"/>
+              <SetChassisMode input_chassis_mode_id="21"
+                              chassis_mode="{chassis_mode}"/>
+            </IfThenElse>
+          </IfThenElse>
+        </IfThenElse>
+      </IfThenElse>
+    </ReactiveSequence>
+  </BehaviorTree>
+
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Condition ID="IsBulletsRemain"
+               editable="true"/>
+    <Condition ID="IsClientMapUpdate"
+               editable="true">
+      <output_port name="chassis_mode"
+                   default="{chassis_mode}"
+                   type="int"/>
+    </Condition>
+    <Condition ID="IsGameInBattle"
+               editable="true"/>
+    <Condition ID="IsHeroInTrapezoid"
+               editable="true"/>
+    <Condition ID="IsOutpostAlive"
+               editable="true"/>
+    <Condition ID="IsOwnFortressBeenCap"
+               editable="true">
+      <input_port name="capture_status"
+                  type="int"/>
+    </Condition>
     <Condition ID="IsRefereeOnline"
                editable="true"/>
     <Condition ID="IsRemoteControlTurnOn"
                editable="true"/>
+    <Condition ID="IsSentryHpUrgent"
+               editable="true">
+      <input_port name="trigger_blood_return_hp"
+                  type="int"/>
+    </Condition>
+    <Condition ID="IsTimeRangeCondition"
+               editable="true">
+      <input_port name="min_time"
+                  type="double"/>
+      <input_port name="max_time"
+                  type="double"/>
+      <input_port name="game_total_time"
+                  type="double"/>
+    </Condition>
     <Action ID="ManualSendChassisCmd"
             editable="true"/>
     <Action ID="ManualSendGimbalCmd"
@@ -53,11 +184,65 @@
                    default="{state}"
                    type="std::string"/>
     </Action>
-    <Action ID="PatrolTestArea"
-            editable="true"/>
+    <Action ID="RelieveWeakState"
+            editable="true">
+      <input_port name="need_supply"
+                  default="{need_supply}"
+                  type="bool"/>
+      <output_port name="chassis_mode"
+                   default="{chassis_mode}"
+                   type="int"/>
+      <output_port name="need_supply_output"
+                   default="{need_supply}"
+                   type="bool"/>
+    </Action>
     <Action ID="RemoteControlTurnOff"
             editable="true"/>
+    <Action ID="ReviveIfDead"
+            editable="true">
+      <output_port name="self_is_weak"
+                   default="{self_is_weak}"
+                   type="bool"/>
+      <output_port name="self_weak_until"
+                   default="{self_weak_until}"
+                   type="ros::Time"/>
+      <output_port name="need_supply"
+                   default="{need_supply}"
+                   type="bool"/>
+      <output_port name="has_revived"
+                   default="{has_revived}"
+                   type="bool"/>
+      <output_port name="confirm_respawn"
+                   default="{confirm_respawn}"
+                   type="bool"/>
+    </Action>
+    <Action ID="SetChassisMode"
+            editable="true">
+      <input_port name="input_chassis_mode_id"
+                  type="int"/>
+      <output_port name="chassis_mode"
+                   default="{chassis_mode}"
+                   type="int"/>
+    </Action>
+    <Action ID="SetGimbalMode"
+            editable="true">
+      <input_port name="input_gimbal_mode_id"
+                  type="int"/>
+      <output_port name="gimbal_mode"
+                   default="{gimbal_mode}"
+                   type="int"/>
+    </Action>
     <Action ID="SetIdle"
+            editable="true"/>
+    <Action ID="SetShooterMode"
+            editable="true">
+      <input_port name="input_shooter_mode_id"
+                  type="int"/>
+      <output_port name="shooter_mode"
+                   default="{shooter_mode}"
+                   type="int"/>
+    </Action>
+    <Action ID="StartMainControllers"
             editable="true"/>
     <Action ID="VisionCalibrate"
             editable="true">

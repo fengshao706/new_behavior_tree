@@ -130,7 +130,7 @@ namespace register_node
       "SetChassisMode",
       [](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<chassis::SetChassisMode>(name, config, *config.blackboard);
+        return std::make_unique<chassis::SetChassisMode>(name, config);
       });
 
     factory.registerBuilder<chassis::SetIsEnableFight>(
@@ -142,12 +142,12 @@ namespace register_node
 
     // ==================== 5. 高度复杂依赖节点 (ReviveIfDead) ====================
 
-    factory.registerBuilder<chassis::ReviveIfDead>(
+    factory.registerBuilder<ReviveIfDead>(
       "ReviveIfDead",
       [&cmd_tools, &subscriber, &navigation_tools, &controller_tools](
       const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<chassis::ReviveIfDead>(
+        return std::make_unique<ReviveIfDead>(
           name, config, cmd_tools, subscriber, navigation_tools, controller_tools);
       });
 
@@ -157,16 +157,16 @@ namespace register_node
       "SetGimbalMode",
       [](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::SetGimbalMode>(name, config, *config.blackboard);
+        return std::make_unique<gimbal::SetGimbalMode>(name, config);
       });
 
     // ==================== 2. 依赖 gimbal_tools 的扫描/控制节点 ====================
 
     factory.registerBuilder<gimbal::YawSlowRound>(
       "YawSlowRound",
-      [&gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      [&gimbal_tools , &cmd_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::YawSlowRound>(name, config, gimbal_tools);
+        return std::make_unique<gimbal::YawSlowRound>(name, config, gimbal_tools,cmd_tools);
       });
 
     // ==================== 3. 依赖感知与坐标变换的对敌节点 ====================
@@ -225,21 +225,6 @@ namespace register_node
       {
         return std::make_unique<RemoteControlTurnOff>(name, config, cmd_tools,controller_tools);
       });
-
-    // ==================== 2. 注册 SimpleAction 的成员函数为独立节点 ====================
-    // 提示：需要在注册函数外部或内部先实例化出单例对象 manual_action
-    auto manual_action = std::make_shared<manual::SimpleAction>(bt_nh, cmd_tools, subscriber);
-
-    // 直接将类方法映射为行为树中的 Action 节点
-    factory.registerSimpleAction("ManualSendChassisCmd",
-                                 std::bind(&manual::SimpleAction::sendChassisCmd, manual_action));
-
-    factory.registerSimpleAction("ManualSendGimbalCmd",
-                                 std::bind(&manual::SimpleAction::sendGimbalCmd, manual_action));
-
-    factory.registerSimpleAction("ManualSendShooterCmd",
-                                 std::bind(&manual::SimpleAction::sendShooterCmd, manual_action));
-
     // ==================== 仅依赖 controller_tools 的核心控制器节点 ====================
 
     factory.registerBuilder<StartMainControllers>(
@@ -284,13 +269,6 @@ namespace register_node
       [&subscriber](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<condition_node::IsSentryHpUrgent>(name, config, subscriber);
-      });
-
-    factory.registerBuilder<condition_node::IsSentryHpReturnMax>(
-      "IsSentryHpReturnMax",
-      [&subscriber](const std::string& name, const BT::NodeConfig& config)
-      {
-        return std::make_unique<condition_node::IsSentryHpReturnMax>(name, config, subscriber);
       });
 
     factory.registerBuilder<condition_node::IsTimeRangeCondition>(
@@ -470,6 +448,48 @@ namespace register_node
       [&bt_nh](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<Relocate>(name, config,bt_nh);
+      });
+
+    factory.registerBuilder<RelieveWeakState>(
+      "RelieveWeakState",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<RelieveWeakState>(name, config,subscriber);
+      });
+
+    factory.registerBuilder<condition_node::IsHeroInTrapezoid>(
+      "IsHeroInTrapezoid",
+      [&subscriber,&mini_map_tools,&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsHeroInTrapezoid>(name, config,subscriber,mini_map_tools,navigation_tools);
+      });
+
+    factory.registerBuilder<condition_node::IsOwnFortressBeenCap>(
+      "IsOwnFortressBeenCap",
+      [&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsOwnFortressBeenCap>(name, config,subscriber);
+      });
+
+    factory.registerBuilder<manual::ManualSendChassisCmd>(
+      "ManualSendChassisCmd",
+      [&cmd_tools,&subscriber,&bt_nh](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<manual::ManualSendChassisCmd>(name, config,cmd_tools,subscriber,bt_nh);
+      });
+
+    factory.registerBuilder<manual::ManualSendGimbalCmd>(
+      "ManualSendGimbalCmd",
+      [&cmd_tools,&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<manual::ManualSendGimbalCmd>(name, config,cmd_tools,subscriber);
+      });
+
+    factory.registerBuilder<manual::ManualSendShooterCmd>(
+      "ManualSendShooterCmd",
+      [&cmd_tools,&subscriber](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<manual::ManualSendShooterCmd>(name, config,cmd_tools,subscriber);
       });
   }
 }

@@ -191,47 +191,6 @@ namespace tools
     }
   }
 
-  bool isPointInPolygon(const geometry_msgs::TransformStamped& point,
-                        const std::vector<geometry_msgs::PointStamped>& polygon)
-  {
-    int n = polygon.size();
-    int count = 0;
-    for (int i = 0; i < n; ++i)
-    {
-      if (point.transform.translation.x == polygon[i].point.x && point.transform.translation.y == polygon[i].point.y)
-        return true;
-      if (point.transform.translation.x == polygon[(i + 1) % n].point.x &&
-        point.transform.translation.y == polygon[(i + 1) % n].point.y)
-        return true;
-
-      if ((point.transform.translation.y < polygon[i].point.y) !=
-        (point.transform.translation.y < polygon[(i + 1) % n].point.y))
-      {
-        double x = (polygon[(i + 1) % n].point.x - polygon[i].point.x) *
-          (point.transform.translation.y - polygon[i].point.y) /
-          (polygon[(i + 1) % n].point.y - polygon[i].point.y) +
-          polygon[i].point.x;
-        if (x > point.transform.translation.x)
-          count++;
-        else if (x == point.transform.translation.x)
-          return true;
-      }
-    }
-    return count % 2 == 1;
-  }
-
-  std::string determinePolygonInWhich(const geometry_msgs::TransformStamped& point,
-                                      std::unordered_map<std::string, std::vector<geometry_msgs::PointStamped>>
-                                      pos_detection_polygons)
-  {
-    for (const auto& pair : pos_detection_polygons)
-    {
-      if (isPointInPolygon(point, pair.second))
-        return pair.first;
-    }
-    return "unknown";
-  }
-
   MiniMapTools::MiniMapTools(BT::Blackboard& blackboard, perception::Publisher& publisher,
                              perception::Subscriber& subscriber) : blackboard_(blackboard), publisher_(publisher),
                                                                    subscriber_(subscriber) //用于构造旋转矩阵
@@ -338,6 +297,10 @@ namespace tools
     if (!blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones",all_zones))
     {
       ROS_ERROR("BT can not access key name [all_zones] , no default param");
+    }
+    if (!blackboard_.get<std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>>>("pos_detection_polygons",pos_detection_polygons))
+    {
+      ROS_ERROR("BT can not access key name [pos_detection_polygons] , no default param");
     }
     if (!blackboard_.get<double>("chase_freq",chase_freq_))
     {
@@ -494,6 +457,45 @@ namespace tools
   void NavigationTools::resetPatrolState()
   {
     patrol_state_ = PatrolState::IDLE;
+  }
+
+  bool NavigationTools::isPointInPolygon(const geometry_msgs::Point& point,
+                        const std::vector<geometry_msgs::PointStamped>& polygon)
+  {
+    int n = polygon.size();
+    int count = 0;
+    for (int i = 0; i < n; ++i)
+    {
+      if (point.x == polygon[i].point.x && point.y == polygon[i].point.y)
+        return true;
+      if (point.x == polygon[(i + 1) % n].point.x &&
+        point.y == polygon[(i + 1) % n].point.y)
+        return true;
+
+      if ((point.y < polygon[i].point.y) !=
+        (point.y < polygon[(i + 1) % n].point.y))
+      {
+        double x = (polygon[(i + 1) % n].point.x - polygon[i].point.x) *
+          (point.y - polygon[i].point.y) /
+          (polygon[(i + 1) % n].point.y - polygon[i].point.y) +
+          polygon[i].point.x;
+        if (x > point.x)
+          count++;
+        else if (x == point.x)
+          return true;
+      }
+    }
+    return count % 2 == 1;
+  }
+
+  [[nodiscard]]std::string NavigationTools::determinePolygonInWhich(const geometry_msgs::Point& point)
+  {
+    for (const auto& pair : pos_detection_polygons)
+    {
+      if (isPointInPolygon(point, pair.second))
+        return pair.first;
+    }
+    return "unknown";
   }
 
   bool NavigationTools::chase()
@@ -727,7 +729,7 @@ namespace tools
     cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
-  void GimbalTools::lidarTwist(double yaw_vel , double scan_range_circles)
+  void GimbalTools::lidarTwist(double yaw_vel , int scan_range_circles)
   {
     geometry_msgs::TransformStamped map2yaw_;
     try

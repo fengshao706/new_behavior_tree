@@ -22,7 +22,6 @@ int main(int argc,char * argv[])
   ros::NodeHandle bt_nh(nh,"rm_behavior_tree");
 
   double wait_time = 3.0;
-  std::string file_path = bt_nh.param("xml_file_path", std::string(" "));
   auto blackboard = BT::Blackboard::create();
   SentryParamLoader sentry_param_loader(bt_nh,blackboard);
 
@@ -39,16 +38,15 @@ int main(int argc,char * argv[])
   tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools,planner_tools);
   subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
 
-  manual::SimpleAction manual_action(bt_nh,cmd_tools,subscriber);
   posture::PostureManager posture_manager(bt_nh,*blackboard,publisher);
   ROS_INFO("------------------complete------------------------");
   BT::BehaviorTreeFactory factory;
 
   register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,planner_tools, tf_accessor,publisher);
 
-  BT::Tree tree = factory.createTreeFromFile("/home/wjr/rmuc_ws/src/rm_sentry/decision/new_behavior_tree/config/untitled_1.xml",blackboard);
+  BT::Tree tree = factory.createTreeFromFile("/home/wjr/rmuc_ws/src/rm_sentry/decision/new_behavior_tree/config/test.xml",blackboard);
   BT::Groot2Publisher groot2_publisher(tree,5555);
-  ros::Rate rate(200);
+  ros::Rate rate(2000);
   int test = 0;
   while (ros::ok())
   {
@@ -57,7 +55,7 @@ int main(int argc,char * argv[])
     controller_tools.ControllerUpdate();
     posture_manager.update();
     test += 1;
-    if (test >= 200)
+    if (test >= 2000)
     {
       ROS_INFO("---------complete a circle------------");
       test = 0;

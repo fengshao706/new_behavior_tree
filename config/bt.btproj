@@ -3,8 +3,29 @@
     <include path="untitled_1.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
+        <Action ID="ChassisSlowGyro" editable="true">
+            <input_port name="slow_gyro_vel_scale" type="double"/>
+        </Action>
+        <Condition ID="IsBulletsRemain" editable="true"/>
+        <Condition ID="IsClientMapUpdate" editable="true">
+            <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
+        </Condition>
+        <Condition ID="IsGameInBattle" editable="true"/>
+        <Condition ID="IsHeroInTrapezoid" editable="true"/>
+        <Condition ID="IsOutpostAlive" editable="true"/>
+        <Condition ID="IsOwnFortressBeenCap" editable="true">
+            <input_port name="capture_status" type="int"/>
+        </Condition>
         <Condition ID="IsRefereeOnline" editable="true"/>
         <Condition ID="IsRemoteControlTurnOn" editable="true"/>
+        <Condition ID="IsSentryHpUrgent" editable="true">
+            <input_port name="trigger_blood_return_hp" type="int"/>
+        </Condition>
+        <Condition ID="IsTimeRangeCondition" editable="true">
+            <input_port name="min_time" type="double"/>
+            <input_port name="max_time" type="double"/>
+            <input_port name="game_total_time" type="double"/>
+        </Condition>
         <Action ID="ManualSendChassisCmd" editable="true"/>
         <Action ID="ManualSendGimbalCmd" editable="true"/>
         <Action ID="ManualSendShooterCmd" editable="true"/>
@@ -12,12 +33,46 @@
             <output_port name="state" default="{state}" type="std::string"/>
         </Action>
         <Action ID="PatrolTestArea" editable="true"/>
+        <Action ID="RelieveWeakState" editable="true">
+            <input_port name="need_supply" default="{need_supply}" type="bool"/>
+            <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
+            <output_port name="need_supply_output" default="{need_supply}" type="bool"/>
+        </Action>
         <Action ID="RemoteControlTurnOff" editable="true"/>
+        <Action ID="ReviveIfDead" editable="true">
+            <output_port name="self_is_weak" default="{self_is_weak}" type="bool"/>
+            <output_port name="self_weak_until" default="{self_weak_until}" type="ros::Time"/>
+            <output_port name="need_supply" default="{need_supply}" type="bool"/>
+            <output_port name="has_revived" default="{has_revived}" type="bool"/>
+            <output_port name="confirm_respawn" default="{confirm_respawn}" type="bool"/>
+        </Action>
+        <Action ID="SetChassisMode" editable="true">
+            <input_port name="input_chassis_mode_id" type="int"/>
+            <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
+        </Action>
+        <Action ID="SetGimbalMode" editable="true">
+            <input_port name="input_gimbal_mode_id" type="int"/>
+            <output_port name="gimbal_mode" default="{gimbal_mode}" type="int"/>
+        </Action>
         <Action ID="SetIdle" editable="true"/>
+        <Action ID="SetShooterMode" editable="true">
+            <input_port name="input_shooter_mode_id" type="int"/>
+            <output_port name="shooter_mode" default="{shooter_mode}" type="int"/>
+        </Action>
+        <Action ID="StartMainControllers" editable="true"/>
         <Action ID="Test1" editable="true"/>
         <Action ID="Test2" editable="true"/>
         <Action ID="VisionCalibrate" editable="true">
             <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+        <Action ID="YawSlowRound" editable="true">
+            <input_port name="yaw_vel" type="double"/>
+            <input_port name="scan_range_circles" type="double"/>
+            <input_port name="pitch_inside_vel" type="double"/>
+            <input_port name="pitch_outside_vel" type="double"/>
+            <input_port name="pitch_min" type="double"/>
+            <input_port name="pitch_max" type="double"/>
+            <input_port name="breach_thresholds" type="double"/>
         </Action>
     </TreeNodesModel>
 </root>

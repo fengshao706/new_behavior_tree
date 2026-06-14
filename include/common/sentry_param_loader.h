@@ -218,9 +218,8 @@ public:
 
   void load_zone_configs()
   {
-    ros::NodeHandle rm_behavior_tree_nh(bt_nh_,"rm_behavior_tree");
-    ros::NodeHandle auto_nh(rm_behavior_tree_nh,"auto");
-    ros::NodeHandle chassis_behavior_nh(rm_behavior_tree_nh,"chassis_behavior");
+    ros::NodeHandle auto_nh(bt_nh_,"auto");
+    ros::NodeHandle chassis_behavior_nh(bt_nh_,"chassis_behavior");
     XmlRpc::XmlRpcValue zones;
     auto_nh.getParam("zones",zones);
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones; //所有的区域的所有坐标
@@ -314,7 +313,7 @@ public:
     blackboard_->set<bool>("need_defense_base",false);
     blackboard_->set<bool>("need_still_gyro",false);
     blackboard_->set<double>("present_time",0.0);
-    blackboard_->set<types::ChassisMode>("chassis_mode",types::ChassisMode::ChassisSlowGyro);
+    blackboard_->set<int>("chassis_mode",0);
     blackboard_->set<bool>("has_revived",false);
     blackboard_->set<bool>("need_supply",false);
     blackboard_->set<bool>("has_calibrated_barrel",false);
@@ -323,7 +322,7 @@ public:
     blackboard_->set<bool>("need_enable_fight",false);
     blackboard_->set<bool>("ignore_buff",false);
     blackboard_->set<ros::Time>("last_track_time",ros::Time::now());
-    blackboard_->set<types::GimbalMode>("gimbal_mode",types::GimbalMode::YawSlowRound);
+    blackboard_->set<int>("gimbal_mode",0);
     blackboard_->set<int>("circle_count",0); //该参数在gimbal_action_node中被调用
     blackboard_->set<double>("last_yaw",0.0); //该参数在gimbal_action_node中被调用
     blackboard_->set<bool>("has_determined_goal",false);

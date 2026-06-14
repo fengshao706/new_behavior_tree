@@ -18,31 +18,32 @@ namespace gimbal
   class SetGimbalMode : public BT::SyncActionNode
   {
   public:
-    SetGimbalMode(const std::string &name ,const BT::NodeConfig &config , BT::Blackboard &blackboard) : SyncActionNode(name , config) , blackboard_(blackboard)
+    SetGimbalMode(const std::string &name ,const BT::NodeConfig &config) : SyncActionNode(name , config)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return { BT::InputPort<int>("gimbal_mode_id") };
+      return { BT::InputPort<int>("input_gimbal_mode_id"),
+                BT::OutputPort<int>("gimbal_mode")};
     }
 
     BT::NodeStatus tick() override
     {
-      BT::Expected<int> gimbal_mode_id = getInput<int>("gimbal_mode_id");
-      blackboard_.set<types::GimbalMode>("gimbal_mode",static_cast<types::GimbalMode>(gimbal_mode_id.value()));
+      BT::Expected<int> input_gimbal_mode_id = getInput<int>("input_gimbal_mode_id");
+      setOutput<int>("gimbal_mode", input_gimbal_mode_id.value());
       return BT::NodeStatus::SUCCESS;
     }
 
   private:
-    BT::Blackboard &blackboard_;
+
   };
 
   class YawSlowRound : public BT::StatefulActionNode
   {
   public:
-    YawSlowRound(const std::string &name ,const BT::NodeConfig &config ,tools::GimbalTools &gimbal_tools) : StatefulActionNode(name , config) , gimbal_tools_(gimbal_tools)
+    YawSlowRound(const std::string &name ,const BT::NodeConfig &config ,tools::GimbalTools &gimbal_tools , tools::CmdTools &cmd_tools) : StatefulActionNode(name , config) , gimbal_tools_(gimbal_tools) , cmd_tools_(cmd_tools)
     {
 
     }
@@ -68,7 +69,7 @@ namespace gimbal
     BT::NodeStatus onRunning() override
     {
       BT::Expected<double> yaw_vel;
-      BT::Expected<double> scan_range_circles;
+      BT::Expected<int> scan_range_circles;
       BT::Expected<double> pitch_inside_vel;
       BT::Expected<double> pitch_outside_vel;
       BT::Expected<double> pitch_min;
@@ -92,10 +93,12 @@ namespace gimbal
 
     void onHalted() override
     {
-
+      cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
+      cmd_tools_.getSenders()->base_gimbal_command_sender_->setZero();
     }
   private:
     tools::GimbalTools &gimbal_tools_;
+    tools::CmdTools &cmd_tools_;
   };
 
   class InverseGimbal : public BT::StatefulActionNode //需用timeout节点维持运行一小段时间

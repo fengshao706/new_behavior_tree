@@ -8,7 +8,7 @@
 
     <node pkg="new_behavior_tree" type="new_behavior_tree" name="new_behavior_tree" output="screen" required="false"
           respawn="false">
-        <param name="xml_file_path" type="string" value="$(find new_behavior_tree)/config/untitled_1.xml"/>
+        <param name="xml_file_path" type="string" value="$(find new_behavior_tree)/config/test.xml"/>
         <param name="enable_controller_manager" type="bool" value="$(arg enable_controller_manager)"/>
     </node>
 
