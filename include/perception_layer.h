@@ -5,6 +5,7 @@
 #ifndef NEW_BEHAVIOR_TREE_PERCEPTION_LAYER_H
 #define NEW_BEHAVIOR_TREE_PERCEPTION_LAYER_H
 
+#include <any>
 #include <rm_msgs/DbusData.h>
 #include <rm_msgs/GameRobotStatus.h>
 #include <rm_msgs/GameStatus.h>
@@ -51,191 +52,127 @@ namespace tools
 }
 
 namespace perception{
+
   class Subscriber
   {
   public:
-    Subscriber(tools::CmdTools& cmd_tools , ros::NodeHandle& nh);
+    enum class TopicId
+    {
+      TRACK_DATA,
+      GAME_ROBOT_STATUS,
+      DBUS_DATA,
+      SHOOT_CMD,
+      POWER_HEAT_DATA,
+      CAPACITY_DATA,
+      GAME_STATUS,
+      ROBOT_HURT_DATA,
+      GAME_ROBOT_HP,
+      SENTRY_INFO,
+      CLIENT_MAP_SEND_DATA,
+      EVENT_DATA,
+      BULLET_ALLOWANCE,
+      GLOBAL_PLANNER_DATA,
+      ROBOT_POSITION,
+      BUFF_DATA,
+      RFID_DATA,
+      RADAR_TO_SENTRY_DATA,
+      ALLOW_SHOOT,
+      SHOOT_CMD_DATA,
+      PLANNER_GOAL,
+      ODOM_DATA,
+      BACK_CAMERA_DETECTION_DATA,
+      FRONT_CAMERA_DETECTION_DATA
+    };
 
-    void setNavigationTools(tools::NavigationTools* nav_tools);
-    // Thread-safe data access methods
-    rm_msgs::TrackData getTrackData() const;
+    template <typename MsgType>
+    struct ReturnMsg
+    {
+      MsgType message;
+      ros::Time stamp = ros::Time::now();
+    };
 
-    rm_msgs::GameRobotStatus getGameRobotStatus() const;
+    Subscriber(ros::NodeHandle &bt_nh) : bt_nh_(bt_nh)
+    {
+      register_subscriber<rm_msgs::DbusData>(TopicId::DBUS_DATA,"/rm_ecat_hw/dbus");
+      register_subscriber<rm_msgs::GameRobotStatus>(TopicId::GAME_ROBOT_STATUS,"/rm_referee/game_robot_status");
+      register_subscriber<rm_msgs::TrackData>(TopicId::TRACK_DATA,"/track");
+      register_subscriber<rm_msgs::ShootCmd>(TopicId::SHOOT_CMD,"/controllers/shooter_controller/command");
+      register_subscriber<rm_msgs::PowerHeatData>(TopicId::POWER_HEAT_DATA,"/rm_referee/power_heat_data");
+      register_subscriber<rm_msgs::PowerManagementSampleAndStatusData>(TopicId::CAPACITY_DATA,"/rm_referee/power_management/sample_and_status");
+      register_subscriber<rm_msgs::GameStatus>(TopicId::GAME_STATUS,"/rm_referee/game_status");
+      register_subscriber<rm_msgs::RobotHurt>(TopicId::ROBOT_HURT_DATA,"/rm_referee/robot_hurt_data");
+      register_subscriber<rm_msgs::GameRobotHp>(TopicId::GAME_ROBOT_HP,"/rm_referee/game_robot_hp");
+      register_subscriber<rm_msgs::SentryInfo>(TopicId::SENTRY_INFO,"/rm_referee/sentry_info");
+      register_subscriber<rm_msgs::ClientMapSendData>(TopicId::CLIENT_MAP_SEND_DATA,"/rm_referee/client_map_send_data");
+      register_subscriber<rm_msgs::EventData>(TopicId::EVENT_DATA,"/rm_referee/event_data");
+      register_subscriber<rm_msgs::BulletAllowance>(TopicId::BULLET_ALLOWANCE,"/rm_referee/bullet_allowance_data");
+      register_subscriber<nav_msgs::Path>(TopicId::GLOBAL_PLANNER_DATA,"/move_base_flex/GlobalPlanner/plan");
+      register_subscriber<rm_msgs::RobotsPositionData>(TopicId::ROBOT_POSITION,"robot_position");
+      register_subscriber<rm_msgs::Buff>(TopicId::BUFF_DATA,"/rm_referee/robot_buff");
+      register_subscriber<rm_msgs::RfidStatus>(TopicId::RFID_DATA,"/rm_referee/rfid_status_data");
+      register_subscriber<rm_msgs::RadarToSentry>(TopicId::RADAR_TO_SENTRY_DATA,"/rm_referee/radar_to_sentry");
+      register_subscriber<rm_msgs::ShootBeforehandCmd>(TopicId::ALLOW_SHOOT,"/controllers/gimbal_controller/bullet_solver/shoot_beforehand_cmd");
+      register_subscriber<rm_msgs::ShootCmd>(TopicId::SHOOT_CMD_DATA,"/controllers/shooter_controller/command");
+      register_subscriber<geometry_msgs::PoseStamped>(TopicId::PLANNER_GOAL,"/move_base_simple/goal");
+      register_subscriber<nav_msgs::Odometry>(TopicId::ODOM_DATA,"/odom");
+      register_subscriber<rm_msgs::TargetDetectionArray>(TopicId::BACK_CAMERA_DETECTION_DATA,"/detection_back");
+      register_subscriber<rm_msgs::TargetDetectionArray>(TopicId::FRONT_CAMERA_DETECTION_DATA,"/detection_front");
 
-    rm_msgs::ShootCmd getShootCmd() const;
+      initSubscriber();
+    }
 
-    void setTrackData(const rm_msgs::TrackData& data);
+    template<typename MsgType>
+    ReturnMsg<MsgType> msgGetter(TopicId topic_id)
+    {
+      ReturnMsg<MsgType> return_msg;
+      return_msg.message = std::any_cast<MsgType>(dir_.at(topic_id).message);
+      return_msg.stamp = dir_.at(topic_id).stamp;
 
-    void setGameRobotStatus(const rm_msgs::GameRobotStatus& data);
-
-    bool isRefereeOnline() const;
-
-    void setRefereeOnline(bool online);
-
-    bool hasBackCameraDetected() const;
-
-    geometry_msgs::PointStamped getBackCameraDetection();
-
-    void setBackCameraDetected(bool detected);
-
-    [[nodiscard]]int getBackCameraDetectionId();
-
-    void setBackCameraDetectionId(int id);
-
-    bool hasEngineerMarked() const;
-
-    void setEngineerMarked(bool marked);
-
-    rm_msgs::TargetDetectionArray getFrontCameraDetection();
-
-    rm_msgs::DbusData getDbusData() const;
-
-    rm_msgs::GameStatus getGameStatus() const;
-
-    rm_msgs::GameRobotHp getGameRobotHp() const;
-
-    void setPowerHeatData(const rm_msgs::PowerHeatData &data);
-
-    rm_msgs::PowerHeatData getPowerHeatData() const;
-
-    rm_msgs::ClientMapSendData  getClientMapSendData() const;
-
-    void clearClientMapUpdateState();
-
-    bool isClientMapUpdate() const;
-
-    rm_msgs::EventData getEventData() const;
-
-    rm_msgs::BulletAllowance getBulletAllowance() const;
-
-    rm_msgs::RobotsPositionData getRobotPositionData() const;
-
-    nav_msgs::Path getGlobalPlannerPathData() const;
-
-    bool isGlobalPlannerPathDataUpdate() const;
-
-    nav_msgs::Odometry getOdomData() const;
-
-    rm_msgs::RobotHurt getRobotHurtData() const;
-
-    rm_msgs::Buff getBuffData() const;
-
-    rm_msgs::RfidStatus getRfidStatus() const;
-
-    rm_msgs::SentryInfo getSentryInfoData() const;
+      return return_msg;
+    }
 
   private:
-    void backCameraDetectionCallback(const rm_msgs::TargetDetectionArray::ConstPtr& data);
+    struct TopicDetail
+    {
+      std::string topic_name;
+      ros::Time stamp = ros::Time::now();
+      std::any message;
+      std::function<void()> creator;
+    };
 
-    void frontCameraDetectionCallback(const rm_msgs::TargetDetectionArray::ConstPtr& data);
+    template<typename MsgType>
+    void register_subscriber(TopicId id ,const std::string &topic_name)
+    {
+      TopicDetail detail;
+      detail.topic_name = topic_name;
+      detail.stamp = ros::Time::now();
+      detail.creator = [this,id]()
+      {
+        subscribers_.push_back(bt_nh_.subscribe<MsgType>(dir_.at(id).topic_name,
+          10,
+          [this,id](const typename MsgType::ConstPtr &msg){callback<MsgType>(msg,id);}));
+      };
 
-    void dbusCallback(const rm_msgs::DbusData::ConstPtr& data);
+      dir_.emplace(id,std::move(detail));
+    };
 
-    void gimbalDesErrorCallback(
-      const rm_msgs::GimbalDesError::ConstPtr& data); // data 是 rm_msgs::GimbalDesError 类型的 智能指针（ConstPtr）;
+    template<typename MsgType>
+    void callback(const typename MsgType::ConstPtr &msg , TopicId topic_id)
+    {
+      dir_[topic_id].message = *msg;
+      dir_[topic_id].stamp = ros::Time::now();
+    }
 
-    void trackCallback(const rm_msgs::TrackData::ConstPtr& data);
-
-    void gameStatusCallback(const rm_msgs::GameStatus::ConstPtr& data);
-
-    void robotHurtCallback(const rm_msgs::RobotHurt::ConstPtr& data);
-
-    void robotBuffCallback(const rm_msgs::Buff::ConstPtr& data);
-
-    void rfidStatuCallBack(const rm_msgs::RfidStatus::ConstPtr& data);
-
-    void sentryCmdCallBack(const rm_msgs::SentryInfo::ConstPtr& data);
-
-    void ShootBeforehandCmdCallback(const rm_msgs::ShootBeforehandCmd::ConstPtr& data);
-
-    void shootCommandCallback(const rm_msgs::ShootCmd::ConstPtr& data);
-
-    void robotHpCallback(const rm_msgs::GameRobotHp::ConstPtr& data);
-
-    void gameRobotStatusCallback(const rm_msgs::GameRobotStatus::ConstPtr& data);
-
-    void powerHeatDataCallback(const rm_msgs::PowerHeatData::ConstPtr& data);
-
-    void capacityDataCallback(const rm_msgs::PowerManagementSampleAndStatusData::ConstPtr& data);
-
-    void clientMapSendDataCallback(const rm_msgs::ClientMapSendData::ConstPtr& data);
-
-    void radarToSentryCallback(const rm_msgs::RadarToSentry::ConstPtr& data);
-
-    void eventDataCallback(const rm_msgs::EventData::ConstPtr& data);
-
-    void bulletAllowanceCallback(const rm_msgs::BulletAllowance::ConstPtr& data);
-
-    void robotsPositionCallback(const rm_msgs::RobotsPositionData::ConstPtr& data);
-
-    void globalPlannerCallback(
-      const nav_msgs::Path::ConstPtr&
-      data); // 接受一个参数 const nav_msgs::Path::ConstPtr& data，该参数是一个指向 nav_msgs::Path 消息的常量指针;
-
-    void rvizGoalCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
-
-    void odomCallback(const nav_msgs::Odometry::ConstPtr& msg);
-
-    tools::CmdTools& cmd_tools_;
-    tools::NavigationTools* navigation_tools_{nullptr};
-
-    ros::Subscriber dbus_sub_;
-    ros::Subscriber track_sub_;
-    ros::Subscriber robot_hp_sub_;
-    ros::Subscriber game_robot_status_sub_, game_status_sub_, robot_hurt_sub_;
-    ros::Subscriber gimbal_des_error_sub_;
-    ros::Subscriber power_heat_data_sub_, capacity_sub_;
-    ros::Subscriber client_map_send_data_sub_;
-    ros::Subscriber global_planner_sub_;
-    ros::Subscriber goal_subscriber;
-    ros::Subscriber points_subscriber;
-    ros::Subscriber odom_sub_;
-    ros::Subscriber event_data_sub_;
-    ros::Subscriber bullet_allowance_sub_;
-    ros::Subscriber robots_position_sub_;
-    ros::Subscriber buff_sub_;
-    ros::Subscriber sentry_info_sub_;
-    ros::Subscriber rfid_statu_sub_;
-    ros::Subscriber back_camera_detection_sub_;
-    ros::Subscriber front_camera_detection_sub_;
-    ros::Subscriber allow_shoot_sub_;
-    ros::Subscriber shoot_command_sub_;
-    ros::Subscriber radar_to_sentry_sub_;
-
-    rm_msgs::DbusData dbus_;
-    rm_msgs::RobotHurt robot_hurt_msgs_{};
-    rm_msgs::TrackData track_data_;
-    rm_msgs::GameRobotStatus game_robot_status_;
-    rm_msgs::GameRobotHp game_robot_hp_{};
-    rm_msgs::GameStatus game_status_;
-    rm_msgs::ClientMapSendData client_map_send_data_;
-    rm_msgs::EventData event_data_;
-    rm_msgs::BulletAllowance bullet_allowance_;
-    rm_msgs::RobotsPositionData robots_position_;
-    rm_msgs::Buff buff_;
-    rm_msgs::RfidStatus rfid_statu_;
-    rm_msgs::PowerHeatData power_heat_data_;
-    rm_msgs::PowerManagementSampleAndStatusData power_management_sample_and_status_data_{};
-    nav_msgs::Path goal_planner_;
-    nav_msgs::Odometry odom_;
-    rm_msgs::ShootCmd shoot_cmd_;
-    rm_msgs::SentryInfo sentry_info_;
-    rm_msgs::TargetDetectionArray front_camera_detection_info_;
-    rm_msgs::RadarToSentry radar_to_sentry_info_;
-    ros::Time last_map_data_update_{};
-    std::atomic<bool> referee_is_online_{false};
-    bool client_map_update_{false};
-    bool goal_planner_update_{false};
-    std::atomic<bool> has_back_camera_detected_{false};
-    std::atomic<bool> has_engineer_marked_{false};
-    geometry_msgs::PointStamped back_of_camera_;
-    int back_camera_detection_id_ = 0;
-
-    // Mutexes for thread-safe access
-    mutable std::mutex front_camera_mutex_, dbus_mutex_, game_robot_status_mutex_, track_mutex_, game_status_mutex_, buff_data_mutex_,
-                       game_robot_hp_mutex_, power_heat_data_mutex_, client_map_send_data_mutex_, odom_data_mutex_, robot_hurt_data_mutex_,
-                       shoot_cmd_mutex_ , event_data_mutex_ , bullet_allowance_mutex_ , robot_position_mutex_ , global_planner_mutex_,
-                        rfid_status_mutex_ , sentry_info_data_mutex_ , power_management_sample_and_status_data_mutex_ , back_camera_mutex_ , back_camera_detection_id_mutex_;
+    void initSubscriber()
+    {
+      for (auto &temp : dir_)
+      {
+        temp.second.creator();
+      }
+    }
+    std::map<TopicId,TopicDetail> dir_;
+    ros::NodeHandle &bt_nh_;
+    std::vector<ros::Subscriber> subscribers_;
   };
 
   class TfAccessor

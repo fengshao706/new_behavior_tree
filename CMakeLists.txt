@@ -72,7 +72,7 @@ src/perception_layer.cpp src/register_node.cpp include/behavior_tree/common/acti
         include/behavior_tree/common/action_node.h
         include/behavior_tree/condition_node.h
         include/behavior_tree/condition_node.cpp
-        src/common/posture_manager.cpp
+        src/common/posture_manager.cpp include/behavior_tree/common/control_node.cpp
 
 )
 
@@ -85,3 +85,6 @@ target_link_libraries(${PROJECT_NAME}
         ${catkin_LIBRARIES}
 )
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+        PROJECT_ROOT_DIR="${CMAKE_SOURCE_DIR}"
+)

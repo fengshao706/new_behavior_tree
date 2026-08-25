@@ -65,6 +65,7 @@ rm_behavior_tree:
 
   auto:
     #hero(5),engineer(3->0),standard3(2<->4),standard4,standard5,outpost(5),sentry(0->3),base
+    # `[hero, engineer, standard3, standard4, standard5, outpost, sentry, base]`。
     default_aim_priority: [ 5, 3, 2, 2, 2, 5, 1, 0 ] #--------
     #    default_aim_priority: [ 0, 0, 0, 0, 0, 0, 0, 0 ]
     attack_engineer_enable: true
@@ -174,7 +175,7 @@ rm_behavior_tree:
         ]
         pos_detection_polygon: [ 19,20,21,22 ]
 
-      trapezoid_area:
+      blue_trapezoid_area:
         position: [
           [ 12.897 , 7.324, 0.000 ],
           [ 12.840 , 1.824, 0.000 ]
@@ -182,6 +183,36 @@ rm_behavior_tree:
         aim_direct: [
           [ 4.908, -2.364, 70.0 ]
         ]
+        pos_detection_polygon: [ 19,20,21,22 ]
+
+      blue_base_defence_area:
+        position: [
+          [ 12.897 , 7.324, 0.000 ],
+          [ 12.840 , 1.824, 0.000 ]
+        ]
+        aim_direct: [
+          [ 4.908, -2.364, 70.0 ]
+        ]
+        pos_detection_polygon: [ 19,20,21,22 ]
+
+      blue_fortress_area:
+        position: [
+          [ 12.897 , 7.324, 0.000 ],
+          [ 12.840 , 1.824, 0.000 ]
+        ]
+        aim_direct: [
+          [ 4.908, -2.364, 70.0 ]
+        ]
+        pos_detection_polygon: [ 19,20,21,22 ]
+
+      blue_engineer_invincible_area:
+        position: [ ]
+        aim_direct: [ ]
+        pos_detection_polygon: [ 19,20,21,22 ]
+
+      red_engineer_invincible_area:
+        position: [ ]
+        aim_direct: [ ]
         pos_detection_polygon: [ 19,20,21,22 ]
 
       middle_area:

@@ -63,14 +63,14 @@ namespace register_node
       "PatrolEnemyOutpostArea",
       [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<chassis::PatrolEnemyOutpostArea>(name, config, *config.blackboard, navigation_tools);
+        return std::make_unique<chassis::PatrolEnemyOutpostArea>(name, config, navigation_tools);
       });
 
     factory.registerBuilder<chassis::PatrolSentryPatrolArea>(
       "PatrolSentryPatrolArea",
       [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<chassis::PatrolSentryPatrolArea>(name, config, *config.blackboard, navigation_tools);
+        return std::make_unique<chassis::PatrolSentryPatrolArea>(name, config, navigation_tools);
       });
 
     factory.registerBuilder<chassis::GotoReturnBloodArea>(
@@ -173,9 +173,9 @@ namespace register_node
 
     factory.registerBuilder<gimbal::InverseGimbal>(
       "InverseGimbal",
-      [&gimbal_tools, &subscriber, &tf_accessor](const std::string& name, const BT::NodeConfig& config)
+      [&gimbal_tools,&cmd_tools ,&subscriber, &tf_accessor](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::InverseGimbal>(name, config, gimbal_tools, subscriber, tf_accessor);
+        return std::make_unique<gimbal::InverseGimbal>(name, config, gimbal_tools,cmd_tools, subscriber, tf_accessor);
       });
 
     factory.registerBuilder<gimbal::TrackEnemy>(
@@ -490,6 +490,62 @@ namespace register_node
       [&cmd_tools,&subscriber](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<manual::ManualSendShooterCmd>(name, config,cmd_tools,subscriber);
+      });
+
+    factory.registerBuilder<chassis::GotoTrapezoidArea>(
+      "GotoTrapezoidArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoTrapezoidArea>(name, config,navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GotoBaseDefenceArea>(
+      "GotoBaseDefenceArea",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoBaseDefenceArea>(name, config,navigation_tools);
+      });
+
+    factory.registerBuilder<chassis::GotoOwnFortress>(
+      "GotoOwnFortress",
+      [&navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::GotoOwnFortress>(name, config,navigation_tools);
+      });
+
+    factory.registerBuilder<ReactiveIfThenElse>(
+      "ReactiveIfThenElse",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<ReactiveIfThenElse>(name, config);
+      });
+
+    factory.registerBuilder<RunForSeconds>(
+      "RunForSeconds",
+      [](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<RunForSeconds>(name, config);
+      });
+
+    factory.registerBuilder<gimbal::UpdateAimPriority>(
+      "UpdateAimPriority",
+      [&navigation_tools,&tf_accessor,&subscriber,&publisher](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::UpdateAimPriority>(name, config,tf_accessor,subscriber,publisher,navigation_tools);
+      });
+
+    factory.registerBuilder<gimbal::PreAimingOutpost>(
+      "PreAimingOutpost",
+      [&gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::PreAimingOutpost>(name, config,gimbal_tools);
+      });
+
+    factory.registerBuilder<gimbal::PreAimingBase>(
+      "PreAimingBase",
+      [&gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<gimbal::PreAimingBase>(name, config,gimbal_tools);
       });
   }
 }

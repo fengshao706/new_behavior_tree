@@ -14,10 +14,10 @@
 
 namespace chassis
 {
-  class ChassisSlowGyro : public BT::SyncActionNode  // 用于赛前的慢速小陀螺
+  class ChassisSlowGyro : public BT::StatefulActionNode  // 用于赛前的慢速小陀螺
   {
   public:
-    ChassisSlowGyro(const std::string &name ,const BT::NodeConfig &config  , tools::CmdTools & cmd_tools) : BT::SyncActionNode(name,config) , cmd_tools_(cmd_tools)
+    ChassisSlowGyro(const std::string &name ,const BT::NodeConfig &config  , tools::CmdTools & cmd_tools) : BT::StatefulActionNode(name,config) , cmd_tools_(cmd_tools)
     {
 
     }
@@ -27,7 +27,7 @@ namespace chassis
       return { BT::InputPort<double>("slow_gyro_vel_scale") };
     }
 
-    BT::NodeStatus tick() override
+    BT::NodeStatus onStart() override
     {
       BT::Expected<double> msg = getInput<double>("slow_gyro_vel_scale");
       // Check if expected is valid. If not, throw its error
@@ -36,18 +36,32 @@ namespace chassis
         throw BT::RuntimeError("missing required input [slow_gyro_vel_scale]: ",
                                 msg.error() );
       }
+      slow_gyro_vel_scale = msg.value();
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+
       // use the method value() to extract the valid message.
 
       cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
       cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame = "base_link";
       ros::Time time = ros::Time::now();
-      cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(msg.value());//在我给出的配置文件中设定底盘的旋转速度
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(slow_gyro_vel_scale);//在我给出的配置文件中设定底盘的旋转速度
       cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
       cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
-      return BT::NodeStatus::SUCCESS;
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      cmd_tools_.getSenders()->chassis_command_sender_->setZero();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
     }
   private:
     tools::CmdTools & cmd_tools_;
+    double slow_gyro_vel_scale{};
   };
 
   class AbnormalStillStopAllMotion : public BT::SyncActionNode
@@ -199,19 +213,19 @@ namespace chassis
   class PatrolEnemyOutpostArea : public BT::StatefulActionNode
   {
   public:
-    PatrolEnemyOutpostArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard ,tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
+    PatrolEnemyOutpostArea(const std::string & name ,const BT::NodeConfig & config ,tools::NavigationTools &navigation_tools) : StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return {  };
+      return { BT::InputPort<std::string>("robot_color") };
     }
 
     BT::NodeStatus onStart() override
     {
-      robot_color=blackboard_.get<std::string>("robot_color");
+      robot_color=getInput<std::string>("robot_color").value();
       if (robot_color == "red") //因为要打击的是对面的机器人，所以要把robot_color反相
       {
         robot_color = "blue";
@@ -236,7 +250,6 @@ namespace chassis
     }
 
   private:
-    BT::Blackboard &blackboard_;
     std::string robot_color;
     std::string target_area_name;
     tools::NavigationTools &navigation_tools_;
@@ -245,19 +258,19 @@ namespace chassis
   class PatrolSentryPatrolArea : public BT::StatefulActionNode
   {
   public:
-    PatrolSentryPatrolArea(const std::string & name ,const BT::NodeConfig & config , BT::Blackboard & blackboard , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , blackboard_(blackboard) , navigation_tools_(navigation_tools)
+    PatrolSentryPatrolArea(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
     {
 
     }
 
     static BT::PortsList providedPorts()
     {
-      return {  };
+      return { BT::InputPort<std::string>("robot_color") };
     }
 
     BT::NodeStatus onStart() override
     {
-      robot_color=blackboard_.get<std::string>("robot_color");
+      robot_color=getInput<std::string>("robot_color").value();
       target_area_name = robot_color + "_center_sentry_patrol_area";
       return BT::NodeStatus::RUNNING;
     }
@@ -275,7 +288,6 @@ namespace chassis
     }
 
   private:
-    BT::Blackboard &blackboard_;
     std::string robot_color;
     std::string target_area_name;
     tools::NavigationTools &navigation_tools_;
@@ -581,7 +593,7 @@ namespace chassis
 
     BT::NodeStatus tick() override
     {
-      setOutput("keyboard_command",subscriber_.getClientMapSendData().command_keyboard);
+      setOutput("keyboard_command",subscriber_.msgGetter<rm_msgs::ClientMapSendData>(perception::Subscriber::TopicId::CLIENT_MAP_SEND_DATA).message.command_keyboard);
       return BT::NodeStatus::SUCCESS;
     }
   private:
@@ -659,6 +671,120 @@ namespace chassis
     tools::NavigationTools &navigation_tools_;
     tools::PlannerTools &planner_tools_;
     tools::CmdTools &cmd_tools_;
+  };
+
+  class GotoTrapezoidArea : public BT::StatefulActionNode
+  {
+  public:
+    GotoTrapezoidArea(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return { BT::InputPort<std::string>("robot_color") };
+    }
+
+    BT::NodeStatus onStart() override
+    {
+      robot_color = getInput<std::string>("robot_color").value();
+      target_area_name = robot_color + "_trapezoid_area";
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false,true,true);
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
+    }
+
+  private:
+    std::string robot_color;
+    std::string target_area_name;
+    tools::NavigationTools &navigation_tools_;
+  };
+
+  class GotoBaseDefenceArea : public BT::StatefulActionNode
+  {
+  public:
+    GotoBaseDefenceArea(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return { BT::InputPort<std::string>("robot_color") };
+    }
+
+    BT::NodeStatus onStart() override
+    {
+      robot_color = getInput<std::string>("robot_color").value();
+      target_area_name = robot_color + "_base_defence_area";
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false,true,true);
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
+    }
+
+  private:
+    std::string robot_color;
+    std::string target_area_name;
+    tools::NavigationTools &navigation_tools_;
+  };
+
+  class GotoOwnFortress : public BT::StatefulActionNode
+  {
+  public:
+    GotoOwnFortress(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : BT::StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return { BT::InputPort<std::string>("robot_color") };
+    }
+
+    BT::NodeStatus onStart() override
+    {
+      robot_color = getInput<std::string>("robot_color").value();
+      target_area_name = robot_color + "_fortress_area";
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,false),5.0,false,true,true);
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      navigation_tools_.getMbfClient()->cancelGoal();
+      navigation_tools_.resetPatrolState();
+    }
+
+  private:
+    std::string robot_color;
+    std::string target_area_name;
+    tools::NavigationTools &navigation_tools_;
   };
 
 }

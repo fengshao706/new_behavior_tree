@@ -2,48 +2,103 @@
 <root BTCPP_format="4"
       main_tree_to_execute="mainTree">
   <BehaviorTree ID="auto">
-    <IfThenElse>
+    <ReactiveIfThenElse>
       <IsGameInBattle/>
-      <ReactiveSequence>
-        <Sequence>
-          <ReviveIfDead self_is_weak="{self_is_weak}"
-                        self_weak_until="{self_weak_until}"
-                        need_supply="{need_supply}"
-                        has_revived="{has_revived}"
-                        confirm_respawn="{confirm_respawn}"/>
-          <RelieveWeakState need_supply="{need_supply}"
-                            chassis_mode="{chassis_mode}"
-                            need_supply_output="{need_supply}"/>
-        </Sequence>
-        <Inverter>
-          <IsClientMapUpdate chassis_mode="{chassis_mode}"/>
-        </Inverter>
-        <IfThenElse>
-          <Fallback>
-            <IsSentryHpUrgent trigger_blood_return_hp="30"/>
-            <Inverter>
-              <IsBulletsRemain/>
-            </Inverter>
-          </Fallback>
+      <Parallel failure_count="1"
+                success_count="-1">
+        <ReactiveSequence>
           <Sequence>
-            <SetChassisMode input_chassis_mode_id="7"
-                            chassis_mode="{chassis_mode}"/>
-            <AlwaysFailure/>
+            <ReviveIfDead self_is_weak="{self_is_weak}"
+                          self_weak_until="{self_weak_until}"
+                          need_supply="{need_supply}"
+                          has_revived="{has_revived}"
+                          confirm_respawn="{confirm_respawn}"/>
+            <RelieveWeakState need_supply="{need_supply}"
+                              chassis_mode="{chassis_mode}"
+                              need_supply_output="{need_supply}"/>
           </Sequence>
-          <AlwaysSuccess/>
-        </IfThenElse>
-        <SubTree ID="timeBasedDecision"
+          <Inverter>
+            <IsClientMapUpdate chassis_mode="{chassis_mode}"/>
+          </Inverter>
+          <ReactiveIfThenElse>
+            <Fallback>
+              <IsSentryHpUrgent trigger_blood_return_hp="30"/>
+              <Inverter>
+                <IsBulletsRemain/>
+              </Inverter>
+            </Fallback>
+            <GotoReturnBloodArea/>
+            <AlwaysSuccess/>
+          </ReactiveIfThenElse>
+          <SubTree ID="timeBasedDecision"
+                   _autoremap="true"/>
+        </ReactiveSequence>
+        <SubTree ID="gimbal_behavior"
                  _autoremap="true"/>
-      </ReactiveSequence>
-      <Sequence>
-        <SetChassisMode input_chassis_mode_id="0"
-                        chassis_mode="{chassis_mode}"/>
-        <SetGimbalMode input_gimbal_mode_id="0"
-                       gimbal_mode="{gimbal_mode}"/>
-        <SetShooterMode input_shooter_mode_id="1"
-                        shooter_mode="{shooter_mode}"/>
-      </Sequence>
-    </IfThenElse>
+        <SubTree ID="shooter_behavior"
+                 _autoremap="true"/>
+      </Parallel>
+      <Parallel failure_count="1"
+                success_count="-1">
+        <ChassisSlowGyro slow_gyro_vel_scale="0.2"/>
+        <YawSlowRound yaw_vel="2.0"
+                      scan_range_circles="3"
+                      pitch_inside_vel="2.0"
+                      pitch_outside_vel="3.0"
+                      pitch_min="-0.55"
+                      pitch_max="0.55"
+                      breach_thresholds="0.1"/>
+        <ShooterReady/>
+      </Parallel>
+    </ReactiveIfThenElse>
+  </BehaviorTree>
+
+  <BehaviorTree ID="gimbal_behavior">
+    <Parallel failure_count="1"
+              success_count="-1">
+      <UpdateAimPriority chassis_mode="{chassis_mode}"
+                         robot_color="{robot_color}"
+                         aim_priority="{aim_priority}"/>
+      <ReactiveIfThenElse>
+        <Script code="is_need_aim_outpost==true"/>
+        <ReactiveIfThenElse>
+          <IsTargetEffective/>
+          <TrackEnemy/>
+          <PreAimingOutpost robot_color="{robot_color}"
+                            aim_per_point_sec="{aim_per_point_sec}"
+                            blue_outpost_poses="{blue_outpost_poses}"
+                            red_outpost_poses="{red_outpost_poses}"/>
+        </ReactiveIfThenElse>
+        <ReactiveIfThenElse>
+          <Script code="is_need_aim_base==true"/>
+          <ReactiveIfThenElse>
+            <IsTargetEffective/>
+            <TrackEnemy/>
+            <PreAimingBase robot_color="{robot_color}"
+                           aim_per_point_sec="{aim_per_point_sec}"
+                           blue_base_poses="{blue_base_poses}"
+                           red_base_poses="{red_base_poses}"/>
+          </ReactiveIfThenElse>
+          <ReactiveIfThenElse>
+            <IsNeedInverseGimbal default_aim_rank="{default_aim_rank}"/>
+            <RunForSeconds seconds="1.0">
+              <InverseGimbal/>
+            </RunForSeconds>
+            <ReactiveIfThenElse>
+              <IsTargetEffective/>
+              <TrackEnemy/>
+              <YawSlowRound yaw_vel="2.0"
+                            scan_range_circles="3"
+                            pitch_inside_vel="2.0"
+                            pitch_outside_vel="3.0"
+                            pitch_min="-0.55"
+                            pitch_max="0.55"
+                            breach_thresholds="0.1"/>
+            </ReactiveIfThenElse>
+          </ReactiveIfThenElse>
+        </ReactiveIfThenElse>
+      </ReactiveIfThenElse>
+    </Parallel>
   </BehaviorTree>
 
   <BehaviorTree ID="mainTree">
@@ -61,7 +116,7 @@
         <RunOnce then_skip="true">
           <VisionCalibrate robot_color="{robot_color}"/>
         </RunOnce>
-        <AlwaysSuccess/>
+        <AlwaysFailure/>
       </IfThenElse>
       <OutputRightSwitchState state="{state}"/>
       <Switch3 case_1="auto"
@@ -88,53 +143,88 @@
     </ReactiveSequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="shooter_behavior">
+    <ReactiveIfThenElse>
+      <IsTargetEffective/>
+      <ShooterPush/>
+      <ShooterReady/>
+    </ReactiveIfThenElse>
+  </BehaviorTree>
+
   <BehaviorTree ID="timeBasedDecision">
     <ReactiveSequence>
-      <IfThenElse>
+      <ReactiveIfThenElse>
         <IsTimeRangeCondition min_time="0"
                               max_time="120"
                               game_total_time="420"/>
-        <ForceFailure>
-          <IfThenElse>
-            <IsOutpostAlive/>
-            <SetChassisMode input_chassis_mode_id="19"
-                            chassis_mode="{chassis_mode}"/>
-            <SetChassisMode input_chassis_mode_id="20"
-                            chassis_mode="{chassis_mode}"/>
-          </IfThenElse>
-        </ForceFailure>
-        <AlwaysSuccess/>
-      </IfThenElse>
-      <IfThenElse>
+        <ReactiveIfThenElse>
+          <IsOutpostAlive/>
+          <Sequence>
+            <PatrolEnemyOutpostArea robot_color="{robot_color}"/>
+            <Script code="is_need_aim_outpost:=true"/>
+          </Sequence>
+          <Sequence>
+            <Script code="is_need_aim_outpost:=false"/>
+            <GotoTrapezoidArea robot_color="{robot_color}"/>
+          </Sequence>
+        </ReactiveIfThenElse>
+        <Sequence>
+          <Script code="is_need_aim_outpost:=false"/>
+          <AlwaysSuccess/>
+        </Sequence>
+      </ReactiveIfThenElse>
+      <ReactiveIfThenElse>
         <IsOutpostAlive/>
-        <SetChassisMode input_chassis_mode_id="6"
-                        chassis_mode="{chassis_mode}"/>
-        <IfThenElse>
+        <PatrolSentryPatrolArea robot_color="{robot_color}"/>
+        <ReactiveIfThenElse>
           <Fallback>
             <IsOwnFortressBeenCap capture_status="2"/>
             <IsOwnFortressBeenCap capture_status="3"/>
           </Fallback>
-          <SetChassisMode input_chassis_mode_id="13"
-                          chassis_mode="{chassis_mode}"/>
-          <IfThenElse>
+          <GotoBaseDefenceArea robot_color="{robot_color}"/>
+          <ReactiveIfThenElse>
             <IsHeroInTrapezoid/>
-            <SetChassisMode input_chassis_mode_id="20"
-                            chassis_mode="{chassis_mode}"/>
-            <IfThenElse>
+            <GotoTrapezoidArea robot_color="{robot_color}"/>
+            <ReactiveIfThenElse>
               <IsOwnFortressBeenCap capture_status="1"/>
-              <SetChassisMode input_chassis_mode_id="6"
-                              chassis_mode="{chassis_mode}"/>
-              <SetChassisMode input_chassis_mode_id="21"
-                              chassis_mode="{chassis_mode}"/>
-            </IfThenElse>
-          </IfThenElse>
-        </IfThenElse>
-      </IfThenElse>
+              <PatrolSentryPatrolArea robot_color="{robot_color}"/>
+              <GotoOwnFortress robot_color="{robot_color}"/>
+            </ReactiveIfThenElse>
+          </ReactiveIfThenElse>
+        </ReactiveIfThenElse>
+      </ReactiveIfThenElse>
     </ReactiveSequence>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Action ID="ChassisSlowGyro"
+            editable="true">
+      <input_port name="slow_gyro_vel_scale"
+                  type="double"/>
+    </Action>
+    <Action ID="GotoBaseDefenceArea"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+    <Action ID="GotoOwnFortress"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+    <Action ID="GotoReturnBloodArea"
+            editable="true"/>
+    <Action ID="GotoTrapezoidArea"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+    <Action ID="InverseGimbal"
+            editable="true"/>
     <Condition ID="IsBulletsRemain"
                editable="true"/>
     <Condition ID="IsClientMapUpdate"
@@ -147,6 +237,12 @@
                editable="true"/>
     <Condition ID="IsHeroInTrapezoid"
                editable="true"/>
+    <Condition ID="IsNeedInverseGimbal"
+               editable="true">
+      <input_port name="default_aim_rank"
+                  default="{default_aim_rank}"
+                  type="std::vector&lt;int&gt;"/>
+    </Condition>
     <Condition ID="IsOutpostAlive"
                editable="true"/>
     <Condition ID="IsOwnFortressBeenCap"
@@ -163,6 +259,8 @@
       <input_port name="trigger_blood_return_hp"
                   type="int"/>
     </Condition>
+    <Condition ID="IsTargetEffective"
+               editable="true"/>
     <Condition ID="IsTimeRangeCondition"
                editable="true">
       <input_port name="min_time"
@@ -184,6 +282,50 @@
                    default="{state}"
                    type="std::string"/>
     </Action>
+    <Action ID="PatrolEnemyOutpostArea"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+    <Action ID="PatrolSentryPatrolArea"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+    </Action>
+    <Action ID="PreAimingBase"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+      <input_port name="aim_per_point_sec"
+                  default="{aim_per_point_sec}"
+                  type="double"/>
+      <input_port name="blue_base_poses"
+                  default="{blue_base_poses}"
+                  type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+      <input_port name="red_base_poses"
+                  default="{red_base_poses}"
+                  type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+    </Action>
+    <Action ID="PreAimingOutpost"
+            editable="true">
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+      <input_port name="aim_per_point_sec"
+                  default="{aim_per_point_sec}"
+                  type="double"/>
+      <input_port name="blue_outpost_poses"
+                  default="{blue_outpost_poses}"
+                  type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+      <input_port name="red_outpost_poses"
+                  default="{red_outpost_poses}"
+                  type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+    </Action>
+    <Control ID="ReactiveIfThenElse"
+             editable="true"/>
     <Action ID="RelieveWeakState"
             editable="true">
       <input_port name="need_supply"
@@ -216,39 +358,55 @@
                    default="{confirm_respawn}"
                    type="bool"/>
     </Action>
-    <Action ID="SetChassisMode"
-            editable="true">
-      <input_port name="input_chassis_mode_id"
-                  type="int"/>
-      <output_port name="chassis_mode"
-                   default="{chassis_mode}"
-                   type="int"/>
-    </Action>
-    <Action ID="SetGimbalMode"
-            editable="true">
-      <input_port name="input_gimbal_mode_id"
-                  type="int"/>
-      <output_port name="gimbal_mode"
-                   default="{gimbal_mode}"
-                   type="int"/>
-    </Action>
+    <Decorator ID="RunForSeconds"
+               editable="true">
+      <input_port name="seconds"
+                  type="double"/>
+    </Decorator>
     <Action ID="SetIdle"
             editable="true"/>
-    <Action ID="SetShooterMode"
-            editable="true">
-      <input_port name="input_shooter_mode_id"
-                  type="int"/>
-      <output_port name="shooter_mode"
-                   default="{shooter_mode}"
-                   type="int"/>
-    </Action>
+    <Action ID="ShooterPush"
+            editable="true"/>
+    <Action ID="ShooterReady"
+            editable="true"/>
     <Action ID="StartMainControllers"
             editable="true"/>
+    <Action ID="TrackEnemy"
+            editable="true"/>
+    <Action ID="UpdateAimPriority"
+            editable="true">
+      <input_port name="chassis_mode"
+                  default="{chassis_mode}"
+                  type="int"/>
+      <input_port name="robot_color"
+                  default="{robot_color}"
+                  type="std::string"/>
+      <output_port name="aim_priority"
+                   default="{aim_priority}"
+                   type="std::vector&lt;uint_8&gt;"/>
+    </Action>
     <Action ID="VisionCalibrate"
             editable="true">
       <input_port name="robot_color"
                   default="{robot_color}"
                   type="std::string"/>
+    </Action>
+    <Action ID="YawSlowRound"
+            editable="true">
+      <input_port name="yaw_vel"
+                  type="double"/>
+      <input_port name="scan_range_circles"
+                  type="double"/>
+      <input_port name="pitch_inside_vel"
+                  type="double"/>
+      <input_port name="pitch_outside_vel"
+                  type="double"/>
+      <input_port name="pitch_min"
+                  type="double"/>
+      <input_port name="pitch_max"
+                  type="double"/>
+      <input_port name="breach_thresholds"
+                  type="double"/>
     </Action>
   </TreeNodesModel>
 

@@ -6,12 +6,26 @@
         <Action ID="ChassisSlowGyro" editable="true">
             <input_port name="slow_gyro_vel_scale" type="double"/>
         </Action>
+        <Action ID="GotoBaseDefenceArea" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+        <Action ID="GotoOwnFortress" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+        <Action ID="GotoReturnBloodArea" editable="true"/>
+        <Action ID="GotoTrapezoidArea" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+        <Action ID="InverseGimbal" editable="true"/>
         <Condition ID="IsBulletsRemain" editable="true"/>
         <Condition ID="IsClientMapUpdate" editable="true">
             <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
         </Condition>
         <Condition ID="IsGameInBattle" editable="true"/>
         <Condition ID="IsHeroInTrapezoid" editable="true"/>
+        <Condition ID="IsNeedInverseGimbal" editable="true">
+            <input_port name="default_aim_rank" default="{default_aim_rank}" type="std::vector&lt;int&gt;"/>
+        </Condition>
         <Condition ID="IsOutpostAlive" editable="true"/>
         <Condition ID="IsOwnFortressBeenCap" editable="true">
             <input_port name="capture_status" type="int"/>
@@ -21,6 +35,7 @@
         <Condition ID="IsSentryHpUrgent" editable="true">
             <input_port name="trigger_blood_return_hp" type="int"/>
         </Condition>
+        <Condition ID="IsTargetEffective" editable="true"/>
         <Condition ID="IsTimeRangeCondition" editable="true">
             <input_port name="min_time" type="double"/>
             <input_port name="max_time" type="double"/>
@@ -32,7 +47,26 @@
         <Action ID="OutputRightSwitchState" editable="true">
             <output_port name="state" default="{state}" type="std::string"/>
         </Action>
+        <Action ID="PatrolEnemyOutpostArea" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
+        <Action ID="PatrolSentryPatrolArea" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        </Action>
         <Action ID="PatrolTestArea" editable="true"/>
+        <Action ID="PreAimingBase" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+            <input_port name="aim_per_point_sec" default="{aim_per_point_sec}" type="double"/>
+            <input_port name="blue_base_poses" default="{blue_base_poses}" type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+            <input_port name="red_base_poses" default="{red_base_poses}" type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+        </Action>
+        <Action ID="PreAimingOutpost" editable="true">
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+            <input_port name="aim_per_point_sec" default="{aim_per_point_sec}" type="double"/>
+            <input_port name="blue_outpost_poses" default="{blue_outpost_poses}" type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+            <input_port name="red_outpost_poses" default="{red_outpost_poses}" type="std::vector&lt;geometry_msgs::PointStamped&gt;"/>
+        </Action>
+        <Control ID="ReactiveIfThenElse" editable="true"/>
         <Action ID="RelieveWeakState" editable="true">
             <input_port name="need_supply" default="{need_supply}" type="bool"/>
             <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
@@ -46,6 +80,9 @@
             <output_port name="has_revived" default="{has_revived}" type="bool"/>
             <output_port name="confirm_respawn" default="{confirm_respawn}" type="bool"/>
         </Action>
+        <Decorator ID="RunForSeconds" editable="true">
+            <input_port name="seconds" type="double"/>
+        </Decorator>
         <Action ID="SetChassisMode" editable="true">
             <input_port name="input_chassis_mode_id" type="int"/>
             <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
@@ -59,9 +96,18 @@
             <input_port name="input_shooter_mode_id" type="int"/>
             <output_port name="shooter_mode" default="{shooter_mode}" type="int"/>
         </Action>
+        <Action ID="ShooterPush" editable="true"/>
+        <Action ID="ShooterReady" editable="true"/>
+        <Action ID="ShooterStop" editable="true"/>
         <Action ID="StartMainControllers" editable="true"/>
         <Action ID="Test1" editable="true"/>
         <Action ID="Test2" editable="true"/>
+        <Action ID="TrackEnemy" editable="true"/>
+        <Action ID="UpdateAimPriority" editable="true">
+            <input_port name="chassis_mode" default="{chassis_mode}" type="int"/>
+            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+            <output_port name="aim_priority" default="{aim_priority}" type="std::vector&lt;uint_8&gt;"/>
+        </Action>
         <Action ID="VisionCalibrate" editable="true">
             <input_port name="robot_color" default="{robot_color}" type="std::string"/>
         </Action>

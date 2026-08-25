@@ -24,7 +24,9 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      bool is_online = subscriber_.isRefereeOnline();
+      ros::Time heat_data_stamp = subscriber_.msgGetter<rm_msgs::PowerHeatData>(perception::Subscriber::TopicId::POWER_HEAT_DATA).stamp;
+
+      bool is_online = ros::Time::now() - heat_data_stamp < ros::Duration(0.3); //时间差小于0.3的时候视为referee online
       BT::NodeStatus status = is_online == true ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
       return status;
     }
@@ -43,7 +45,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      bool is_in_battle = subscriber_.getGameStatus().game_progress == rm_msgs::GameStatus::IN_BATTLE;
+      bool is_in_battle = subscriber_.msgGetter<rm_msgs::GameStatus>(perception::Subscriber::TopicId::GAME_STATUS).message.game_progress == rm_msgs::GameStatus::IN_BATTLE;
       BT::NodeStatus status = is_in_battle == true ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
       return status;
     }
@@ -67,11 +69,11 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      bool is_update = subscriber_.isClientMapUpdate();
-      subscriber_.clearClientMapUpdateState();
+      bool is_update = ros::Time::now() - subscriber_.msgGetter<rm_msgs::ClientMapSendData>(perception::Subscriber::TopicId::CLIENT_MAP_SEND_DATA).stamp < ros::Duration(0.5);
       if (is_update == true)
       {
-        switch (subscriber_.getClientMapSendData().command_keyboard)
+        uint8_t client_map_data = subscriber_.msgGetter<rm_msgs::ClientMapSendData>(perception::Subscriber::TopicId::CLIENT_MAP_SEND_DATA).message.command_keyboard;
+        switch (client_map_data)
         {
         case rm_msgs::ClientMapSendData::KEY_A :
           setOutput("chassis_mode",19);
@@ -116,7 +118,9 @@ namespace condition_node
         trigger_hp = 30;
       }
 
-      bool is_urgent = subscriber_.getGameRobotStatus().remain_hp < trigger_hp;
+      uint16_t remain_hp = subscriber_.msgGetter<rm_msgs::GameRobotStatus>(perception::Subscriber::TopicId::GAME_ROBOT_STATUS).message.remain_hp;
+
+      bool is_urgent = remain_hp < trigger_hp;
       BT::NodeStatus status = is_urgent == true ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
 
       return status;
@@ -183,7 +187,7 @@ namespace condition_node
         ROS_ERROR("BT can not access key name [game_total_time] , default value is 420.0");
         game_total_time = 420.0;
       }
-      double present_time = game_total_time - subscriber_.getGameStatus().stage_remain_time;
+      double present_time = game_total_time - subscriber_.msgGetter<rm_msgs::GameStatus>(perception::Subscriber::TopicId::GAME_STATUS).message.stage_remain_time;
 
       if (present_time >= min_time.value() && present_time <= max_time.value())
       {
@@ -241,7 +245,7 @@ namespace condition_node
         ROS_ERROR("BT can not access key name [outpost_hp_threshold] , default value is 800");
         threshold = 800;
       }
-      BT::NodeStatus status = subscriber_.getGameRobotHp().ally_outpost_hp > threshold
+      BT::NodeStatus status = subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message.ally_outpost_hp > threshold
                                 ? BT::NodeStatus::SUCCESS
                                 : BT::NodeStatus::FAILURE;
       return status;
@@ -276,8 +280,9 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      if (subscriber_.getBulletAllowance().bullet_allowance_num_17_mm > 0 &&
-        subscriber_.getBulletAllowance().bullet_allowance_num_17_mm < 2000 == true)
+      uint16_t remain_bullet = subscriber_.msgGetter<rm_msgs::BulletAllowance>(perception::Subscriber::TopicId::BULLET_ALLOWANCE).message.bullet_allowance_num_17_mm;
+      if (remain_bullet > 0 &&
+        remain_bullet < 2000 == true)
       {
         return BT::NodeStatus::SUCCESS;
       }
@@ -308,7 +313,7 @@ namespace condition_node
     {
       BT::Expected<int> track_id = getInput<int>("track_id");
 
-      if (track_id.value() == subscriber_.getTrackData().id)
+      if (track_id.value() == subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).message.id)
       {
         return BT::NodeStatus::SUCCESS;
       }
@@ -332,7 +337,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      bool has_engineer_marked = subscriber_.hasEngineerMarked();
+      bool has_engineer_marked = subscriber_.msgGetter<rm_msgs::RadarToSentry>(perception::Subscriber::TopicId::RADAR_TO_SENTRY_DATA).message.engineer_marked;
       return has_engineer_marked == true ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 
@@ -350,7 +355,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      if (subscriber_.getGameRobotHp().ally_2_robot_hp > 0)
+      if (subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message.ally_2_robot_hp > 0)
         return BT::NodeStatus::SUCCESS;
       else
       {
@@ -374,7 +379,7 @@ namespace condition_node
     {
       geometry_msgs::PoseStamped hero_pose;
       geometry_msgs::Point hero_point;
-      mini_map_tools_.targetPoseTransform(subscriber_.getRobotPositionData().hero_x,subscriber_.getRobotPositionData().hero_y,&hero_pose);
+      mini_map_tools_.targetPoseTransform(subscriber_.msgGetter<rm_msgs::RobotsPositionData>(perception::Subscriber::TopicId::ROBOT_POSITION).message.hero_x,subscriber_.msgGetter<rm_msgs::RobotsPositionData>(perception::Subscriber::TopicId::ROBOT_POSITION).message.hero_y,&hero_pose);
       hero_point.x = hero_pose.pose.position.x;
       hero_point.y = hero_pose.pose.position.y;
       std::string area_name = navigation_tools_.determinePolygonInWhich(hero_point);
@@ -409,9 +414,10 @@ namespace condition_node
     {
       BT::Expected<int> input_value =  getInput<int>("capture_status");
       int is_our_robot_capture = input_value.value();
+      uint8_t fortress_point_state = subscriber_.msgGetter<rm_msgs::EventData>(perception::Subscriber::TopicId::EVENT_DATA).message.fortress_point_state;
       if (is_our_robot_capture == 1)//被己方占领
       {
-        if (subscriber_.getEventData().fortress_point_state == 1)
+        if (fortress_point_state == 1)
         {
           return BT::NodeStatus::SUCCESS;
         }else
@@ -420,7 +426,7 @@ namespace condition_node
         }
       }else if (is_our_robot_capture == 2)//被对方占领
       {
-        if (subscriber_.getEventData().fortress_point_state == 2)
+        if (fortress_point_state == 2)
         {
           return BT::NodeStatus::SUCCESS;
         }else
@@ -429,7 +435,7 @@ namespace condition_node
         }
       }else if (is_our_robot_capture == 3)//被双方占领
       {
-        if (subscriber_.getEventData().fortress_point_state == 3)
+        if (fortress_point_state == 3)
         {
           return BT::NodeStatus::SUCCESS;
         }else
@@ -455,7 +461,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      if (subscriber_.getGameRobotHp().ally_outpost_hp > 0)
+      if (subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message.ally_outpost_hp > 0)
       {
         return BT::NodeStatus::SUCCESS;
       }
@@ -503,7 +509,6 @@ namespace condition_node
   private:
   };
 
-  //TODO : gimbal_mode需保证在gimbal_action_node中正确设定
   class CheckGimbalMode : public BT::ConditionNode // 若实际的云台模式和给定的云台模式相同，则返回success，否则返回failure
   {
   public:
@@ -557,17 +562,15 @@ namespace condition_node
       std::vector<int> default_aim_rank;
       BT::Expected<std::vector<int>> default_aim_rank_value = getInput<std::vector<int>>("default_aim_rank");
       default_aim_rank = default_aim_rank_value.value();
-      if (subscriber_.hasBackCameraDetected() &&
-        subscriber_.getBackCameraDetectionId() != 0)
+      if (!subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections.empty() &&
+        subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections[0].id != 0)
       {
-        if (default_aim_rank[subscriber_.getBackCameraDetectionId()] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
+        if (default_aim_rank[subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections[0].id] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
         {
           return BT::NodeStatus::FAILURE;
         }
         else
         {
-          subscriber_.setBackCameraDetected(false);
-          subscriber_.setBackCameraDetectionId(0);
           return BT::NodeStatus::SUCCESS; //如果不是等于0的优先级（有效），就把云台反过来
         }
       }
@@ -606,7 +609,8 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      return subscriber_.getTrackData().id != 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+      auto track_id = subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).message.id;
+      return track_id != 0 ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
     }
 
   private:
@@ -630,7 +634,7 @@ namespace condition_node
     {
       std::vector<double> map_bounds;
       getInput("map_bounds",map_bounds);
-      geometry_msgs::TransformStamped cur_in_map =  tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::BASE_LINK,perception::TfAccessor::FrameId::MAP);
+      geometry_msgs::TransformStamped cur_in_map =  tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,perception::TfAccessor::FrameId::BASE_LINK);
       for (int i = 0; i < map_bounds.size(); i++)
       {
         if (!std::isfinite(map_bounds[i]))
@@ -661,7 +665,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      if (ros::Time::now() - subscriber_.getDbusData().stamp < ros::Duration(1.0))
+      if (ros::Time::now() - subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).stamp < ros::Duration(1.0))
       {
           if (controller_tools_.getControllerManager())//std::unique_ptr类型，当该指针持有对象时返回true，该对象在BasicControl中的构造函数被唯一赋值
             controller_tools_.startMainController();

@@ -37,7 +37,7 @@ namespace manual
       ros::Time time = ros::Time::now();
       bool is_gyro;
 
-      if (std::abs(subscriber_.getDbusData().wheel) > 0.01)
+      if (std::abs(subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.wheel) > 0.01)
       {
         cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
         is_gyro = true;
@@ -48,15 +48,15 @@ namespace manual
         is_gyro = false;
       }
       cmd_tools_.getSenders()->vel_2d_command_sender_->setAngularZVel(
-        (std::abs(subscriber_.getDbusData().ch_r_y) > 0.01 || std::abs(subscriber_.getDbusData().ch_r_x) > 0.01)
-          ? subscriber_.getDbusData().wheel * gyro_rotate_reduction_
-          : subscriber_.getDbusData().wheel * still_gyro_vel_);
+        (std::abs(subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_y) > 0.01 || std::abs(subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_x) > 0.01)
+          ? subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.wheel * gyro_rotate_reduction_
+          : subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.wheel * still_gyro_vel_);
       cmd_tools_.getSenders()->vel_2d_command_sender_->setLinearXVel(is_gyro
-                                                     ? subscriber_.getDbusData().ch_r_y * gyro_move_reduction_
-                                                     : subscriber_.getDbusData().ch_r_y);
+                                                     ? subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_y * gyro_move_reduction_
+                                                     : subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_y);
       cmd_tools_.getSenders()->vel_2d_command_sender_->setLinearYVel(is_gyro
-                                                     ? -subscriber_.getDbusData().ch_r_x * gyro_move_reduction_
-                                                     : -subscriber_.getDbusData().ch_r_x);
+                                                     ? -subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_x * gyro_move_reduction_
+                                                     : -subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_r_x);
       cmd_tools_.getSenders()->chassis_command_sender_->power_limit_->updateState(rm_common::PowerLimit::NORMAL);
       cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame = "yaw";
       cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, is_gyro);
@@ -95,10 +95,10 @@ namespace manual
     BT::NodeStatus onRunning() override
     {
       ros::Time time = ros::Time::now();
-      if (subscriber_.getTrackData().id == 0 || subscriber_.getShootCmd().mode == 0)
+      if (subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).message.id == 0 || subscriber_.msgGetter<rm_msgs::ShootCmd>(perception::Subscriber::TopicId::SHOOT_CMD).message.mode == 0)
       {
         cmd_tools_.setStackGimbalMode(rm_msgs::GimbalCmd::RATE);
-        cmd_tools_.setStackGimbalRate(-subscriber_.getDbusData().ch_l_x, -subscriber_.getDbusData().ch_l_x, -subscriber_.getDbusData().ch_l_y);
+        cmd_tools_.setStackGimbalRate(-subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_l_x, -subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_l_x, -subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.ch_l_y);
         if (cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->mode == rm_msgs::GimbalCmd::RATE)
           cmd_tools_.getSenders()->chassis_command_sender_->setFollowVelDes(
             cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_yaw);
@@ -147,7 +147,7 @@ namespace manual
     BT::NodeStatus onRunning() override
     {
       ros::Time now_time = ros::Time::now();
-      if (subscriber_.getDbusData().s_l == rm_msgs::DbusData::UP)
+      if (subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.s_l == rm_msgs::DbusData::UP)
       {
         if (now_time.toSec() - last_time_.toSec() > 0.00001 || continue_shoot_)
         {
@@ -164,7 +164,7 @@ namespace manual
       {
         continue_shoot_ = false;
         one_shoot_ = false;
-        if (subscriber_.getDbusData().s_l == rm_msgs::DbusData::MID)
+        if (subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.s_l == rm_msgs::DbusData::MID)
           cmd_tools_.getSenders()->shooter_command_sender_->setMode(rm_msgs::ShootCmd::READY);
         else
           cmd_tools_.getSenders()->shooter_command_sender_->setMode(rm_msgs::ShootCmd::STOP);

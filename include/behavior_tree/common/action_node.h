@@ -69,7 +69,7 @@ public:
     BT::Expected<std::string> expected = getInput<std::string>("robot_color");
     std::string robot_color = expected.value();
     robot_color == "blue" ? robot_color = "red" : robot_color = "blue"; // 要击打的是敌方，因此颜色反相
-    switch_detection_srv_->setEnemyColor(subscriber_.getGameRobotStatus().robot_id, robot_color);
+    switch_detection_srv_->setEnemyColor(subscriber_.msgGetter<rm_msgs::GameRobotStatus>(perception::Subscriber::TopicId::GAME_ROBOT_STATUS).message.robot_id, robot_color);
 
     switch_detection_srv_->setTargetType(rm_msgs::StatusChangeRequest::ARMOR);
     switch_detection_srv_->setArmorTargetType(rm_msgs::StatusChangeRequest::ARMOR_WITHOUT_OUTPOST_BASE);
@@ -132,7 +132,7 @@ public:
 
   BT::NodeStatus tick() override  // 读取拨杆状态（感知）并根据状态做进入动作（执行），同时输出黑板状态（决策）
   {
-    const rm_msgs::DbusData::_s_r_type switch_state = subscriber_.getDbusData().s_r;
+    const rm_msgs::DbusData::_s_r_type switch_state = subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.s_r;
     BT::NodeStatus status = BT::NodeStatus::SUCCESS;
     // 未校准且非 idle，拒绝进入自动/手动
     if (switch_state == rm_msgs::DbusData::MID)
@@ -143,8 +143,6 @@ public:
                                  "mbf client State:" << navigation_tools_.getMbfClient()->getState().isDone());
         navigation_tools_.resetPatrolState();
         navigation_tools_.getMbfClient()->cancelGoal();
-        subscriber_.setBackCameraDetected(false);
-        subscriber_.setBackCameraDetectionId(0);
         ROS_INFO_THROTTLE(0.5, "enter manual");
       }
       state_ = "manual";
@@ -303,7 +301,7 @@ class ReviveIfDead : public BT::SyncActionNode
     {
       BT::NodeStatus status = BT::NodeStatus::SUCCESS;
       const ros::Time now = ros::Time::now();
-      if (subscriber_.getGameRobotStatus().remain_hp == 0)  // 如果订阅到哨兵的剩余血量为0，则关闭主要控制器
+      if (subscriber_.msgGetter<rm_msgs::GameRobotStatus>(perception::Subscriber::TopicId::GAME_ROBOT_STATUS).message.remain_hp == 0)  // 如果订阅到哨兵的剩余血量为0，则关闭主要控制器
       {
         controller_tools_.stopMainController();
         is_dead_=true;  // 若血量为零则判定为死亡
@@ -378,7 +376,7 @@ public:
 
   BT::NodeStatus onRunning() override
   {
-    if (subscriber_.getGameRobotStatus().remain_hp >= subscriber_.getGameRobotStatus().max_hp)
+    if (subscriber_.msgGetter<rm_msgs::GameRobotStatus>(perception::Subscriber::TopicId::GAME_ROBOT_STATUS).message.remain_hp >= subscriber_.msgGetter<rm_msgs::GameRobotStatus>(perception::Subscriber::TopicId::GAME_ROBOT_STATUS).message.max_hp)
     {
       setOutput("need_supply_output",false); //重置状态
       return BT::NodeStatus::SUCCESS;

@@ -18,6 +18,7 @@
 #include "common/sentry_param_loader.h"
 #include "behavior_tree/common/action_node.h"
 #include "behavior_tree/condition_node.h"
+#include "behavior_tree/common/control_node.h"
 #include "common/tools.h"
 
 namespace register_node

@@ -280,8 +280,8 @@ namespace tools
   {
     geometry_msgs::PoseStamped target_pose;
 
-    targetPoseTransform(subscriber_.getClientMapSendData().target_position_x,
-                        subscriber_.getClientMapSendData().target_position_y, &target_pose);
+    targetPoseTransform(subscriber_.msgGetter<rm_msgs::ClientMapSendData>(perception::Subscriber::TopicId::CLIENT_MAP_SEND_DATA).message.target_position_x,
+                        subscriber_.msgGetter<rm_msgs::ClientMapSendData>(perception::Subscriber::TopicId::CLIENT_MAP_SEND_DATA).message.target_position_y, &target_pose);
     publisher_.getPublishers()->conduct_point_pub_.publish(target_pose);
     return target_pose;
   }
@@ -375,8 +375,6 @@ namespace tools
           }
           if (ros::Time::now() - reach_time_ > ros::Duration(residence_time_at_point))
           {
-            if (is_conduct_mode)
-              subscriber_.clearClientMapUpdateState();
             patrol_state_ = PatrolState::IDLE;
             ROS_INFO_THROTTLE(0.5, "Stay there long enough, change goal.");
           }
@@ -508,7 +506,7 @@ namespace tools
       geometry_msgs::PointStamped target_at_map;
       try
       {
-        track_point_.point = subscriber_.getTrackData().position;
+        track_point_.point = subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).message.position;
         geometry_msgs::TransformStamped transform_stamped =
             tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP, perception::TfAccessor::FrameId::TRACK);
 
@@ -670,10 +668,10 @@ namespace tools
 
   void GimbalTools::updatePitchStrafeDirect(double min_angel , double max_angle , double pitch_outside_vel , double pitch_inside_vel , double breach_threshold)
   {
-    geometry_msgs::TransformStamped yaw2pitch_;
+    geometry_msgs::TransformStamped pitch2yaw;
     try
     {
-      yaw2pitch_ = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::YAW,perception::TfAccessor::FrameId::BASE_LINK);
+      pitch2yaw = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::YAW,perception::TfAccessor::FrameId::BASE_LINK); //TODO:需要确认云台括扑
     }
     catch (tf2::TransformException& ex)
     {
@@ -681,7 +679,7 @@ namespace tools
       return;
     }
     double roll_temp, pitch, yaw_temp;
-    quatToRPY(yaw2pitch_.transform.rotation, roll_temp, pitch, yaw_temp);
+    quatToRPY(pitch2yaw.transform.rotation, roll_temp, pitch, yaw_temp);
 
     if (pitch >= max_angle)
     {
@@ -706,7 +704,7 @@ namespace tools
       traj_pitch_ = max_pitch_angle_;
     if (traj_pitch_ < min_pitch_angle_)
       traj_pitch_ = min_pitch_angle_; //做保护
-    cmd_tools_.getSenders()->gimbal_command_sender_->setTrajFrameId("base_yaw");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("base_yaw");//odom to base_yaw
     cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(scale_yaw, 0.);
@@ -722,7 +720,7 @@ namespace tools
       traj_pitch_ = max_pitch_angle_;
     if (traj_pitch_ < min_pitch_angle_)
       traj_pitch_ = min_pitch_angle_; //做保护
-    cmd_tools_.getSenders()->gimbal_command_sender_->setTrajFrameId("base_yaw");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("base_yaw");//odom to base_yaw
     cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(yaw_direct_, 0.);
@@ -731,17 +729,17 @@ namespace tools
 
   void GimbalTools::lidarTwist(double yaw_vel , int scan_range_circles)
   {
-    geometry_msgs::TransformStamped map2yaw_;
+    geometry_msgs::TransformStamped yaw2map;
     try
     {
-      map2yaw_ = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::YAW);
+      yaw2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::YAW);
     }
     catch (tf2::TransformException& ex)
     {
       ROS_WARN_THROTTLE(0.5, "%s", ex.what());
       return;
     }
-    double yaw = yawFromQuat(map2yaw_.transform.rotation);
+    double yaw = yawFromQuat(yaw2map.transform.rotation);
 
     if (circle_count_ <= 0)
       yaw_direct_ = cmd_tools_.smoothlyYawOutput(yaw_vel); //实际上就是限制加速度
@@ -765,9 +763,9 @@ namespace tools
   void GimbalTools::setGimbalDirectPoint(geometry_msgs::PointStamped point_of_map)
   {
     geometry_msgs::PointStamped point_of_odom;
-    geometry_msgs::TransformStamped odom2map;
-    odom2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,perception::TfAccessor::FrameId::MAP);
-    tf2::doTransform(point_of_map, point_of_odom, odom2map); //中文语义：将map坐标系的物体转换到odom下
+    geometry_msgs::TransformStamped map2odom;
+    map2odom = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,perception::TfAccessor::FrameId::MAP);
+    tf2::doTransform(point_of_map, point_of_odom, map2odom); //中文语义：将map坐标系的物体转换到odom下
     cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
     cmd_tools_.getSenders()->gimbal_command_sender_->setPoint(point_of_odom);

@@ -14,8 +14,6 @@
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "common/types.h"
 
-//TODO : 该文件有较大漏洞，需重新编写
-
 class SentryParamLoader  //需在main函数中构造
 {
 public:
@@ -230,7 +228,7 @@ public:
       ROS_ASSERT(zone.second.hasMember("position") and
                  zone.second.hasMember("pos_detection_polygon"));
       ROS_ASSERT(zone.second["position"].getType() == XmlRpc::XmlRpcValue::TypeArray and
-                 zone.second["pos_detection_polygon"].getType() == XmlRpc::XmlRpcValue::TypeArray); // TODO : 将其放入gtest中
+                 zone.second["pos_detection_polygon"].getType() == XmlRpc::XmlRpcValue::TypeArray);
       std::vector<geometry_msgs::PoseStamped> points;
       for (int i = 0; i < zone.second["position"].size(); ++i)
       {
@@ -290,13 +288,14 @@ public:
   {
     ros::NodeHandle auto_nh(bt_nh_,"auto");
     XmlRpc::XmlRpcValue default_aim_priority;
-    std::vector<int> default_aim_rank;
-    auto_nh.getParam("default_aim_priority",default_aim_priority); //TODO : 这里需要使用gtest测试确保类型为数组且=内部的数据为整数
+    std::vector<int> src_default_aim_rank;
+    auto_nh.getParam("default_aim_priority",default_aim_priority);
     for (int i=0;i<default_aim_priority.size();i++)
     {
-      default_aim_rank.push_back(default_aim_priority[i]);
+      src_default_aim_rank.push_back(default_aim_priority[i]);
     }
-    blackboard_->set<std::vector<int>>("default_aim_rank",default_aim_rank);
+    std::vector<uint8_t> default_aim_rank(src_default_aim_rank.begin() , src_default_aim_rank.end()); //做类型转换
+    blackboard_->set<std::vector<uint8_t>>("aim_priority",default_aim_rank);
   }
 
   void load_robot_color()
@@ -329,6 +328,8 @@ public:
     blackboard_->set<bool>("has_reached_goal",false);
     blackboard_->set<ros::Time>("reach_time",ros::Time::now());
     blackboard_->set<int>("sentry_intention",static_cast<int>(types::SentryIntention::MoveToTheTargetPoint));
+    blackboard_->set<bool>("is_need_aim_outpost",false);
+    blackboard_->set<bool>("is_need_aim_base",false);
   }
 
   void loadMapParam()

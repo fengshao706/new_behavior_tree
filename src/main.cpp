@@ -14,6 +14,21 @@
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "common/sentry_param_loader.h"
 #include "common/posture_manager.h"
+#include <behaviortree_cpp/loggers/bt_file_logger_v2.h>
+#include <chrono>
+
+#ifndef PROJECT_ROOT_DIR
+#define PROJECT_ROOT_DIR ""
+#endif
+
+std::string get_current_time_string() {
+  const auto now = std::chrono::system_clock::now();
+  const auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+  std::stringstream ss;
+  ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d_%H-%M-%S");
+  return ss.str();
+}
 
 int main(int argc,char * argv[])
 {
@@ -31,12 +46,11 @@ int main(int argc,char * argv[])
   ROS_INFO("---------------------TEST-----------------------");
   tools::ControllerTools controller_tools(bt_nh);
 
-  perception::Subscriber subscriber(cmd_tools,bt_nh);
+  perception::Subscriber subscriber(bt_nh);
   tools::MiniMapTools mini_map_tools(*blackboard , publisher , subscriber);
   perception::TfAccessor tf_accessor(bt_nh,subscriber);
   tools::GimbalTools gimbal_tools(tf_accessor,cmd_tools,bt_nh);
   tools::NavigationTools navigation_tools(*blackboard ,subscriber,tf_accessor,cmd_tools,planner_tools);
-  subscriber.setNavigationTools(&navigation_tools); //TODO : 需要优化实现
 
   posture::PostureManager posture_manager(bt_nh,*blackboard,publisher);
   ROS_INFO("------------------complete------------------------");
@@ -44,7 +58,22 @@ int main(int argc,char * argv[])
 
   register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,planner_tools, tf_accessor,publisher);
 
-  BT::Tree tree = factory.createTreeFromFile("/home/wjr/rmuc_ws/src/rm_sentry/decision/new_behavior_tree/config/test.xml",blackboard);
+  std::filesystem::path root_path(PROJECT_ROOT_DIR);
+
+  std::filesystem::path xml_path = root_path / "config" / "untitled_1.xml";
+  std::filesystem::path log_path = root_path / "log" / get_current_time_string().append(".btlog");
+
+  std::cout << "Loading XML from: " << xml_path << std::endl;
+  std::cout << "Saving Log to: " << log_path << std::endl;
+
+  ROS_INFO("Loading XML from: %s" , xml_path.c_str());
+  ROS_INFO("Saving Log to: %s" , log_path.c_str());
+
+  BT::Tree tree = factory.createTreeFromFile(xml_path,blackboard);
+  BT::ReactiveSequence::EnableException(false);
+
+  BT::FileLogger2 logger2(tree,log_path);
+
   BT::Groot2Publisher groot2_publisher(tree,5555);
   ros::Rate rate(2000);
   int test = 0;
