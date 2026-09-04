@@ -11,6 +11,8 @@
 
 #include "behaviortree_cpp/action_node.h"
 #include "common/tools.h"
+#include "common/invincible_detection.h"
+#include "common/chase_policy.h"
 
 namespace condition_node
 {
@@ -543,7 +545,7 @@ namespace condition_node
     int gimbal_mode_;
   };
 
-  class IsNeedInverseGimbal : public BT::ConditionNode
+  class IsNeedInverseGimbal : public BT::ConditionNode //TODO : 有逻辑漏洞，需要确定前置相机瞄着的目标的优先级比较低才反转云台
   {
   public:
     IsNeedInverseGimbal(const std::string& name, const BT::NodeConfig& config, BT::Blackboard& blackboard,
@@ -562,10 +564,28 @@ namespace condition_node
       std::vector<int> default_aim_rank;
       BT::Expected<std::vector<int>> default_aim_rank_value = getInput<std::vector<int>>("default_aim_rank");
       default_aim_rank = default_aim_rank_value.value();
-      if (!subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections.empty() &&
-        subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections[0].id != 0)
+      const int target_id = subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections[0].id;
+      const bool is_hp_fresh = ros::Time::now() - subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).stamp < ros::Duration(1.5);
+      rm_msgs::GameRobotHp game_robot_hp = subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message;
+      if (target_id == static_cast<int>(types::RobotType::OUTPOST) | target_id == static_cast<int>(types::RobotType::BASE))
       {
-        if (default_aim_rank[subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections[0].id] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
+        if (is_hp_fresh == false) //血量数据新鲜度不足直接返回false
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+        if (target_id == static_cast<int>(types::RobotType::OUTPOST) && game_robot_hp.enemy_outpost_hp <= 0)
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+        if (target_id == static_cast<int>(types::RobotType::BASE) && game_robot_hp.enemy_base_hp <=0)
+        {
+          return BT::NodeStatus::FAILURE;
+        }
+      }
+      if (!subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::BACK_CAMERA_DETECTION_DATA).message.detections.empty() &&
+        target_id != 0)
+      {
+        if (default_aim_rank[target_id] == 0) //id是攻击优先级所在的数组下标，数组内部的值为攻击优先级
         {
           return BT::NodeStatus::FAILURE;
         }
@@ -582,21 +602,6 @@ namespace condition_node
 
   private:
     perception::Subscriber& subscriber_;
-  };
-
-  class IsTargetNotInvincible : public BT::ConditionNode //TODO : 需重写无敌检测算法
-  {
-  public:
-    IsTargetNotInvincible(const std::string& name, const BT::NodeConfig& config) : ConditionNode(name, config)
-    {
-    }
-
-    BT::NodeStatus tick() override
-    {
-      return BT::NodeStatus::SUCCESS;
-    }
-
-  private:
   };
 
   class IsTargetEffective : public BT::ConditionNode
@@ -625,7 +630,7 @@ namespace condition_node
 
     }
 
-    BT::PortsList providedPorts()
+    static BT::PortsList providedPorts()
     {
       return {BT::InputPort<std::vector<double>>("map_bounds")};
     }
@@ -681,6 +686,104 @@ namespace condition_node
   private:
     perception::Subscriber &subscriber_;
     tools::ControllerTools &controller_tools_;
+  };
+
+  class IsAllowChase : public BT::ConditionNode
+  {
+  public:
+    IsAllowChase(const std::string &name , const BT::NodeConfig &config , tools::NavigationTools &navigation_tools , tools::MiniMapTools &mini_map_tools , perception::Subscriber &subscriber , perception::TfAccessor &tf_accessor , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker) : ConditionNode(name , config) , navigation_tools_(navigation_tools) , mini_map_tools_(mini_map_tools) , subscriber_(subscriber) , tf_accessor_(tf_accessor) , enemy_hp_state_tracker_(enemy_hp_state_tracker)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<int>("gimbal_mode"),
+                BT::InputPort<int>("chassis_mode"),
+                  BT::InputPort<double>("game_total_time"),
+                  BT::InputPort<bool>("enable_chase"),
+                  BT::InputPort<std::vector<chase_policy::ChaseRestrictedZoneConfig>>("chase_restricted_zones")};
+    }
+
+    BT::NodeStatus tick() override
+    {
+      double present_time = getInput<double>("game_total_time").value() - subscriber_.msgGetter<rm_msgs::GameStatus>(perception::Subscriber::TopicId::GAME_STATUS).message.stage_remain_time;
+
+      geometry_msgs::TransformStamped cur_in_map =
+    tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,
+                                perception::TfAccessor::FrameId::BASE_LINK); //获取机器人的当前位置
+      geometry_msgs::TransformStamped target_in_map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP , perception::TfAccessor::FrameId::TRACK);
+      geometry_msgs::Point cur_position; //当前自身位置
+      geometry_msgs::Point target_position; //目标位置
+      cur_position.x = cur_in_map.transform.translation.x;
+      cur_position.y = cur_in_map.transform.translation.y;
+      cur_position.z = cur_in_map.transform.translation.z;
+      target_position.x = target_in_map.transform.translation.x;
+      target_position.y = target_in_map.transform.translation.y;
+      target_position.z = target_in_map.transform.translation.z;
+
+      std::string cur_area_name = navigation_tools_.determinePolygonInWhich(cur_position);
+      std::string target_area_name = navigation_tools_.determinePolygonInWhich(target_position);
+
+      chase_policy::ChaseGateInput chase_gate_input;
+      getInput<bool>("enable_chase", chase_gate_input.enabled);
+      chase_gate_input.track_enemy = getInput<int>("gimbal_mode") == static_cast<int>(types::GimbalMode::TrackEnemy);
+      chase_gate_input.current_mode_is_chase = getInput<int>("chassis_mode") == static_cast<int>(types::ChassisMode::Chase);
+      chase_gate_input.goal_active = navigation_tools_.getMbfClient()->getState() == actionlib::SimpleClientGoalState::ACTIVE || navigation_tools_.getMbfClient()->getState() == actionlib::SimpleClientGoalState::PENDING;
+      chase_gate_input.last_track_time = subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).stamp.toSec();
+      chase_gate_input.max_continuation_sec = 5.0;
+      chase_gate_input.staying_area_name = cur_area_name;
+      chase_gate_input.target_area_name = target_area_name;
+      chase_gate_input.present_game_time = present_time;
+      chase_gate_input.target_attackable = enemy_hp_state_tracker_.snapshot(subscriber_.msgGetter<rm_msgs::TrackData>(perception::Subscriber::TopicId::TRACK_DATA).message.id,ros::Time::now()).state == invincible_detection::EnemyInvincibleState::ALIVE;
+
+      //------------处理己方机器人是否在目标区域的判断--------------
+      const auto& pos = subscriber_.msgGetter<rm_msgs::RobotsPositionData>(perception::Subscriber::TopicId::ROBOT_POSITION).message;
+      const auto& hp  = subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message;
+
+      const auto sample = [&](types::RobotType t) -> std::tuple<float, float, uint16_t> {
+        switch (t) {
+        case types::RobotType::HERO:       return { pos.hero_x,       pos.hero_y,       hp.ally_1_robot_hp };
+        case types::RobotType::ENGINEER:   return { pos.engineer_x,   pos.engineer_y,   hp.ally_2_robot_hp };
+        case types::RobotType::STANDARD_3: return { pos.standard_3_x, pos.standard_3_y, hp.ally_3_robot_hp };
+        case types::RobotType::STANDARD_4: return { pos.standard_4_x, pos.standard_4_y, hp.ally_4_robot_hp };
+        default: return { 0.0f, 0.0f, 0 };
+        }
+      };
+
+      bool ally_in_target_area = false;
+      for (const types::RobotType t : { types::RobotType::HERO, types::RobotType::ENGINEER,
+                                        types::RobotType::STANDARD_3, types::RobotType::STANDARD_4 })
+      {
+        const auto [x, y, h] = sample(t); // 结构化绑定拆出 x/y/hp
+        if (h <= 0) continue;
+        geometry_msgs::PoseStamped pose;
+        mini_map_tools_.targetPoseTransform(x, y, &pose);
+        geometry_msgs::Point point;
+        point.x = pose.pose.position.x;
+        point.y = pose.pose.position.y;
+        point.z = 0.0;
+
+        if (navigation_tools_.determinePolygonInWhich(point) == chase_gate_input.target_area_name) //己方机器人所处的区域和目标追击区域相同
+        {
+          ally_in_target_area = true;
+          break;
+        }
+      }
+      chase_gate_input.ally_in_target_area = ally_in_target_area;
+
+      std::vector<chase_policy::ChaseRestrictedZoneConfig> restricted_zone_configs;
+      getInput<std::vector<chase_policy::ChaseRestrictedZoneConfig>>("chase_restricted_zones", restricted_zone_configs);
+      const bool allowed = chase_policy::chaseGateAllows(chase_gate_input, restricted_zone_configs);
+      return allowed ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE;
+    }
+
+  private:
+    tools::NavigationTools &navigation_tools_;
+    tools::MiniMapTools &mini_map_tools_;
+    perception::Subscriber &subscriber_;
+    perception::TfAccessor &tf_accessor_;
+    invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker_;
   };
 }
 

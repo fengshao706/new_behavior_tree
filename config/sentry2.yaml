@@ -629,22 +629,30 @@ rm_behavior_tree:
       gyro_speed: 6.0
       gyro_during_patrol_enable: true
     chase_restricted_zones:
-      extreme:
-        areas: [ "enemy_lesiure_area","enemy_supply_area" ]
-        game_present_time: 150
-        #outpost_hp_threshold: 910
-      conservative:
-        areas: [ "enemy_leisure_area","middle_area","enemy_supply_area","enemy_attack_mid_robot_area","enemy_protect_mid_robot_area","own_protect_mid_robot_area" ]
-        game_present_time: 300
-        #outpost_hp_threshold: 620
-
-    #                [ "red_outpost_area","red_center_sentry_patrol_area","red_base_area" ]
-    #        outpost_hp_threshold: 620
-    #      avoidant:
-    #        areas: [ "red_R3_area", "red_R4_trapezoidal_heights_area", "red_stair_area", "red_ring_plateau_area","red_supply_area","red_base_area",
-    #                 "blue_R3_area", "blue_R4_trapezoidal_heights_area", "blue_stair_area", "blue_ring_plateau_area","blue_supply_area","blue_base_area",
-    #        ]
-    #        outpost_hp_threshold: 0
+      - name: "enemy_leisure_area"
+        is_target_area: true
+        begin_time: 0
+        end_time: 420
+      - name: "enemy_supply_area"
+        is_target_area: true
+        begin_time: 0
+        end_time: 420
+      - name: "middle_area"
+        is_target_area: true
+        begin_time: 0
+        end_time: 300
+      - name: "enemy_attack_mid_robot_area"
+        is_target_area: true
+        begin_time: 0
+        end_time: 300
+      - name: "enemy_protect_mid_robot_area"
+        is_target_area: false
+        begin_time: 0
+        end_time: 300
+      - name: "own_protect_mid_robot_area"
+        is_target_area: false
+        begin_time: 0
+        end_time: 300
     enable_chase: true
     still_gyro_enable: true
     trigger_blood_return_hp: 300

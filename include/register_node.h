@@ -20,13 +20,14 @@
 #include "behavior_tree/condition_node.h"
 #include "behavior_tree/common/control_node.h"
 #include "common/tools.h"
+#include "common/invincible_detection.h"
 
 namespace register_node
 {
   void register_node(ros::NodeHandle &bt_nh , tools::CmdTools& cmd_tools, perception::Subscriber& subscriber, BT::BehaviorTreeFactory& factory,
                      tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
                      tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools,tools::PlannerTools &planner_tools,
-                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher);
+                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker);
 }
 
 #endif //NEW_BEHAVIOR_TREE_REGITER_NODE_H

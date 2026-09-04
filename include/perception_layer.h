@@ -29,6 +29,7 @@
 #include "dynamic_reconfigure/client.h"
 #include <rm_msgs/ShootState.h>
 #include "rm_msgs/RadarToSentry.h"
+#include "rm_msgs/RadarWirelessEnemyRobotPos.h"
 #include "rm_msgs/DartRemainingTime.h"
 #include <mbf_msgs/MoveBaseAction.h>
 #include "visualization_msgs/Marker.h"
@@ -76,6 +77,7 @@ namespace perception{
       BUFF_DATA,
       RFID_DATA,
       RADAR_TO_SENTRY_DATA,
+      RADAR_WIRELESS_ENEMY_ROBOT_POS,
       ALLOW_SHOOT,
       SHOOT_CMD_DATA,
       PLANNER_GOAL,
@@ -111,6 +113,7 @@ namespace perception{
       register_subscriber<rm_msgs::Buff>(TopicId::BUFF_DATA,"/rm_referee/robot_buff");
       register_subscriber<rm_msgs::RfidStatus>(TopicId::RFID_DATA,"/rm_referee/rfid_status_data");
       register_subscriber<rm_msgs::RadarToSentry>(TopicId::RADAR_TO_SENTRY_DATA,"/rm_referee/radar_to_sentry");
+      register_subscriber<rm_msgs::RadarWirelessEnemyRobotPos>(TopicId::RADAR_WIRELESS_ENEMY_ROBOT_POS,"/rm_referee/radar_wireless_enemy_robot_pos");
       register_subscriber<rm_msgs::ShootBeforehandCmd>(TopicId::ALLOW_SHOOT,"/controllers/gimbal_controller/bullet_solver/shoot_beforehand_cmd");
       register_subscriber<rm_msgs::ShootCmd>(TopicId::SHOOT_CMD_DATA,"/controllers/shooter_controller/command");
       register_subscriber<geometry_msgs::PoseStamped>(TopicId::PLANNER_GOAL,"/move_base_simple/goal");

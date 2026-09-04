@@ -17,6 +17,13 @@
             <input_port name="robot_color" default="{robot_color}" type="std::string"/>
         </Action>
         <Action ID="InverseGimbal" editable="true"/>
+        <Condition ID="IsAllowChase" editable="true">
+            <input_port name="gimbal_mode" default="{gimbal_mode}" type="int"/>
+            <input_port name="chassis_mode" default="{chassis_mode}" type="int"/>
+            <input_port name="game_total_time" default="{game_total_time}" type="double"/>
+            <input_port name="chase_restricted_zones" default="{chase_restricted_zones}" type="std::vector&lt;chase_policy::ChaseRestrictedZoneConfig&gt;"/>
+            <input_port name="enable_chase" default="{enable_chase}" type="bool"/>
+        </Condition>
         <Condition ID="IsBulletsRemain" editable="true"/>
         <Condition ID="IsClientMapUpdate" editable="true">
             <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>

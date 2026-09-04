@@ -13,6 +13,7 @@
 #include "geometry_msgs/TransformStamped.h"
 #include <rm_msgs/PriorityArray.h>
 #include "rm_common/ori_tool.h"
+#include "common/invincible_detection.h"
 
 namespace gimbal
 {
@@ -293,7 +294,7 @@ namespace gimbal
   class UpdateAimPriority : public BT::SyncActionNode
   {
   public:
-    UpdateAimPriority(const std::string &name , const BT::NodeConfig &config , perception::TfAccessor &tf_accessor , perception::Subscriber &subscriber, perception::Publisher &publisher , tools::NavigationTools &navigation_tools) : SyncActionNode(name , config) , tf_accessor_(tf_accessor) , subscriber_(subscriber), publisher_(publisher) , navigation_tools_(navigation_tools)
+    UpdateAimPriority(const std::string &name , const BT::NodeConfig &config , perception::TfAccessor &tf_accessor , perception::Subscriber &subscriber, perception::Publisher &publisher , tools::NavigationTools &navigation_tools , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker) : SyncActionNode(name , config) , tf_accessor_(tf_accessor) , subscriber_(subscriber), publisher_(publisher) , navigation_tools_(navigation_tools) , enemy_hp_state_tracker_(enemy_hp_state_tracker)
     {
 
     }
@@ -347,6 +348,7 @@ namespace gimbal
         }
       }
 
+      //----------获取目标在map坐标系下的坐标------------
       geometry_msgs::TransformStamped camera_optical_frame2map;
       camera_optical_frame2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,perception::TfAccessor::FrameId::CAMERA_OPTICAL_FRAME);
       for (auto& detection : subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::FRONT_CAMERA_DETECTION_DATA).message.detections)
@@ -368,6 +370,26 @@ namespace gimbal
 
         if (detection.id > 0 && detection.id <=8)
         {
+          //---------目标为建筑时判断建筑是否死亡以及数据是否新鲜-----------
+          const bool is_hp_fresh = ros::Time::now() - subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).stamp < ros::Duration(1.5);
+          rm_msgs::GameRobotHp game_robot_hp = subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message;
+          if (detection.id == static_cast<int>(types::RobotType::OUTPOST) || detection.id == static_cast<int>(types::RobotType::BASE))
+          {
+            if (is_hp_fresh == false) //血量数据新鲜度不足直接返回false
+            {
+              aim_priority[detection.id-1] = 0;
+            }
+            if (detection.id == static_cast<int>(types::RobotType::OUTPOST) && game_robot_hp.enemy_outpost_hp <= 0)
+            {
+              aim_priority[detection.id-1] = 0;
+            }
+            if (detection.id == static_cast<int>(types::RobotType::BASE) && game_robot_hp.enemy_base_hp <=0)
+            {
+              aim_priority[detection.id-1] = 0;
+            }
+          }
+
+          //----------判断目标所处的区域并动态调整优先级------------
           if (enemy_in_area == robot_color+"_fortress_area")//目标位于自家堡垒区,将优先级开到最高
           {
             aim_priority[detection.id-1] = 5; //数组下标需要将实际id减去1
@@ -381,6 +403,16 @@ namespace gimbal
           if (detection.id == 2 && enemy_in_area == enemy_color+"_engineer_invincible_area")//目标是工程的情况
           {
             aim_priority[detection.id-1] = 0; //工程在无敌区不打
+          }
+
+          //-----------利用无敌状态检测，覆盖之前的优先级，无敌或死亡强制不打-----------
+          if (detection.id != static_cast<int>(types::RobotType::OUTPOST) && detection.id != static_cast<int>(types::RobotType::BASE))
+          {
+            invincible_detection::EnemyLifeSnapshot target_life_snapshot = enemy_hp_state_tracker_.snapshot(detection.id,ros::Time::now());
+            if (target_life_snapshot.state != invincible_detection::EnemyInvincibleState::ALIVE)
+            {
+              aim_priority[detection.id-1] = 0;
+            }
           }
         }
       }
@@ -397,6 +429,7 @@ namespace gimbal
     perception::Subscriber &subscriber_;
     perception::Publisher &publisher_;
     tools::NavigationTools &navigation_tools_;
+    invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker_;
   };
 }
 

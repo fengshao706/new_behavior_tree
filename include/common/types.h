@@ -93,12 +93,6 @@ namespace types
     int revive_hp;
   } ENEMY_INFO;
 
-  typedef struct
-  {
-    std::vector<std::string> chase_restricted_zone;
-    int outpost_hp_threshold;
-  } CHASE_JUDGE;
-
 }
 
 #endif //NEW_BEHAVIOR_TREE_TYPES_H

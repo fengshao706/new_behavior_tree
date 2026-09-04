@@ -73,7 +73,8 @@ src/perception_layer.cpp src/register_node.cpp include/behavior_tree/common/acti
         include/behavior_tree/condition_node.h
         include/behavior_tree/condition_node.cpp
         src/common/posture_manager.cpp include/behavior_tree/common/control_node.cpp
-
+        include/common/invincible_detection.h
+        include/common/chase_policy.h
 )
 
 

@@ -13,6 +13,7 @@
 #include "tf2/LinearMath/Quaternion.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "common/types.h"
+#include "common/chase_policy.h"
 
 class SentryParamLoader  //需在main函数中构造
 {
@@ -57,6 +58,7 @@ public:
     double chasing_max_for_time;
     bool attack_engineer_enable;
     bool attack_outpost_enable;
+    bool enable_chase;
 
     XmlRpc::XmlRpcValue chase_restricted_zones;
     XmlRpc::XmlRpcValue standby_velocity;
@@ -66,6 +68,7 @@ public:
     chassis_behavior_nh.getParam("trigger_run_away_outpost_hp", trigger_run_away_outpost_hp) &&//离开前哨站的血量阈值
     chassis_behavior_nh.getParam("trigger_ban_chase_outpost_hp", trigger_ban_chase_outpost_hp) &&//禁止追击敌人到前哨站区域的血量阈值
     chassis_behavior_nh.getParam("chase_restricted_zones", chase_restricted_zones) &&//限制追击的区域
+    chassis_behavior_nh.getParam("enable_chase", enable_chase) &&//追击总开关
     chassis_behavior_nh.getParam("max_planning_period",max_planning_period) &&
     chassis_behavior_nh.getParam("stand_at_conduct_point_sec",stand_at_conduct_point_sec) &&
     chassis_behavior_nh.getParam("chase_freq",chase_freq) &&
@@ -79,6 +82,18 @@ public:
     auto_nh.getParam("attack_engineer_enable",attack_engineer_enable) &&
     auto_nh.getParam("attack_outpost_enable",attack_outpost_enable) &&
     auto_nh.getParam("standby_velocity", standby_velocity) == true);
+
+    std::vector<chase_policy::ChaseRestrictedZoneConfig> chase_restricted_zone_configs;
+    for (int i = 0; i < chase_restricted_zones.size(); ++i)
+    {
+      chase_policy::ChaseRestrictedZoneConfig c;
+      c.name = static_cast<std::string>(chase_restricted_zones[i]["name"]);
+      ROS_ASSERT(chase_restricted_zones[i].hasMember("is_target_area"));
+      c.is_target_area = static_cast<bool>(chase_restricted_zones[i]["is_target_area"]);
+      c.begin_time = static_cast<int>(chase_restricted_zones[i]["begin_time"]);
+      c.end_time = static_cast<int>(chase_restricted_zones[i]["end_time"]);
+      chase_restricted_zone_configs.push_back(c);
+    }
 
     blackboard_->set<int>("trigger_blood_return_hp",trigger_blood_return_hp);
     blackboard_->set<int>("trigger_blood_return_hp_without_buff", trigger_blood_return_hp_without_buff);
@@ -96,6 +111,8 @@ public:
     blackboard_->set<double>("chasing_max_for_time",chasing_max_for_time);
     blackboard_->set<bool>("attack_engineer_enable",attack_engineer_enable);
     blackboard_->set<bool>("attack_outpost_enable",attack_outpost_enable);
+    blackboard_->set<bool>("enable_chase",enable_chase);
+    blackboard_->set<std::vector<chase_policy::ChaseRestrictedZoneConfig>>("chase_restricted_zones", chase_restricted_zone_configs);
   }
 
   void gimbal_behavior_param_load()
@@ -255,22 +272,6 @@ public:
       pos_detection_polygons.insert(std::make_pair(zone.first, polygon_points));
     }
     //-----------------------------------------------------------------------
-    XmlRpc::XmlRpcValue chase_restricted_zone_params;
-    std::unordered_map<std::string,types::CHASE_JUDGE> chase_restricted_zones;
-    auto_nh.getParam("chase_restricted_zones",chase_restricted_zone_params);
-    for (const auto & zone_params : chase_restricted_zone_params)
-    {
-      std::vector<std::string> degree_restriction_to_each_region;
-      for (int i=0;i<zone_params.second["areas"].size();i++)
-      {
-        degree_restriction_to_each_region.push_back(zone_params.second["areas"][i]);
-      }
-      types::CHASE_JUDGE chase_judge;
-      chase_judge.chase_restricted_zone=degree_restriction_to_each_region;
-      chase_judge.outpost_hp_threshold=zone_params.second["outpost_hp_threshold"];
-      chase_restricted_zones.insert(std::make_pair(zone_params.first,chase_judge));
-    }
-
     //----------------------------------------------------------------------
     std::vector<std::string> red_half_area;
     std::vector<std::string> blue_half_area;
@@ -279,7 +280,6 @@ public:
 
     blackboard_->set<std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>>>("all_zones",all_zones);
     blackboard_->set<std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>>>("pos_detection_polygons",pos_detection_polygons);
-    blackboard_->set<std::unordered_map<std::string,types::CHASE_JUDGE>>("chase_restricted_zones",chase_restricted_zones);
     blackboard_->set<std::vector<std::string>>("red_half_area",red_half_area);
     blackboard_->set<std::vector<std::string>>("blue_half_area",blue_half_area);
   }

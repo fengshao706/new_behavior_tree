@@ -10,7 +10,7 @@ namespace register_node
                      BT::BehaviorTreeFactory& factory,
                      tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
                      tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools, tools::PlannerTools &planner_tools,
-                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher)
+                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker)
   {
     factory.registerBuilder<chassis::ChassisSlowGyro>(
       "ChassisSlowGyro",
@@ -387,13 +387,6 @@ namespace register_node
         return std::make_unique<condition_node::IsTrackLoss>(name, config);
       });
 
-    factory.registerBuilder<condition_node::IsTargetNotInvincible>(
-      "IsTargetNotInvincible",
-      [](const std::string& name, const BT::NodeConfig& config)
-      {
-        return std::make_unique<condition_node::IsTargetNotInvincible>(name, config);
-      });
-
     factory.registerBuilder<VisionCalibrate>(
       "VisionCalibrate",
       [&subscriber , &bt_nh](const std::string& name, const BT::NodeConfig& config)
@@ -529,9 +522,9 @@ namespace register_node
 
     factory.registerBuilder<gimbal::UpdateAimPriority>(
       "UpdateAimPriority",
-      [&navigation_tools,&tf_accessor,&subscriber,&publisher](const std::string& name, const BT::NodeConfig& config)
+      [&navigation_tools,&tf_accessor,&subscriber,&publisher,&enemy_hp_state_tracker](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::UpdateAimPriority>(name, config,tf_accessor,subscriber,publisher,navigation_tools);
+        return std::make_unique<gimbal::UpdateAimPriority>(name, config,tf_accessor,subscriber,publisher,navigation_tools,enemy_hp_state_tracker);
       });
 
     factory.registerBuilder<gimbal::PreAimingOutpost>(
@@ -546,6 +539,13 @@ namespace register_node
       [&gimbal_tools](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<gimbal::PreAimingBase>(name, config,gimbal_tools);
+      });
+
+    factory.registerBuilder<condition_node::IsAllowChase>(
+      "IsAllowChase",
+      [&navigation_tools,&mini_map_tools,&subscriber,&tf_accessor,&enemy_hp_state_tracker](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsAllowChase>(name, config,navigation_tools,mini_map_tools,subscriber,tf_accessor,enemy_hp_state_tracker);
       });
   }
 }
