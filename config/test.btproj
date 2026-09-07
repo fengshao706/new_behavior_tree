@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4" project_name="Project">
-    <include path="untitled_1.xml"/>
+    <include path="test.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
+        <Action ID="AlignToRoadAreaYaw" editable="true">
+            <input_port name="road_area_align_yaw" default="{road_area_align_yaw}" type="double"/>
+            <input_port name="road_area_align_yaw_tolerance" default="{road_area_align_yaw_tolerance}" type="double"/>
+            <input_port name="road_area_align_angular_vel" default="{road_area_align_angular_vel}" type="double"/>
+            <input_port name="road_area_align_timeout" default="{road_area_align_timeout}" type="double"/>
+        </Action>
         <Action ID="ChassisSlowGyro" editable="true">
             <input_port name="slow_gyro_vel_scale" type="double"/>
         </Action>
@@ -43,6 +49,9 @@
         </Condition>
         <Condition ID="IsRefereeOnline" editable="true"/>
         <Condition ID="IsRemoteControlTurnOn" editable="true"/>
+        <Condition ID="IsRobotInArea" editable="true">
+            <input_port name="area_name" type="std::string"/>
+        </Condition>
         <Condition ID="IsSentryHpUrgent" editable="true">
             <input_port name="trigger_blood_return_hp" type="int"/>
         </Condition>
@@ -98,6 +107,11 @@
             <input_port name="input_chassis_mode_id" type="int"/>
             <output_port name="chassis_mode" default="{chassis_mode}" type="int"/>
         </Action>
+        <Action ID="SetControlModes" editable="true">
+            <input_port name="chassis_mode" type="std::string"/>
+            <input_port name="gimbal_mode" type="std::string"/>
+            <input_port name="shooter_mode" type="std::string"/>
+        </Action>
         <Action ID="SetGimbalMode" editable="true">
             <input_port name="input_gimbal_mode_id" type="int"/>
             <output_port name="gimbal_mode" default="{gimbal_mode}" type="int"/>
@@ -111,6 +125,7 @@
         <Action ID="ShooterReady" editable="true"/>
         <Action ID="ShooterStop" editable="true"/>
         <Action ID="StartMainControllers" editable="true"/>
+        <Action ID="StartStateControllers" editable="true"/>
         <Action ID="Test1" editable="true"/>
         <Action ID="Test2" editable="true"/>
         <Action ID="TrackEnemy" editable="true"/>

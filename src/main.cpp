@@ -34,6 +34,7 @@ std::string get_current_time_string() {
 int main(int argc,char * argv[])
 {
   ros::init(argc,argv,"rm_behavior_tree");
+  ROS_INFO("---------------ros init----------------");
   ros::NodeHandle nh;
   ros::NodeHandle bt_nh(nh,"rm_behavior_tree");
 
@@ -62,7 +63,7 @@ int main(int argc,char * argv[])
 
   std::filesystem::path root_path(PROJECT_ROOT_DIR);
 
-  std::filesystem::path xml_path = root_path / "config" / "untitled_1.xml";
+  std::filesystem::path xml_path = root_path / "config" / "test.xml";
   std::filesystem::path log_path = root_path / "log" / get_current_time_string().append(".btlog");
 
   std::cout << "Loading XML from: " << xml_path << std::endl;
@@ -77,7 +78,11 @@ int main(int argc,char * argv[])
   BT::FileLogger2 logger2(tree,log_path);
 
   BT::Groot2Publisher groot2_publisher(tree,5555);
-  ros::Rate rate(2000);
+  ros::Rate rate(500);
+  ros::Publisher shinji_result_pub_ =
+      bt_nh.advertise<geometry_msgs::TransformStamped>("/shinji/result", 1, false);
+  ros::Time last_initialpose_stamp = subscriber.msgGetter<geometry_msgs::PoseWithCovarianceStamped>(
+      perception::Subscriber::TopicId::RVIZ_2D_POSE).stamp;  // 启动时播种，避免启动即误发
   int test = 0;
   while (ros::ok())
   {
@@ -85,8 +90,28 @@ int main(int argc,char * argv[])
     tree.tickExactlyOnce();
     controller_tools.ControllerUpdate();
     posture_manager.update();
+
+    const auto initial_pose = subscriber.msgGetter<geometry_msgs::PoseWithCovarianceStamped>(
+        perception::Subscriber::TopicId::RVIZ_2D_POSE);
+    if (initial_pose.stamp != last_initialpose_stamp)  // 有新点击，时间戳更新
+    {
+      geometry_msgs::TransformStamped msg;
+      msg.header.stamp = initial_pose.stamp;
+      msg.header.frame_id = "map";
+      msg.child_frame_id = "camera_init";  // 与 shinji 输出一致
+      const auto& p = initial_pose.message.pose.pose;
+      msg.transform.translation.x = p.position.x;
+      msg.transform.translation.y = p.position.y;
+      msg.transform.translation.z = p.position.z;
+      msg.transform.rotation = p.orientation;
+      shinji_result_pub_.publish(msg);
+      last_initialpose_stamp = initial_pose.stamp;
+      ROS_INFO_STREAM_THROTTLE(1.0, "RvizPoseCorrection: map->camera_init = ("
+        << p.position.x << ", " << p.position.y << ")");
+    }
+
     test += 1;
-    if (test >= 2000)
+    if (test >= 500)
     {
       ROS_INFO("---------complete a circle------------");
       test = 0;

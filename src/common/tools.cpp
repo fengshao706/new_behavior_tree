@@ -107,19 +107,16 @@ namespace tools
   void CmdTools::sendStackGimbalCommand(ros::Time time)
   {
     senders_->gimbal_command_sender_->sendCommand(time);
-    senders_->base_gimbal_command_sender_->sendCommand(time);
   }
 
   void CmdTools::setStackGimbalMode(int mode)
   {
     senders_->gimbal_command_sender_->setMode(mode);
-    senders_->base_gimbal_command_sender_->setMode(mode);
   }
 
   void CmdTools::setStackGimbalRate(double scale_base_yaw, double scale_yaw, double scale_pitch)
   {
     senders_->gimbal_command_sender_->setRate(scale_yaw, scale_pitch);
-    senders_->base_gimbal_command_sender_->setRate(scale_base_yaw, 0.0);
   }
 
   void CmdTools::setStackGimbalPoint()
@@ -328,11 +325,15 @@ namespace tools
     {
       ROS_INFO_THROTTLE(0.5, "failed to reach goal");
       patrol_state_ = PatrolState::IDLE;
+      has_determined_goal_ = false; //目标失败，解锁取下一个
     }
   }
 
   void NavigationTools::patrol(const geometry_msgs::PoseStamped& point, double residence_time_at_point, bool is_conduct_mode , bool move_need_gyro , bool reached_need_gyro)
   {
+    ROS_INFO_THROTTLE(0.5,"%d",static_cast<int>(patrol_state_));
+    cmd_tools_.getSenders()->chassis_command_sender_->setMode(rm_msgs::ChassisCmd::RAW);
+    cmd_tools_.getSenders()->chassis_command_sender_->getMsg()->command_source_frame = "base_link";
     ros::Time time = ros::Time::now();
     if (checkMbfClientState())
     {
@@ -376,6 +377,7 @@ namespace tools
           if (ros::Time::now() - reach_time_ > ros::Duration(residence_time_at_point))
           {
             patrol_state_ = PatrolState::IDLE;
+            has_determined_goal_ = false; //停留够久，解锁取下一个点
             ROS_INFO_THROTTLE(0.5, "Stay there long enough, change goal.");
           }
         }
@@ -385,6 +387,7 @@ namespace tools
           {
             mbf_client_->cancelGoal();
             patrol_state_ = PatrolState::TIMEOUT;
+            has_determined_goal_ = false; //规划超时，解锁取下一个点
             ROS_INFO_THROTTLE(0.5, "Planning timeout, change goal.");
           }
         }
@@ -405,9 +408,13 @@ namespace tools
     }
     if (sequential_patrol_enable) //顺序取点
     {
-      if (last_patrol_area_name_ != patrol_area_name)
-        patrol_sequential_index_ = -1;
-      patrol_sequential_index_ = ((patrol_sequential_index_ + 1) % points.size());
+      if (!has_determined_goal_) //取到目标后锁定，防止每 tick 重复累加导致跳点/重复点
+      {
+        if (last_patrol_area_name_ != patrol_area_name)
+          patrol_sequential_index_ = -1;
+        patrol_sequential_index_ = ((patrol_sequential_index_ + 1) % points.size());
+        has_determined_goal_ = true;
+      }
       last_patrol_area_name_ = patrol_area_name;
       return points[patrol_sequential_index_];
     }
@@ -455,6 +462,7 @@ namespace tools
   void NavigationTools::resetPatrolState()
   {
     patrol_state_ = PatrolState::IDLE;
+    has_determined_goal_ = false;
   }
 
   bool NavigationTools::isPointInPolygon(const geometry_msgs::Point& point,
@@ -585,6 +593,29 @@ namespace tools
       }
     }
 
+    //--------------------state controllers------------------------
+
+    if (!controllers_list.hasMember("state_controllers"))
+    {
+      ROS_ERROR("ROS can not access key name [state_controllers] in ControllerTools");
+    }
+    else
+    {
+      XmlRpc::XmlRpcValue state_ctrls_xml = controllers_list["state_controllers"];
+      ROS_ASSERT(state_ctrls_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
+      for (int i = 0; i < state_ctrls_xml.size(); ++i)
+      {
+        if (state_ctrls_xml[i].getType() == XmlRpc::XmlRpcValue::TypeString)
+        {
+          state_controllers_.push_back(static_cast<std::string>(state_ctrls_xml[i]));
+        }
+        else
+        {
+          ROS_ERROR("Element at index %d in state_controllers is not a string!", i);
+        }
+      }
+    }
+
     //--------------------calibration controllers------------------------
 
     XmlRpc::XmlRpcValue  calibration_ctrls_xml = controllers_list["calibration_controllers"];
@@ -629,6 +660,22 @@ namespace tools
     controller_manager_->update();
   }
 
+  void ControllerTools::startStateController()
+  {
+    for (const auto & controller : state_controllers_)
+    {
+      controller_manager_->startController(controller);
+    }
+  }
+
+  void ControllerTools::stopStateController()
+  {
+    for (const auto & controller : state_controllers_)
+    {
+      controller_manager_->stopController(controller);
+    }
+  }
+
   void ControllerTools::startMainController()
   {
     for (const auto & controller : main_controllers_)
@@ -671,7 +718,7 @@ namespace tools
     geometry_msgs::TransformStamped pitch2yaw;
     try
     {
-      pitch2yaw = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::YAW,perception::TfAccessor::FrameId::BASE_LINK); //TODO:需要确认云台括扑
+      pitch2yaw = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::YAW,perception::TfAccessor::FrameId::PITCH); //TODO:需要确认云台括扑
     }
     catch (tf2::TransformException& ex)
     {
@@ -692,6 +739,9 @@ namespace tools
       pitch_direct_ = pitch_inside_vel;
       if (pitch - min_angel <= -breach_threshold)
         pitch_direct_ = pitch_outside_vel;
+    }else                       // pitch 在区间内部:保持一个固定方向继续扫,直到碰到边界
+    {
+      pitch_direct_ = (pitch_direct_ >= 0) ? pitch_inside_vel : -pitch_inside_vel;  // 方向取上一次,保速扫
     }
   }
 
@@ -699,15 +749,20 @@ namespace tools
   {
     cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRAJ);
     cmd_tools_.getSenders()->gimbal_command_sender_->setRate(scale_yaw, scale_pitch);
-    traj_pitch_ = cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_pitch * 0.01 + traj_pitch_; //原pitch加上速度等于本次pitch
+
+    if (ros::Time::now() - last_update_time_ > ros::Duration(0.02))
+    {
+      traj_pitch_ = scale_pitch * 0.02 + traj_pitch_; //原pitch加上速度等于本次pitch
+      traj_yaw_ = scale_yaw * 0.02 + traj_yaw_;
+      last_update_time_ = ros::Time::now();
+    }
+
     if (traj_pitch_ > max_pitch_angle_)
       traj_pitch_ = max_pitch_angle_;
     if (traj_pitch_ < min_pitch_angle_)
       traj_pitch_ = min_pitch_angle_; //做保护
-    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("base_yaw");//odom to base_yaw
-    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(scale_yaw, 0.);
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("odom");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(traj_yaw_, traj_pitch_);
     cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
@@ -715,16 +770,50 @@ namespace tools
   {
     cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRAJ);
     cmd_tools_.getSenders()->gimbal_command_sender_->setRate(yaw_direct_, pitch_direct_);
-    traj_pitch_ = cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_pitch * 0.01 + traj_pitch_; //原pitch加上速度等于本次pitch
+
+    if (ros::Time::now() - last_update_time_ > ros::Duration(0.02))
+    {
+      traj_pitch_ = pitch_direct_ * 0.02 + traj_pitch_; //原pitch加上速度等于本次pitch
+      traj_yaw_ = yaw_direct_ * 0.02 + traj_yaw_;
+      last_update_time_ = ros::Time::now();
+    }
+
     if (traj_pitch_ > max_pitch_angle_)
       traj_pitch_ = max_pitch_angle_;
     if (traj_pitch_ < min_pitch_angle_)
       traj_pitch_ = min_pitch_angle_; //做保护
-    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("base_yaw");//odom to base_yaw
-    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(0.0, traj_pitch_);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::RATE);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setRate(yaw_direct_, 0.);
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTrajFrameId("odom");//odom to base_yaw
+    cmd_tools_.getSenders()->gimbal_command_sender_->setGimbalTraj(traj_yaw_, traj_pitch_);
     cmd_tools_.sendStackGimbalCommand(ros::Time::now());
+  }
+
+  void GimbalTools::resetTrajToCurrent()
+  {
+    try
+    {
+      traj_yaw_ = yawFromQuat(tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,
+                                                          perception::TfAccessor::FrameId::YAW).transform.rotation);
+      double roll, pitch, yaw;
+      quatToRPY(tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,
+                                            perception::TfAccessor::FrameId::PITCH).transform.rotation,
+                roll, pitch, yaw);
+      traj_pitch_ = pitch;
+    }
+    catch (tf2::TransformException& ex)
+    {
+      ROS_WARN_THROTTLE(0.5, "%s", ex.what()); // tf异常时保持原值不重置
+      return;
+    }
+    yaw_direct_ = 0.0; //复位速度,避免残留速度直行为前馈
+    pitch_direct_ = 0.0; //后续 updatePitchStrafeDirect 会以当前pitch为界重新定方向
+    circle_count_ = 0; //圈数清零,从0圈正向起扫,避免残留圈数导致立刻反向
+    lidar_twist_last_yaw_ = traj_yaw_; //以当前位置为圈数判别的起点
+    last_update_time_ = ros::Time::now(); //跳过首帧积分,防一进来就先跳一小步
+    if (traj_pitch_ > max_pitch_angle_)
+      traj_pitch_ = max_pitch_angle_;
+    if (traj_pitch_ < min_pitch_angle_)
+      traj_pitch_ = min_pitch_angle_; //防止越界目标引发PID饱和
+    ROS_INFO("Gimbal traj reset to current: yaw=%lf pitch=%lf", traj_yaw_, traj_pitch_);
   }
 
   void GimbalTools::lidarTwist(double yaw_vel , int scan_range_circles)

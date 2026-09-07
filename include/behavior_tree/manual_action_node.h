@@ -104,11 +104,6 @@ namespace manual
             cmd_tools_.getSenders()->gimbal_command_sender_->getMsg()->rate_yaw);
         else
           cmd_tools_.getSenders()->chassis_command_sender_->setFollowVelDes(0);
-        if (cmd_tools_.getSenders()->base_gimbal_command_sender_->getMsg()->mode == rm_msgs::GimbalCmd::RATE)
-          cmd_tools_.getSenders()->chassis_command_sender_->setFollowVelDes(
-            cmd_tools_.getSenders()->base_gimbal_command_sender_->getMsg()->rate_yaw);
-        else
-          cmd_tools_.getSenders()->chassis_command_sender_->setFollowVelDes(0);
       }
       else
       {

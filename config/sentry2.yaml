@@ -26,6 +26,10 @@ rm_behavior_tree:
     default_side_window: 0.3
     neutral_cost: 40  #------------
     lethal_cost: 253  #-------------
+    road_area_align_yaw: 0.0
+    road_area_align_yaw_tolerance: 0.06
+    road_area_align_angular_vel: 0.4
+    road_area_align_timeout: 5.0   # 起伏路段区对齐超时，超时未对准则放弃返回 FAILURE
 
   chassis:
     topic: "/cmd_chassis"
@@ -50,6 +54,7 @@ rm_behavior_tree:
     buffer_threshold: 10 #-----------
     total_burst_time: 5
     power_gain: 0 #------------
+    follow_source_frame: base_yaw
   vel:
     topic: "/cmd_vel"
     power_limit_topic: "/cmd_chassis"
@@ -163,17 +168,34 @@ rm_behavior_tree:
       [ 50.300, 50.000, 0.000 ],    #31
       [ 50.300, 50.300, 0.000 ],    #32
       [ 50.000, 50.300, 0.000 ],     #33
+      [ 0.143 , 1.663 , 0.000], #34
+      [ 0.173 , 0.154 , 0.000], #35
+      [ 4.011 , 0.144 , 0.000], #36
+      [ 3.991 , 1.643 , 0.000]  #37
     ]
     zones:
       test_area:
         position: [
-          [ 12.897 , 7.324, 0.000 ],
-          [ 12.840 , 1.824, 0.000 ]
+          [ 7.779 , 3.022, 0.000 ],
+          [ 7.769 , 4.092, 0.000 ],
+          [ 8.818 , 4.881 ,0.000 ]
         ]
         aim_direct: [
           [ 4.908, -2.364, 70.0 ]
         ]
         pos_detection_polygon: [ 19,20,21,22 ]
+
+      road_area:
+        position: []
+        aim_direct: []
+        pos_detection_polygon: [ 34,35,36,37 ]
+
+      supply_area:
+        position: [
+          [-0.617,1.014,0.000]
+        ]
+        aim_direct: []
+        pos_detection_polygon: [ ]
 
       blue_trapezoid_area:
         position: [
@@ -736,8 +758,6 @@ rm_behavior_tree:
     topic: "/controllers/gimbal_controller/command"
     max_yaw_vel: 4.0
     max_pitch_vel: 1.0
-    time_constant_rc: 0.1
-    time_constant_pc: 0.05
     track_timeout: 0.5
     target_cost_function:
       k_pos: 1.0
@@ -750,8 +770,6 @@ rm_behavior_tree:
     max_yaw_vel: 4.0
     max_pitch_vel: 1.0
     track_timeout: 0.5
-    time_constant_rc: 0.1
-    time_constant_pc: 0.05
     target_cost_function:
       k_pos: 1.0
       k_vel: 1.0
@@ -847,12 +865,9 @@ rm_behavior_tree:
       - controllers/chassis_controller
       - controllers/orientation_controller
       - controllers/gimbal_controller
-      - controllers/base_gimbal_controller
       - controllers/shooter_controller
-      - controllers/barrel_controller
     calibration_controllers:
       - controllers/trigger_calibration_controller
-      - controllers/barrel_calibration_controller
   # // gimbal_calibration - DISABLED: gimbal does not need calibration
   shooter_calibration:
     - start_controllers:

@@ -51,6 +51,45 @@ private:
   tools::ControllerTools &controller_tools_;
 };
 
+class StartStateControllers : public BT::SyncActionNode
+{
+public:
+  StartStateControllers(const std::string &name , const BT::NodeConfig &config , tools::ControllerTools &controller_tools) : SyncActionNode(name,config) , controller_tools_(controller_tools)
+  {
+
+  }
+
+  BT::NodeStatus tick() override
+  {
+    controller_tools_.startStateController();
+    controller_tools_.calibrate();
+    ros::Duration duration(1.0);
+    duration.sleep();
+    return BT::NodeStatus::SUCCESS;
+  }
+private:
+  tools::ControllerTools &controller_tools_;
+};
+
+class StopStateControllers : public BT::SyncActionNode
+{
+public:
+  StopStateControllers(const std::string &name , const BT::NodeConfig &config , tools::ControllerTools &controller_tools) : SyncActionNode(name , config) , controller_tools_(controller_tools)
+  {
+
+  }
+
+  BT::NodeStatus tick() override
+  {
+    controller_tools_.stopStateController();
+    ros::Duration duration(0.5);
+    duration.sleep();
+    return BT::NodeStatus::SUCCESS;
+  }
+private:
+  tools::ControllerTools &controller_tools_;
+};
+
 class VisionCalibrate : public BT::SyncActionNode
 {
 public:
@@ -86,7 +125,7 @@ private:
 class RemoteControlTurnOff : public BT::SyncActionNode
 {
 public:
-  RemoteControlTurnOff(const std::string &name , const BT::NodeConfig &config , tools::CmdTools &cmd_tools , tools::ControllerTools &controller_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools) , controller_tools_(controller_tools)
+  RemoteControlTurnOff(const std::string &name , const BT::NodeConfig &config , tools::CmdTools &cmd_tools , tools::ControllerTools &controller_tools , tools::NavigationTools &navigation_tools) : SyncActionNode(name , config) , cmd_tools_(cmd_tools) , controller_tools_(controller_tools) , navigation_tools_(navigation_tools)
   {
 
   }
@@ -109,12 +148,14 @@ public:
     cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(now);
     cmd_tools_.getSenders()->base_gimbal_command_sender_->sendCommand(now);
     cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(now);
+    navigation_tools_.getMbfClient()->cancelGoal();
     return BT::NodeStatus::SUCCESS;
   }
 
 private:
   tools::CmdTools &cmd_tools_;
   tools::ControllerTools &controller_tools_;
+  tools::NavigationTools &navigation_tools_;
 };
 
 class OutputRightSwitchState : public BT::SyncActionNode  // 继承这个同步行为节点
@@ -393,6 +434,107 @@ public:
   }
 private:
   perception::Subscriber &subscriber_;
+};
+
+class SetControlModes : public BT::SyncActionNode
+{
+public:
+  SetControlModes(const std::string& name, const BT::NodeConfig& config, tools::CmdTools& cmd_tools)
+    : SyncActionNode(name, config), cmd_tools_(cmd_tools)
+  {
+  }
+
+  static BT::PortsList providedPorts()
+  {
+    return { BT::InputPort<std::string>("chassis_mode"),
+             BT::InputPort<std::string>("gimbal_mode"),
+             BT::InputPort<std::string>("shooter_mode") };
+  }
+
+  BT::NodeStatus tick() override
+  {
+    const bool chassis_ok = setChassisMode();
+    if (!chassis_ok) return BT::NodeStatus::FAILURE;
+    const bool gimbal_ok = setGimbalMode();
+    if (!gimbal_ok) return BT::NodeStatus::FAILURE;
+    const bool shooter_ok = setShooterMode();
+    if (!shooter_ok) return BT::NodeStatus::FAILURE;
+
+    // 三个模式都设置成功后再统一发送，保证发布生效
+    cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(ros::Time::now(), false);
+    cmd_tools_.getSenders()->gimbal_command_sender_->sendCommand(ros::Time::now());
+    cmd_tools_.getSenders()->shooter_command_sender_->checkError(ros::Time::now());
+    cmd_tools_.getSenders()->shooter_command_sender_->sendCommand(ros::Time::now());
+    return BT::NodeStatus::SUCCESS;
+  }
+
+private:
+  bool getPort(const char* port, std::string& value)
+  {
+    const auto expected = getInput<std::string>(port);
+    if (!expected)
+    {
+      ROS_WARN("%s: %s not provided: %s", name().c_str(), port, expected.error().c_str());
+      return false;
+    }
+    value = expected.value();
+    return true;
+  }
+
+  bool setChassisMode()
+  {
+    std::string cmd;
+    if (!getPort("chassis_mode", cmd)) return false;
+    static const std::unordered_map<std::string, uint8_t> kChassisModes{
+      {"raw", rm_msgs::ChassisCmd::RAW}, {"follow", rm_msgs::ChassisCmd::FOLLOW},
+      {"twist", rm_msgs::ChassisCmd::TWIST}, {"up_slope", rm_msgs::ChassisCmd::UP_SLOPE},
+      {"fallen", rm_msgs::ChassisCmd::FALLEN}, {"deploy", rm_msgs::ChassisCmd::DEPLOY},
+      {"recovery", rm_msgs::ChassisCmd::RECOVERY} };
+    const auto it = kChassisModes.find(cmd);
+    if (it == kChassisModes.end())
+    {
+      ROS_WARN("%s: unknown chassis_mode \"%s\"", name().c_str(), cmd.c_str());
+      return false;
+    }
+    cmd_tools_.getSenders()->chassis_command_sender_->setMode(it->second);
+    return true;
+  }
+
+  bool setGimbalMode()
+  {
+    std::string cmd;
+    if (!getPort("gimbal_mode", cmd)) return false;
+    static const std::unordered_map<std::string, uint8_t> kGimbalModes{
+      {"rate", rm_msgs::GimbalCmd::RATE}, {"track", rm_msgs::GimbalCmd::TRACK},
+      {"direct", rm_msgs::GimbalCmd::DIRECT}, {"traj", rm_msgs::GimbalCmd::TRAJ} };
+    const auto it = kGimbalModes.find(cmd);
+    if (it == kGimbalModes.end())
+    {
+      ROS_WARN("%s: unknown gimbal_mode \"%s\"", name().c_str(), cmd.c_str());
+      return false;
+    }
+    cmd_tools_.getSenders()->gimbal_command_sender_->setMode(it->second);
+    return true;
+  }
+
+  bool setShooterMode()
+  {
+    std::string cmd;
+    if (!getPort("shooter_mode", cmd)) return false;
+    static const std::unordered_map<std::string, uint8_t> kShooterModes{
+      {"stop", rm_msgs::ShootCmd::STOP}, {"ready", rm_msgs::ShootCmd::READY},
+      {"push", rm_msgs::ShootCmd::PUSH} };
+    const auto it = kShooterModes.find(cmd);
+    if (it == kShooterModes.end())
+    {
+      ROS_WARN("%s: unknown shooter_mode \"%s\"", name().c_str(), cmd.c_str());
+      return false;
+    }
+    cmd_tools_.getSenders()->shooter_command_sender_->setMode(it->second);
+    return true;
+  }
+
+  tools::CmdTools& cmd_tools_;
 };
 
 class Test1 : public BT::SyncActionNode

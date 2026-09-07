@@ -38,6 +38,7 @@
 #include <rm_msgs/PowerHeatData.h>
 #include <rm_msgs/PowerManagementSampleAndStatusData.h>
 #include <geometry_msgs/PointStamped.h>
+#include <geometry_msgs/PoseWithCovarianceStamped.h>
 #include <nav_msgs/Path.h>
 #include <nav_msgs//Odometry.h>
 #include <tf2_ros/buffer.h>
@@ -83,7 +84,8 @@ namespace perception{
       PLANNER_GOAL,
       ODOM_DATA,
       BACK_CAMERA_DETECTION_DATA,
-      FRONT_CAMERA_DETECTION_DATA
+      FRONT_CAMERA_DETECTION_DATA,
+      RVIZ_2D_POSE
     };
 
     template <typename MsgType>
@@ -120,6 +122,7 @@ namespace perception{
       register_subscriber<nav_msgs::Odometry>(TopicId::ODOM_DATA,"/odom");
       register_subscriber<rm_msgs::TargetDetectionArray>(TopicId::BACK_CAMERA_DETECTION_DATA,"/detection_back");
       register_subscriber<rm_msgs::TargetDetectionArray>(TopicId::FRONT_CAMERA_DETECTION_DATA,"/detection_front");
+      register_subscriber<geometry_msgs::PoseWithCovarianceStamped>(TopicId::RVIZ_2D_POSE, "/initialpose");
 
       initSubscriber();
     }
@@ -128,8 +131,12 @@ namespace perception{
     ReturnMsg<MsgType> msgGetter(TopicId topic_id)
     {
       ReturnMsg<MsgType> return_msg;
-      return_msg.message = std::any_cast<MsgType>(dir_.at(topic_id).message);
-      return_msg.stamp = dir_.at(topic_id).stamp;
+      const auto &detail = dir_.at(topic_id);
+      if (detail.message.type() == typeid(MsgType))
+      {
+        return_msg.message = std::any_cast<MsgType>(detail.message);
+      }
+      return_msg.stamp = detail.stamp;
 
       return return_msg;
     }

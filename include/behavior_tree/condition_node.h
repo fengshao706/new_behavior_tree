@@ -13,6 +13,7 @@
 #include "common/tools.h"
 #include "common/invincible_detection.h"
 #include "common/chase_policy.h"
+#include "common/aim_buff_flow.h"
 
 namespace condition_node
 {
@@ -280,16 +281,23 @@ namespace condition_node
     {
     }
 
+    static BT::PortsList providedPorts()
+    {
+      return {BT::OutputPort<bool>("is_need_get_bullet")};
+    }
+
     BT::NodeStatus tick() override
     {
       uint16_t remain_bullet = subscriber_.msgGetter<rm_msgs::BulletAllowance>(perception::Subscriber::TopicId::BULLET_ALLOWANCE).message.bullet_allowance_num_17_mm;
       if (remain_bullet > 0 &&
         remain_bullet < 2000 == true)
       {
+        setOutput<bool>("is_need_get_bullet",false);
         return BT::NodeStatus::SUCCESS;
       }
       else
       {
+        setOutput<bool>("is_need_get_bullet",true);
         return BT::NodeStatus::FAILURE;
       }
     }
@@ -670,7 +678,7 @@ namespace condition_node
 
     BT::NodeStatus tick() override
     {
-      if (ros::Time::now() - subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).stamp < ros::Duration(1.0))
+      if (ros::Time::now() - subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.stamp < ros::Duration(1.0))
       {
           if (controller_tools_.getControllerManager())//std::unique_ptr类型，当该指针持有对象时返回true，该对象在BasicControl中的构造函数被唯一赋值
             controller_tools_.startMainController();
@@ -784,6 +792,40 @@ namespace condition_node
     perception::Subscriber &subscriber_;
     perception::TfAccessor &tf_accessor_;
     invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker_;
+  };
+
+  class IsRobotInArea : public BT::ConditionNode
+  {
+  public:
+    IsRobotInArea(const std::string& name, const BT::NodeConfig& config,
+                  perception::TfAccessor& tf_accessor, tools::NavigationTools& navigation_tools)
+      : ConditionNode(name, config), tf_accessor_(tf_accessor), navigation_tools_(navigation_tools)
+    {
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return { BT::InputPort<std::string>("area_name") };
+    }
+
+    BT::NodeStatus tick() override
+    {
+      ROS_INFO_THROTTLE(0.5,"IsRobotInArea");
+      const std::string area_name = getInput<std::string>("area_name").value();
+      geometry_msgs::TransformStamped cur_in_map = tf_accessor_.getTfTransform(
+          perception::TfAccessor::FrameId::MAP, perception::TfAccessor::FrameId::BASE_LINK);
+      geometry_msgs::Point cur;
+      cur.x = cur_in_map.transform.translation.x;
+      cur.y = cur_in_map.transform.translation.y;
+      cur.z = cur_in_map.transform.translation.z;
+      return navigation_tools_.determinePolygonInWhich(cur) == area_name
+               ? BT::NodeStatus::SUCCESS
+               : BT::NodeStatus::FAILURE;
+    }
+
+  private:
+    perception::TfAccessor& tf_accessor_;
+    tools::NavigationTools& navigation_tools_;
   };
 }
 

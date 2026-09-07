@@ -7,6 +7,7 @@
 
 #include <behaviortree_cpp/condition_node.h>
 #include <rm_common/decision/controller_manager.h>
+#include <angles/angles.h>
 
 #include "behaviortree_cpp/action_node.h"
 #include "common/tools.h"
@@ -303,13 +304,13 @@ namespace chassis
 
     static BT::PortsList providedPorts()
     {
-      return {  };
+      return {BT::InputPort<bool>("is_need_get_bullet")};
     }
 
     BT::NodeStatus onStart() override
     {
       robot_color=blackboard_.get<std::string>("robot_color");
-      target_area_name = robot_color + "_supply_area";
+      target_area_name = "supply_area";
       return BT::NodeStatus::RUNNING;
     }
 
@@ -651,8 +652,9 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
+      ROS_INFO_THROTTLE(0.5,"PatrolTestArea");
       planner_tools_.setLimitVelAndSlideWindow(8.2,0.2);
-      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,false,false);
+      navigation_tools_.patrol(navigation_tools_.getPatrolPoint(target_area_name,true),5.0,false,false,true);
       return BT::NodeStatus::RUNNING;
     }
 
@@ -785,6 +787,91 @@ namespace chassis
     std::string robot_color;
     std::string target_area_name;
     tools::NavigationTools &navigation_tools_;
+  };
+
+  class AlignToRoadAreaYaw : public BT::StatefulActionNode
+  {
+  public:
+    AlignToRoadAreaYaw(const std::string &name , const BT::NodeConfig &config , tools::CmdTools &cmd_tools , tools::NavigationTools &navigation_tools , perception::TfAccessor &tf_accessor) : StatefulActionNode(name , config) , cmd_tools_(cmd_tools) , navigation_tools_(navigation_tools) , tf_accessor_(tf_accessor)
+    {
+
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<double>("road_area_align_yaw"),
+                  BT::InputPort<double>("road_area_align_yaw_tolerance"),
+                    BT::InputPort<double>("road_area_align_angular_vel"),
+                      BT::InputPort<double>("road_area_align_timeout")};
+    }
+
+    BT::NodeStatus onStart() override
+    {
+      align_start_time_ = ros::Time::now(); //记录本轮对准起始时刻，作为超时判定基准
+      return BT::NodeStatus::RUNNING;
+    }
+
+    BT::NodeStatus onRunning() override
+    {
+      ROS_INFO_THROTTLE(0.5,"AlignToRoadAreaYaw");
+      const double current_yaw = yawFromQuat(tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,perception::TfAccessor::FrameId::BASE_LINK).transform.rotation);
+      const double target_yaw = angles::normalize_angle(getInput<double>("road_area_align_yaw").value());
+      const double yaw_error = angles::shortest_angular_distance(current_yaw, target_yaw);
+      const ros::Time time = ros::Time::now();
+      ROS_INFO_THROTTLE(1.0, "[BT] road area yaw aligned target=%.3f current=%.3f err=%.3f", target_yaw,
+                          current_yaw, yaw_error);
+
+      if (std::fabs(yaw_error) <= getInput<double>("road_area_align_yaw_tolerance").value()) //已经旋转到指定角度的情况
+      {
+        cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
+        cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time,true); //TODO : 需要测试参数应为true还是false，与功率限制有关
+        cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
+        ROS_INFO_THROTTLE(1.0, "[BT] road area yaw aligned target=%.3f current=%.3f err=%.3f", target_yaw,
+                          current_yaw, yaw_error);
+        return BT::NodeStatus::SUCCESS;
+      }
+
+      // 防御：任何路径下第一次读 align_start_time_ 前先自愈（正常由 onStart 赋值）。
+      if (align_start_time_.isZero())
+        align_start_time_ = ros::Time::now();
+
+      // 对准超时：超过 road_area_align_timeout 仍未到位，停转并上报失败。
+      // if (ros::Time::now() - align_start_time_ > ros::Duration(getInput<double>("road_area_align_timeout").value()))
+      // {
+      //   navigation_tools_.getMbfClient()->cancelGoal();
+      //   cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
+      //   cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
+      //   cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
+      //   ROS_WARN_THROTTLE(1.0, "[BT] road area yaw align timeout err=%.3f", yaw_error);
+      //   return BT::NodeStatus::FAILURE;
+      // }
+
+      navigation_tools_.getMbfClient()->cancelGoal(); //没有旋转到指定角度的情况
+      double angular_z = std::fabs(getInput<double>("road_area_align_angular_vel").value());
+      if (angular_z < 0.2)
+        angular_z = 0.2;
+      angular_z = std::copysign(angular_z, yaw_error);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->set2DVel(0.0, 0.0, angular_z);
+      cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(time, true);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(time);
+      ROS_INFO_THROTTLE(0.5, "[BT] road area yaw aligning target=%.3f current=%.3f err=%.3f angular_z=%.3f",
+                        target_yaw, current_yaw, yaw_error, angular_z);
+      return BT::NodeStatus::RUNNING;
+    }
+
+    void onHalted() override
+    {
+      navigation_tools_.getMbfClient()->cancelGoal();
+      cmd_tools_.getSenders()->vel_2d_command_sender_->setZero();
+      cmd_tools_.getSenders()->chassis_command_sender_->sendChassisCommand(ros::Time::now(), true);
+      cmd_tools_.getSenders()->vel_2d_command_sender_->sendCommand(ros::Time::now());
+    }
+
+  private:
+    tools::CmdTools &cmd_tools_;
+    tools::NavigationTools &navigation_tools_;
+    perception::TfAccessor &tf_accessor_;
+    ros::Time align_start_time_; //本轮对准起始时刻，超时判定基准
   };
 
 }

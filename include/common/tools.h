@@ -37,6 +37,7 @@
 #include <XmlRpcValue.h>
 #include <common/types.h>
 #include <rm_common/ori_tool.h>
+#include "common/patrol_retry_cooldown.h"
 
 namespace perception
 {
@@ -258,6 +259,7 @@ namespace tools
     int patrol_sequential_index_ = -1;
     std::string last_patrol_area_name_{};
     PatrolState patrol_state_ = PatrolState::IDLE;
+    bool has_determined_goal_ = false; //本轮巡航目标是否已定（锁定 index，防止每 tick 重复累加导致跳点/重复点）
     std::unordered_map<std::string,std::vector<geometry_msgs::PoseStamped>> all_zones;
     std::unordered_map<std::string,std::vector<geometry_msgs::PointStamped>> pos_detection_polygons;
     geometry_msgs::PointStamped track_point_;
@@ -279,6 +281,14 @@ namespace tools
      * **/
     void ControllerUpdate();
 
+    /**@brief 用于从参数文件中列出来的state_controllers中启动对应的控制器
+     * **/
+    void startStateController();
+
+    /**@brief 用于从参数文件中列出来的state_controllers中停止对应的控制器
+     * **/
+    void stopStateController();
+
     /**@brief 用于从参数文件中列出来的main_controllers中启动对应的控制器
      * **/
     void startMainController();
@@ -297,6 +307,7 @@ namespace tools
     XmlRpc::XmlRpcValue shooter_calibration_config_;
     std::unique_ptr<rm_common::CalibrationQueue> shooter_calibration_queue_;
     std::vector<std::string> main_controllers_;
+    std::vector<std::string> state_controllers_;
     std::vector<std::string> calibration_controllers_;
   };
 
@@ -341,17 +352,24 @@ namespace tools
      * **/
     void setStackGimbalTrack();
 
+    /** @brief 将轨迹积分初值重置为云台当前角度,防止进入扫描/自动时产生阶跃
+     * 在 StatefulActionNode 的 onStart 中调用,使首帧期望=当前位置  **/
+
+    void resetTrajToCurrent();
+
   private:
     perception::TfAccessor &tf_accessor_;
     CmdTools &cmd_tools_;
     double pitch_direct_{};
     double yaw_direct_{};
     double traj_pitch_{};
+    double traj_yaw_{};
     double max_pitch_angle_{};
     double min_pitch_angle_{};
     int circle_count_{};
     double lidar_twist_last_yaw_{};
     ros::NodeHandle &bt_nh;
+    ros::Time last_update_time_{};
   };
 }
 

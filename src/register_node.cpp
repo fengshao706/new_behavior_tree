@@ -117,6 +117,13 @@ namespace register_node
         return std::make_unique<chassis::ChaseEnemy>(name, config, navigation_tools);
       });
 
+    factory.registerBuilder<chassis::AlignToRoadAreaYaw>(
+      "AlignToRoadAreaYaw",
+      [&cmd_tools, &navigation_tools, &tf_accessor](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<chassis::AlignToRoadAreaYaw>(name, config, cmd_tools, navigation_tools, tf_accessor);
+      });
+
     factory.registerBuilder<chassis::GetKeyboardCommand>(
       "GetKeyboardCommand",
       [&subscriber](const std::string& name, const BT::NodeConfig& config)
@@ -221,9 +228,9 @@ namespace register_node
 
     factory.registerBuilder<RemoteControlTurnOff>(
       "RemoteControlTurnOff",
-      [&cmd_tools, &controller_tools](const std::string& name, const BT::NodeConfig& config)
+      [&cmd_tools, &controller_tools ,&navigation_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<RemoteControlTurnOff>(name, config, cmd_tools,controller_tools);
+        return std::make_unique<RemoteControlTurnOff>(name, config, cmd_tools,controller_tools,navigation_tools);
       });
     // ==================== 仅依赖 controller_tools 的核心控制器节点 ====================
 
@@ -239,6 +246,20 @@ namespace register_node
       [&controller_tools](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<StopMainControllers>(name, config, controller_tools);
+      });
+
+    factory.registerBuilder<StartStateControllers>(
+      "StartStateControllers",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StartStateControllers>(name, config, controller_tools);
+      });
+
+    factory.registerBuilder<StopStateControllers>(
+      "StopStateControllers",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StopStateControllers>(name, config, controller_tools);
       });
 
     // ==================== 1. 仅依赖 subscriber 的条件节点 ====================
@@ -434,6 +455,20 @@ namespace register_node
       [&tf_accessor](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<condition_node::IsPoseValid>(name, config,tf_accessor);
+      });
+
+    factory.registerBuilder<condition_node::IsRobotInArea>(
+      "IsRobotInArea",
+      [&tf_accessor, &navigation_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<condition_node::IsRobotInArea>(name, config, tf_accessor, navigation_tools);
+      });
+
+    factory.registerBuilder<SetControlModes>(
+      "SetControlModes",
+      [&cmd_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<SetControlModes>(name, config, cmd_tools);
       });
 
     factory.registerBuilder<Relocate>(

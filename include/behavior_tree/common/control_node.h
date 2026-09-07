@@ -44,7 +44,7 @@ public:
 
     if(cond_status == BT::NodeStatus::SUCCESS)
     {
-      if(else_branch->status() == BT::NodeStatus::RUNNING)
+      if(else_branch->status() != BT::NodeStatus::IDLE)
       {
         haltChild(2);
       }
@@ -54,7 +54,7 @@ public:
 
     if(cond_status == BT::NodeStatus::FAILURE)
     {
-      if(then_branch->status() == BT::NodeStatus::RUNNING)
+      if(then_branch->status() != BT::NodeStatus::IDLE)
       {
         haltChild(1);
       }

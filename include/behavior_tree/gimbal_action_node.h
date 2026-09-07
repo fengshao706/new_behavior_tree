@@ -65,6 +65,7 @@ namespace gimbal
 
     BT::NodeStatus onStart() override
     {
+      gimbal_tools_.resetTrajToCurrent();
       return BT::NodeStatus::RUNNING;
     }
 

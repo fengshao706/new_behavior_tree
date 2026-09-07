@@ -7,7 +7,7 @@
 
 #include "ros/ros.h"
 #include "behaviortree_cpp/blackboard.h"
-#include "XmlRpcValue.h"
+#include <XmlRpcValue.h>
 #include "geometry_msgs/PointStamped.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "tf2/LinearMath/Quaternion.h"
@@ -84,8 +84,13 @@ public:
     auto_nh.getParam("standby_velocity", standby_velocity) == true);
 
     std::vector<chase_policy::ChaseRestrictedZoneConfig> chase_restricted_zone_configs;
+    ROS_INFO("00000000000000000000000");
+    ROS_INFO("---------%d---------",chase_restricted_zones.valid());
+    ROS_INFO("---------%d---------",standby_velocity.valid());
+    ROS_INFO("------------------------------------");
     for (int i = 0; i < chase_restricted_zones.size(); ++i)
     {
+      ROS_INFO("1111111111111111111111");
       chase_policy::ChaseRestrictedZoneConfig c;
       c.name = static_cast<std::string>(chase_restricted_zones[i]["name"]);
       ROS_ASSERT(chase_restricted_zones[i].hasMember("is_target_area"));
@@ -200,19 +205,31 @@ public:
     double default_side_window;
     int neutral_cost;
     int lethal_cost;
+    double road_area_align_yaw;
+    double road_area_align_yaw_tolerance;
+    double road_area_align_angular_vel;
+    double road_area_align_timeout;
 
     ROS_ASSERT(
     planner_nh.getParam("default_limit_vel", default_limit_vel) &&
     planner_nh.getParam("slope_side_window", slope_side_window) &&//坡道附近的代价膨胀值
     planner_nh.getParam("default_side_window", default_side_window) &&//普通路段的代价膨胀值
     planner_nh.getParam("neutral_cost", neutral_cost) &&//可通过区域的代价
-    planner_nh.getParam("lethal_cost", lethal_cost) == true//不可通过区域的代价
+    planner_nh.getParam("lethal_cost", lethal_cost) == true &&//不可通过区域的代价
+    planner_nh.getParam("road_area_align_yaw",road_area_align_yaw)&& //起伏路段区对齐的目标偏航角
+    planner_nh.getParam("road_area_align_yaw_tolerance",road_area_align_yaw_tolerance)&&
+    planner_nh.getParam("road_area_align_angular_vel",road_area_align_angular_vel)&&
+    planner_nh.getParam("road_area_align_timeout",road_area_align_timeout)
     );
     blackboard_->set<double>("default_limit_vel",default_limit_vel);
     blackboard_->set<double>("slope_side_window",slope_side_window);
     blackboard_->set<double>("default_side_window",default_side_window);
     blackboard_->set<int>("neutral_cost",neutral_cost);
     blackboard_->set<int>("lethal_cost",lethal_cost);
+    blackboard_->set<double>("road_area_align_yaw",road_area_align_yaw);
+    blackboard_->set<double>("road_area_align_yaw_tolerance",road_area_align_yaw_tolerance);
+    blackboard_->set<double>("road_area_align_angular_vel",road_area_align_angular_vel);
+    blackboard_->set<double>("road_area_align_timeout",road_area_align_timeout);
   }
 
   void get_region_key_points() //用于下面的多边形
@@ -330,6 +347,7 @@ public:
     blackboard_->set<int>("sentry_intention",static_cast<int>(types::SentryIntention::MoveToTheTargetPoint));
     blackboard_->set<bool>("is_need_aim_outpost",false);
     blackboard_->set<bool>("is_need_aim_base",false);
+    blackboard_->set<bool>("is_need_get_bullet",false);
   }
 
   void loadMapParam()

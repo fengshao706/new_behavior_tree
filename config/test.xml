@@ -104,9 +104,7 @@
   <BehaviorTree ID="mainTree">
     <ReactiveSequence>
       <ReactiveFallback>
-        <ForceSuccess>
-          <IsRemoteControlTurnOn/>
-        </ForceSuccess>
+        <IsRemoteControlTurnOn/>
         <RemoteControlTurnOff/>
       </ReactiveFallback>
       <IfThenElse>
@@ -124,12 +122,42 @@
                case_3="idle"
                variable="{state}">
         <SequenceWithMemory>
+          <StartStateControllers/>
           <StartMainControllers/>
-          <SubTree ID="auto"
-                   _autoremap="true"/>
+          <Sequence>
+            <SetControlModes chassis_mode="raw"
+                             gimbal_mode="traj"
+                             shooter_mode="stop"/>
+            <Parallel failure_count="1"
+                      success_count="-1">
+              <YawSlowRound yaw_vel="0.4"
+                            scan_range_circles="2"
+                            pitch_inside_vel="0.4"
+                            pitch_outside_vel="0.6"
+                            pitch_min="-0.05"
+                            pitch_max="0.259"
+                            breach_thresholds="0.1"/>
+              <ReactiveSequence>
+                <ReactiveIfThenElse>
+                  <IsRobotInArea area_name="road_area"/>
+                  <AlignToRoadAreaYaw road_area_align_yaw="{road_area_align_yaw}"
+                                      road_area_align_yaw_tolerance="{road_area_align_yaw_tolerance}"
+                                      road_area_align_angular_vel="{road_area_align_angular_vel}"
+                                      road_area_align_timeout="{road_area_align_timeout}"/>
+                  <AlwaysSuccess/>
+                </ReactiveIfThenElse>
+                <ReactiveIfThenElse>
+                  <IsSentryHpUrgent trigger_blood_return_hp="50"/>
+                  <GotoReturnBloodArea is_need_get_bullet="false"/>
+                  <PatrolTestArea/>
+                </ReactiveIfThenElse>
+              </ReactiveSequence>
+            </Parallel>
+          </Sequence>
         </SequenceWithMemory>
         <SequenceWithMemory>
           <StartMainControllers/>
+          <StartStateControllers/>
           <Parallel failure_count="1"
                     success_count="-1">
             <ManualSendChassisCmd/>
@@ -198,6 +226,21 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
+    <Action ID="AlignToRoadAreaYaw"
+            editable="true">
+      <input_port name="road_area_align_yaw"
+                  default="{road_area_align_yaw}"
+                  type="double"/>
+      <input_port name="road_area_align_yaw_tolerance"
+                  default="{road_area_align_yaw_tolerance}"
+                  type="double"/>
+      <input_port name="road_area_align_angular_vel"
+                  default="{road_area_align_angular_vel}"
+                  type="double"/>
+      <input_port name="road_area_align_timeout"
+                  default="{road_area_align_timeout}"
+                  type="double"/>
+    </Action>
     <Action ID="ChassisSlowGyro"
             editable="true">
       <input_port name="slow_gyro_vel_scale"
@@ -262,6 +305,11 @@
                editable="true"/>
     <Condition ID="IsRemoteControlTurnOn"
                editable="true"/>
+    <Condition ID="IsRobotInArea"
+               editable="true">
+      <input_port name="area_name"
+                  type="std::string"/>
+    </Condition>
     <Condition ID="IsSentryHpUrgent"
                editable="true">
       <input_port name="trigger_blood_return_hp"
@@ -302,6 +350,8 @@
                   default="{robot_color}"
                   type="std::string"/>
     </Action>
+    <Action ID="PatrolTestArea"
+            editable="true"/>
     <Action ID="PreAimingBase"
             editable="true">
       <input_port name="robot_color"
@@ -371,6 +421,15 @@
       <input_port name="seconds"
                   type="double"/>
     </Decorator>
+    <Action ID="SetControlModes"
+            editable="true">
+      <input_port name="chassis_mode"
+                  type="std::string"/>
+      <input_port name="gimbal_mode"
+                  type="std::string"/>
+      <input_port name="shooter_mode"
+                  type="std::string"/>
+    </Action>
     <Action ID="SetIdle"
             editable="true"/>
     <Action ID="ShooterPush"
@@ -378,6 +437,8 @@
     <Action ID="ShooterReady"
             editable="true"/>
     <Action ID="StartMainControllers"
+            editable="true"/>
+    <Action ID="StartStateControllers"
             editable="true"/>
     <Action ID="TrackEnemy"
             editable="true"/>
