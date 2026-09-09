@@ -46,14 +46,14 @@ namespace posture
     PostureMode desired{ PostureMode::Move }; //期望姿态
     PostureMode last_committed{ PostureMode::Move }; //上次切换前的姿态
     ros::Time last_switch_time{ 0.0 }; //上次切换时间
-    ros::Time time_entered_current_mode_{ 0.0 }; //进入当前体姿态的shike 时刻
+    ros::Time time_entered_current_mode_{ 0.0 }; //进入当前姿态的时刻
     ros::Time track_enemy_enter_time{ 0.0 }; //追踪到敌人的时间
     ros::Time track_enemy_attack_hold_until_time{ 0.0 }; //退出追踪敌人的时候attack姿退出attack姿态的时间戳时刻
     std::array<double, 3> accumulated_sec{ { 0.0, 0.0, 0.0 } }; //各姿态的累计持续时间
     std::array<bool, 3> decayed{ { false, false, false } }; //各姿态是否已经衰减
     bool cooldown_active{ false }; //是否在切换冷却时间中
     bool force_locked{ false }; //是否被强制锁定
-    bool was_track_enemy_active{ false };  //上一帧是否是tr
+    bool was_track_enemy_active{ false };  //上一帧是否是track
   };
 
   struct PostureEffect  //姿态影响

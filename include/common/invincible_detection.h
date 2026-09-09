@@ -18,17 +18,12 @@
 
 #include "perception_layer.h"
 #include "common/tools.h"
+#include "common/types.h"
 
 namespace invincible_detection
 {
-  enum class EnemyInvincibleState
-  {
-    UNKNOWN, // 尚无任何确认信息（雷达 HP 一帧都还没来，或 index 越界）
-    ALIVE, // 已确认存活（连续 confirm_samples 帧 HP>0）
-    DEAD, // 已确认阵亡（连续 confirm_samples 帧 HP<=0）
-    REVIVE_INVINCIBLE, // 检测到 ALIVE->DEAD->ALIVE 完整序列，进入复活无敌期（打了不扣血）
-    REGION_INVINCIBLE // 目标在敌方补给区 / 工程在交换区，规则上不可攻击
-  };
+  // 状态枚举复用 types.h（避免双源）；invincible_detection::EnemyInvincibleState 即 types::EnemyInvincibleState
+  using EnemyInvincibleState = types::EnemyInvincibleState;
 
   /**@brief 无敌状态枚举值转字符串，供日志输出使用
    * **/
@@ -51,12 +46,8 @@ namespace invincible_detection
     }
   }
 
-  struct EnemyLifeSnapshot
-  {
-    EnemyInvincibleState state{EnemyInvincibleState::UNKNOWN}; // 去抖后的生命状态
-    ros::Time revive_invincible_until; // 复活无敌截止时刻（未复活时为零）
-    int hp{0}; // 最近一帧 HP（已下限钳到 0）
-  };
+  // snapshot 返回值即 types::EnemyInvincibleInfo（字段名一致：state / revive_invincible_until / hp）
+  using EnemyLifeSnapshot = types::EnemyInvincibleInfo;
 
   class EnemyInvincibilityManager
   {
@@ -173,7 +164,7 @@ namespace invincible_detection
      *@param robot_index 机器人下标 / 角色序号（1=英雄 2=工程 3=步兵三 4=步兵四 5=无人机 6=哨兵）
      *@param now 当前时刻
      * **/
-    [[nodiscard]] EnemyLifeSnapshot snapshot(const std::size_t robot_index, const ros::Time& now)
+    [[nodiscard]] types::EnemyInvincibleInfo snapshot(const std::size_t robot_index, const ros::Time& now)
     {
       updateEnemyPositions(); // 每次查询前先自刷坐标槽（track / 雷达竞争结果）
       const std::string enemy_color = (robot_color_ == "red") ? "blue" : "red";
@@ -183,7 +174,7 @@ namespace invincible_detection
         return {};
 
       // ---- 生命状态：从 HP 链 states_ 取（RobotState，与位置字段互不合并）----
-      EnemyLifeSnapshot result;
+      types::EnemyInvincibleInfo result;
       if (robot_index < states_.size())
       {
         const RobotState& state = states_[robot_index];

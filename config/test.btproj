@@ -9,6 +9,7 @@
             <input_port name="road_area_align_angular_vel" default="{road_area_align_angular_vel}" type="double"/>
             <input_port name="road_area_align_timeout" default="{road_area_align_timeout}" type="double"/>
         </Action>
+        <Action ID="ChaseEnemy" editable="true"/>
         <Action ID="ChassisSlowGyro" editable="true">
             <input_port name="slow_gyro_vel_scale" type="double"/>
         </Action>
@@ -124,19 +125,25 @@
         <Action ID="ShooterPush" editable="true"/>
         <Action ID="ShooterReady" editable="true"/>
         <Action ID="ShooterStop" editable="true"/>
+        <Action ID="StartCalibrationController" editable="true"/>
         <Action ID="StartMainControllers" editable="true"/>
         <Action ID="StartStateControllers" editable="true"/>
+        <Action ID="StopCalibrationController" editable="true"/>
         <Action ID="Test1" editable="true"/>
         <Action ID="Test2" editable="true"/>
-        <Action ID="TrackEnemy" editable="true"/>
+        <Action ID="TrackEnemy" editable="true">
+            <input_port name="target_type" type="std::string"/>
+        </Action>
         <Action ID="UpdateAimPriority" editable="true">
             <input_port name="chassis_mode" default="{chassis_mode}" type="int"/>
             <input_port name="robot_color" default="{robot_color}" type="std::string"/>
             <output_port name="aim_priority" default="{aim_priority}" type="std::vector&lt;uint_8&gt;"/>
+            <input_port name="enemy_invincible_table" default="{enemy_invincible_table}" type="types::EnemyInvincibleTable"/>
         </Action>
-        <Action ID="VisionCalibrate" editable="true">
-            <input_port name="robot_color" default="{robot_color}" type="std::string"/>
+        <Action ID="UpdateEnemyInvincibleState" editable="true">
+            <output_port name="enemy_invincible_table" default="{enemy_invincible_table}" type="types::EnemyInvincibleTable"/>
         </Action>
+        <Action ID="VisionCalibrate" editable="true"/>
         <Action ID="YawSlowRound" editable="true">
             <input_port name="yaw_vel" type="double"/>
             <input_port name="scan_range_circles" type="double"/>

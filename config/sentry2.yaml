@@ -765,17 +765,6 @@ rm_behavior_tree:
       k_hp: 1.0
       k_freq: 1.0
       timeout: 0.05
-  base_gimbal:
-    topic: "/controllers/base_gimbal_controller/command"
-    max_yaw_vel: 4.0
-    max_pitch_vel: 1.0
-    track_timeout: 0.5
-    target_cost_function:
-      k_pos: 1.0
-      k_vel: 1.0
-      k_hp: 1.0
-      k_freq: 1.0
-      timeout: 0.05
   switcher:
     topic: "/controllers/shooter_controller/command"
     auto_wheel_speed: true
@@ -864,8 +853,8 @@ rm_behavior_tree:
     main_controllers:
       - controllers/chassis_controller
       - controllers/orientation_controller
-      - controllers/gimbal_controller
       - controllers/shooter_controller
+      - controllers/gimbal_controller
     calibration_controllers:
       - controllers/trigger_calibration_controller
   # // gimbal_calibration - DISABLED: gimbal does not need calibration

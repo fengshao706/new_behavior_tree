@@ -13,8 +13,6 @@ namespace tools
     senders_->chassis_command_sender_ = std::make_unique<rm_common::ChassisCommandSender>(chassis_nh);
     ros::NodeHandle vel_nh(nh, "vel");
     senders_->vel_2d_command_sender_ = std::make_unique<rm_common::Vel2DCommandSender>(vel_nh);
-    ros::NodeHandle base_gimbal_nh(nh, "base_gimbal");
-    senders_->base_gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(base_gimbal_nh);
     ros::NodeHandle gimbal_nh(nh, "gimbal");
     senders_->gimbal_command_sender_ = std::make_unique<rm_common::GimbalCommandSender>(gimbal_nh);
     ros::NodeHandle shooter_nh(nh, "switcher");
@@ -581,7 +579,7 @@ namespace tools
 
     XmlRpc::XmlRpcValue  main_ctrls_xml = controllers_list["main_controllers"];
     ROS_ASSERT(main_ctrls_xml.getType() == XmlRpc::XmlRpcValue::TypeArray);
-    for (int i = 0; i < main_ctrls_xml.size(); ++i)
+    for (int i = 0; i < main_ctrls_xml.size(); i++)
     {
       if (main_ctrls_xml[i].getType() == XmlRpc::XmlRpcValue::TypeString)
       {
@@ -641,6 +639,18 @@ namespace tools
   void ControllerTools::calibrate()
   {
     shooter_calibration_queue_->reset();
+  }
+
+  void ControllerTools::stopCalibration()
+  {
+    if (!controller_manager_ || !shooter_calibration_queue_)
+    {
+      return;
+    }
+    // 终止队列当前校准状态（若在校准中 itr→end，后续 update 变 no-op）；stop() 本身不恢复 shooter，需显式兜底
+    shooter_calibration_queue_->stop();
+    controller_manager_->startMainControllers();
+    controller_manager_->stopCalibrationControllers();
   }
 
   void ControllerTools::ControllerUpdate()
@@ -856,20 +866,72 @@ namespace tools
     map2odom = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::ODOM,perception::TfAccessor::FrameId::MAP);
     tf2::doTransform(point_of_map, point_of_odom, map2odom); //中文语义：将map坐标系的物体转换到odom下
     cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::DIRECT);
     cmd_tools_.getSenders()->gimbal_command_sender_->setPoint(point_of_odom);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setPoint(point_of_odom);
     cmd_tools_.sendStackGimbalCommand(ros::Time::now());
   }
 
   void GimbalTools::setStackGimbalTrack()
   {
     cmd_tools_.getSenders()->gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRACK);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setMode(rm_msgs::GimbalCmd::TRACK);
     // double bullet_speed = union_cmd_sender_->double_barrel_cmd_sender_->getSpeed();
     double bullet_speed = cmd_tools_.getSenders()->shooter_command_sender_->getSpeed();
     cmd_tools_.getSenders()->gimbal_command_sender_->setBulletSpeed(bullet_speed);
-    cmd_tools_.getSenders()->base_gimbal_command_sender_->setBulletSpeed(bullet_speed);
     cmd_tools_.sendStackGimbalCommand(ros::Time::now());
+  }
+
+  AutoAimTools::AutoAimTools(ros::NodeHandle & bt_nh , CmdTools &cmd_tools,
+                             auto_aim::DxTrackSwitchCaller &dx_track_switch_caller)
+    : dx_track_switch_caller_(dx_track_switch_caller), bt_nh_(bt_nh), cmd_tools_(cmd_tools)
+  {
+    ros::NodeHandle buff_switch_nh(bt_nh_, "buff_switch");
+    ros::NodeHandle buff_type_switch_nh(bt_nh_, "buff_type_switch");
+    ros::NodeHandle exposure_switch_nh(bt_nh_, "exposure_switch");
+    ros::NodeHandle detection_left_switch_nh(bt_nh_, "detection_left_switch");
+    ros::NodeHandle detection_right_switch_nh(bt_nh_, "detection_right_switch");
+    switch_detection_left_srv_ =
+        std::make_unique<rm_common::SwitchDetectionCaller>(detection_left_switch_nh, "/Processor_left/status_change");
+    switch_detection_right_srv_ =
+        std::make_unique<rm_common::SwitchDetectionCaller>(detection_right_switch_nh, "/Processor_right/status_change");
+    switch_buff_srv_ = std::make_unique<rm_common::SwitchDetectionCaller>(buff_switch_nh, "/buff_status_switch");
+    switch_buff_type_srv_ = std::make_unique<rm_common::SwitchDetectionCaller>(buff_type_switch_nh, "/forecast/status_switch");
+    switch_exposure_srv_ = std::make_unique<rm_common::SwitchDetectionCaller>(exposure_switch_nh, "/hk_camera/exposure_status_switch");
+  }
+
+  rm_msgs::TrackData AutoAimTools::normalizeTrackData(const rm_msgs::TrackData& input, const bool legacy_dx_track_ids)
+  {
+    rm_msgs::TrackData output = input;
+    if (!legacy_dx_track_ids)
+      return output;
+
+    if (output.outpost_id != 0)
+    {
+      output.id = kInternalOutpostId;
+      output.outpost_id = kInternalOutpostId;
+    }
+    else if (output.id == kLegacyDxTrackSentryId)
+    {
+      output.id = kInternalSentryId;
+    }
+    return output;
+  }
+
+  uint8_t AutoAimTools::normalizeDetectionId(const uint8_t id, const bool legacy_dx_track_ids)
+  {
+    if (!legacy_dx_track_ids)
+      return id;
+    if (id == kLegacyDxTrackOutpostId)
+      return kInternalOutpostId;
+    if (id == kLegacyDxTrackSentryId)
+      return kInternalSentryId;
+    return id;
+  }
+
+  rm_msgs::TargetDetectionArray AutoAimTools::normalizeDetectionArray(const rm_msgs::TargetDetectionArray& input,
+                                                             const bool legacy_dx_track_ids)
+  {
+    rm_msgs::TargetDetectionArray output = input;
+    for (auto& detection : output.detections)
+      detection.id = normalizeDetectionId(detection.id, legacy_dx_track_ids);
+    return output;
   }
 }

@@ -30,6 +30,7 @@
 #include <rm_msgs/ShootState.h>
 #include "rm_msgs/RadarToSentry.h"
 #include "rm_msgs/RadarWirelessEnemyRobotPos.h"
+#include "rm_msgs/RadarWirelessEnemyRobotHp.h"
 #include "rm_msgs/DartRemainingTime.h"
 #include <mbf_msgs/MoveBaseAction.h>
 #include "visualization_msgs/Marker.h"
@@ -79,6 +80,7 @@ namespace perception{
       RFID_DATA,
       RADAR_TO_SENTRY_DATA,
       RADAR_WIRELESS_ENEMY_ROBOT_POS,
+      RADAR_WIRELESS_ENEMY_ROBOT_HP,
       ALLOW_SHOOT,
       SHOOT_CMD_DATA,
       PLANNER_GOAL,
@@ -99,7 +101,7 @@ namespace perception{
     {
       register_subscriber<rm_msgs::DbusData>(TopicId::DBUS_DATA,"/rm_ecat_hw/dbus");
       register_subscriber<rm_msgs::GameRobotStatus>(TopicId::GAME_ROBOT_STATUS,"/rm_referee/game_robot_status");
-      register_subscriber<rm_msgs::TrackData>(TopicId::TRACK_DATA,"/track");
+      register_subscriber<rm_msgs::TrackData>(TopicId::TRACK_DATA,"/sp_vision/track");
       register_subscriber<rm_msgs::ShootCmd>(TopicId::SHOOT_CMD,"/controllers/shooter_controller/command");
       register_subscriber<rm_msgs::PowerHeatData>(TopicId::POWER_HEAT_DATA,"/rm_referee/power_heat_data");
       register_subscriber<rm_msgs::PowerManagementSampleAndStatusData>(TopicId::CAPACITY_DATA,"/rm_referee/power_management/sample_and_status");
@@ -116,6 +118,7 @@ namespace perception{
       register_subscriber<rm_msgs::RfidStatus>(TopicId::RFID_DATA,"/rm_referee/rfid_status_data");
       register_subscriber<rm_msgs::RadarToSentry>(TopicId::RADAR_TO_SENTRY_DATA,"/rm_referee/radar_to_sentry");
       register_subscriber<rm_msgs::RadarWirelessEnemyRobotPos>(TopicId::RADAR_WIRELESS_ENEMY_ROBOT_POS,"/rm_referee/radar_wireless_enemy_robot_pos");
+      register_subscriber<rm_msgs::RadarWirelessEnemyRobotHp>(TopicId::RADAR_WIRELESS_ENEMY_ROBOT_HP,"/rm_referee/radar_wireless_enemy_robot_hp");
       register_subscriber<rm_msgs::ShootBeforehandCmd>(TopicId::ALLOW_SHOOT,"/controllers/gimbal_controller/bullet_solver/shoot_beforehand_cmd");
       register_subscriber<rm_msgs::ShootCmd>(TopicId::SHOOT_CMD_DATA,"/controllers/shooter_controller/command");
       register_subscriber<geometry_msgs::PoseStamped>(TopicId::PLANNER_GOAL,"/move_base_simple/goal");

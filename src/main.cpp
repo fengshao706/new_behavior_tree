@@ -15,6 +15,7 @@
 #include "common/sentry_param_loader.h"
 #include "common/posture_manager.h"
 #include "common/invincible_detection.h"
+#include "common/dx_track_switch_caller.h"
 #include <behaviortree_cpp/loggers/bt_file_logger_v2.h>
 #include <chrono>
 
@@ -56,10 +57,12 @@ int main(int argc,char * argv[])
 
   posture::PostureManager posture_manager(bt_nh,*blackboard,publisher);
   invincible_detection::EnemyInvincibilityManager enemy_invincibility_manager(navigation_tools , mini_map_tools , tf_accessor , subscriber , blackboard->get<std::string>("robot_color"));
+  auto_aim::DxTrackSwitchCaller dx_track_switch_caller(bt_nh);
+  tools::AutoAimTools auto_aim_tools(bt_nh , cmd_tools , dx_track_switch_caller);
   ROS_INFO("------------------complete------------------------");
   BT::BehaviorTreeFactory factory;
 
-  register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,planner_tools, tf_accessor,publisher,enemy_invincibility_manager);
+  register_node::register_node(bt_nh , cmd_tools , subscriber , factory , navigation_tools , mini_map_tools , controller_tools , gimbal_tools ,planner_tools, tf_accessor,publisher,enemy_invincibility_manager , dx_track_switch_caller , auto_aim_tools , posture_manager);
 
   std::filesystem::path root_path(PROJECT_ROOT_DIR);
 
@@ -89,7 +92,6 @@ int main(int argc,char * argv[])
     ros::spinOnce();
     tree.tickExactlyOnce();
     controller_tools.ControllerUpdate();
-    posture_manager.update();
 
     const auto initial_pose = subscriber.msgGetter<geometry_msgs::PoseWithCovarianceStamped>(
         perception::Subscriber::TopicId::RVIZ_2D_POSE);

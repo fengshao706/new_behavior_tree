@@ -502,7 +502,7 @@ namespace chassis
     tools::MiniMapTools &mini_map_tools_;
   };
 
-  class ChaseEnemy : public BT::StatefulActionNode // TODO : 未完成追击优先级判断
+  class ChaseEnemy : public BT::StatefulActionNode
   {
   public:
     ChaseEnemy(const std::string & name ,const BT::NodeConfig & config , tools::NavigationTools &navigation_tools) : StatefulActionNode(name,config) , navigation_tools_(navigation_tools)
@@ -517,7 +517,12 @@ namespace chassis
 
     BT::NodeStatus onRunning() override
     {
-      navigation_tools_.chase();
+      if (!navigation_tools_.chase()) // tf 转换或 SearchEnablePoint 服务失败：停止追击并成功退出
+      {
+        navigation_tools_.getMbfClient()->cancelGoal();
+        navigation_tools_.resetLastTargetAtMap();
+        return BT::NodeStatus::SUCCESS;
+      }
       return BT::NodeStatus::RUNNING;
     }
 

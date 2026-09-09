@@ -680,9 +680,7 @@ namespace condition_node
     {
       if (ros::Time::now() - subscriber_.msgGetter<rm_msgs::DbusData>(perception::Subscriber::TopicId::DBUS_DATA).message.stamp < ros::Duration(1.0))
       {
-          if (controller_tools_.getControllerManager())//std::unique_ptr类型，当该指针持有对象时返回true，该对象在BasicControl中的构造函数被唯一赋值
-            controller_tools_.startMainController();
-          controller_tools_.calibrate();
+        // 校准由 XML 中的 StartCalibrationController / StopCalibrationController 显式控制，此处不再调用 calibrate()
         return BT::NodeStatus::SUCCESS;
       }
       else

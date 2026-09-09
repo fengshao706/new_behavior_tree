@@ -38,6 +38,7 @@ public:
     load_default_aim_rank();
     ROS_INFO("9");
     param_initialization();
+    //posture_param_load();
   }
 
   void chassis_behavior_param_load()
@@ -348,6 +349,15 @@ public:
     blackboard_->set<bool>("is_need_aim_outpost",false);
     blackboard_->set<bool>("is_need_aim_base",false);
     blackboard_->set<bool>("is_need_get_bullet",false);
+    blackboard_->set<types::EnemyInvincibleTable>("enemy_invincible_table", types::EnemyInvincibleTable{});
+  }
+
+  void posture_param_load()
+  {
+    ros::NodeHandle posture_nh(bt_nh_, "posture_manager");
+    std::string road_area_name;
+    ROS_ASSERT(posture_nh.getParam("road_area_name", road_area_name));
+    blackboard_->set<std::string>("road_area_name", road_area_name);
   }
 
   void loadMapParam()

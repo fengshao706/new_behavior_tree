@@ -97,7 +97,6 @@ namespace gimbal
     void onHalted() override
     {
       cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
-      cmd_tools_.getSenders()->base_gimbal_command_sender_->setZero();
     }
   private:
     tools::GimbalTools &gimbal_tools_;
@@ -132,7 +131,6 @@ namespace gimbal
 
     void onHalted() override
     {
-      cmd_tools_.getSenders()->base_gimbal_command_sender_->setZero();
       cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
     }
   private:
@@ -146,9 +144,14 @@ namespace gimbal
   class TrackEnemy : public BT::StatefulActionNode
   {
   public:
-    TrackEnemy(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools ,tools::GimbalTools &gimbal_tools) : StatefulActionNode(name , config) , cmd_tools_(cmd_tools) , gimbal_tools_(gimbal_tools)
+    TrackEnemy(const std::string &name ,const BT::NodeConfig &config , tools::CmdTools &cmd_tools ,tools::GimbalTools &gimbal_tools , tools::AutoAimTools &auto_aim_tools) : StatefulActionNode(name , config) , cmd_tools_(cmd_tools) , gimbal_tools_(gimbal_tools) , auto_aim_tools_(auto_aim_tools)
     {
 
+    }
+
+    static BT::PortsList providedPorts()
+    {
+      return {BT::InputPort<std::string>("target_type", "armor")};
     }
 
     BT::NodeStatus onStart() override
@@ -158,18 +161,29 @@ namespace gimbal
 
     BT::NodeStatus onRunning() override
     {
+      const std::string target_type = getInput<std::string>("target_type").value();
+      if (target_type == "armor")
+      {
+        auto_aim_tools_.restoreArmorWindow();
+      }else if (target_type == "small_buff")
+      {
+        auto_aim_tools_.enterBuffWindow(rm_msgs::StatusChangeRequest::SMALL_BUFF,ros::Time::now());
+      }else if (target_type == "big_buff")
+      {
+        auto_aim_tools_.enterBuffWindow(rm_msgs::StatusChangeRequest::BIG_BUFF,ros::Time::now());
+      }
       gimbal_tools_.setStackGimbalTrack();
       return BT::NodeStatus::RUNNING;
     }
 
     void onHalted() override
     {
-      cmd_tools_.getSenders()->base_gimbal_command_sender_->setZero();
       cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
     }
   private:
     tools::CmdTools &cmd_tools_;
     tools::GimbalTools &gimbal_tools_;
+    tools::AutoAimTools &auto_aim_tools_;
   };
 
   class PreAimingOutpost : public BT::StatefulActionNode
@@ -290,147 +304,6 @@ namespace gimbal
     double aim_per_point_sec_;
     ros::Time record_aim_time_ = ros::Time::now();
     tools::GimbalTools &gimbal_tools_;
-  };
-
-  class UpdateAimPriority : public BT::SyncActionNode
-  {
-  public:
-    UpdateAimPriority(const std::string &name , const BT::NodeConfig &config , perception::TfAccessor &tf_accessor , perception::Subscriber &subscriber, perception::Publisher &publisher , tools::NavigationTools &navigation_tools , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker) : SyncActionNode(name , config) , tf_accessor_(tf_accessor) , subscriber_(subscriber), publisher_(publisher) , navigation_tools_(navigation_tools) , enemy_hp_state_tracker_(enemy_hp_state_tracker)
-    {
-
-    }
-
-    static BT::PortsList providedPorts()
-    {
-      return {BT::InputPort<int>("chassis_mode") ,
-                  BT::InputPort<std::string>("robot_color"),
-                BT::OutputPort<std::vector<uint8_t>>("aim_priority")};
-    }
-
-    BT::NodeStatus tick() override
-    {
-      std::vector<uint8_t> aim_priority;
-      int input_chassis_mode = getInput<int>("chassis_mode").value();
-      std::string robot_color = getInput<std::string>("robot_color").value();
-      std::string enemy_color;
-      if (robot_color == "blue") //给enemy_color赋值
-      {
-        enemy_color = "red";
-      }else if (robot_color == "red")
-      {
-        enemy_color = "blue";
-      }
-      types::ChassisMode chassis_mode = static_cast<types::ChassisMode>(input_chassis_mode);
-      switch (chassis_mode)
-      {
-      case types::ChassisMode::GotoHitEnemyOutpostArea :
-        {
-          std::vector<uint8_t> src = {1,1,1,1,5,1,1,1};
-          aim_priority = src;
-          break;
-        }
-      case types::ChassisMode::GotoEnemyBase :
-        {
-          std::vector<uint8_t> src = {1,1,1,1,1,1,1,5};
-          aim_priority = src;
-          break;
-        }
-      case types::ChassisMode::GotoTrapezoidalHighland :
-        {
-          std::vector<uint8_t> src = {5,1,3,3,3,1,2,1};
-          aim_priority = src;
-          break;
-        }
-      default:
-        {
-          std::vector<uint8_t> src = {5, 3, 2, 2, 2, 5, 1, 0};
-          aim_priority = src;
-          break;
-        }
-      }
-
-      //----------获取目标在map坐标系下的坐标------------
-      geometry_msgs::TransformStamped camera_optical_frame2map;
-      camera_optical_frame2map = tf_accessor_.getTfTransform(perception::TfAccessor::FrameId::MAP,perception::TfAccessor::FrameId::CAMERA_OPTICAL_FRAME);
-      for (auto& detection : subscriber_.msgGetter<rm_msgs::TargetDetectionArray>(perception::Subscriber::TopicId::FRONT_CAMERA_DETECTION_DATA).message.detections)
-
-      {
-        geometry_msgs::TransformStamped target_at_map, target_at_camera;
-        target_at_camera.transform.translation.x = detection.pose.position.x;
-        target_at_camera.transform.translation.y = detection.pose.position.y;
-        target_at_camera.transform.translation.z = detection.pose.position.z;
-        target_at_camera.header.frame_id = "camera_optical_frame";
-        target_at_camera.header.stamp = ros::Time::now();
-        tf2::doTransform(target_at_camera, target_at_map, camera_optical_frame2map);
-
-        geometry_msgs::Point enemy_position;
-        enemy_position.x = target_at_map.transform.translation.x;
-        enemy_position.y = target_at_map.transform.translation.y;
-        enemy_position.z = target_at_map.transform.translation.z;
-        std::string enemy_in_area = navigation_tools_.determinePolygonInWhich(enemy_position);
-
-        if (detection.id > 0 && detection.id <=8)
-        {
-          //---------目标为建筑时判断建筑是否死亡以及数据是否新鲜-----------
-          const bool is_hp_fresh = ros::Time::now() - subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).stamp < ros::Duration(1.5);
-          rm_msgs::GameRobotHp game_robot_hp = subscriber_.msgGetter<rm_msgs::GameRobotHp>(perception::Subscriber::TopicId::GAME_ROBOT_HP).message;
-          if (detection.id == static_cast<int>(types::RobotType::OUTPOST) || detection.id == static_cast<int>(types::RobotType::BASE))
-          {
-            if (is_hp_fresh == false) //血量数据新鲜度不足直接返回false
-            {
-              aim_priority[detection.id-1] = 0;
-            }
-            if (detection.id == static_cast<int>(types::RobotType::OUTPOST) && game_robot_hp.enemy_outpost_hp <= 0)
-            {
-              aim_priority[detection.id-1] = 0;
-            }
-            if (detection.id == static_cast<int>(types::RobotType::BASE) && game_robot_hp.enemy_base_hp <=0)
-            {
-              aim_priority[detection.id-1] = 0;
-            }
-          }
-
-          //----------判断目标所处的区域并动态调整优先级------------
-          if (enemy_in_area == robot_color+"_fortress_area")//目标位于自家堡垒区,将优先级开到最高
-          {
-            aim_priority[detection.id-1] = 5; //数组下标需要将实际id减去1
-          }
-
-          if (enemy_in_area == enemy_color+"_fortress_area")//目标位于敌方堡垒区，将优先级开到最低
-          {
-            aim_priority[detection.id-1] = 1; //数组下标需要将实际id减去1
-          }
-
-          if (detection.id == 2 && enemy_in_area == enemy_color+"_engineer_invincible_area")//目标是工程的情况
-          {
-            aim_priority[detection.id-1] = 0; //工程在无敌区不打
-          }
-
-          //-----------利用无敌状态检测，覆盖之前的优先级，无敌或死亡强制不打-----------
-          if (detection.id != static_cast<int>(types::RobotType::OUTPOST) && detection.id != static_cast<int>(types::RobotType::BASE))
-          {
-            invincible_detection::EnemyLifeSnapshot target_life_snapshot = enemy_hp_state_tracker_.snapshot(detection.id,ros::Time::now());
-            if (target_life_snapshot.state != invincible_detection::EnemyInvincibleState::ALIVE)
-            {
-              aim_priority[detection.id-1] = 0;
-            }
-          }
-        }
-      }
-
-      setOutput<std::vector<uint8_t>>("aim_priority",aim_priority);
-
-      rm_msgs::PriorityArray priority_array;
-      priority_array.rank_arr = aim_priority;
-      publisher_.getPublishers()->aim_priority_pub_.publish(priority_array);
-      return BT::NodeStatus::SUCCESS;
-    }
-  private:
-    perception::TfAccessor &tf_accessor_;
-    perception::Subscriber &subscriber_;
-    perception::Publisher &publisher_;
-    tools::NavigationTools &navigation_tools_;
-    invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker_;
   };
 }
 

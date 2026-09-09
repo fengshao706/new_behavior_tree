@@ -117,7 +117,6 @@ namespace manual
 
     void onHalted() override
     {
-      cmd_tools_.getSenders()->base_gimbal_command_sender_->setZero();
       cmd_tools_.getSenders()->gimbal_command_sender_->setZero();
     }
 

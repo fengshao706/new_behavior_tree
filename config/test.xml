@@ -53,17 +53,30 @@
     </ReactiveIfThenElse>
   </BehaviorTree>
 
+  <BehaviorTree ID="chase">
+    <ReactiveIfThenElse>
+      <IsAllowChase gimbal_mode="{gimbal_mode}"
+                    chassis_mode="{chassis_mode}"
+                    game_total_time="{game_total_time}"
+                    chase_restricted_zones="{chase_restricted_zones}"
+                    enable_chase="{enable_chase}"/>
+      <ChaseEnemy/>
+      <AlwaysSuccess/>
+    </ReactiveIfThenElse>
+  </BehaviorTree>
+
   <BehaviorTree ID="gimbal_behavior">
     <Parallel failure_count="1"
               success_count="-1">
       <UpdateAimPriority chassis_mode="{chassis_mode}"
                          robot_color="{robot_color}"
-                         aim_priority="{aim_priority}"/>
+                         aim_priority="{aim_priority}"
+                         enemy_invincible_table="{enemy_invincible_table}"/>
       <ReactiveIfThenElse>
         <Script code="is_need_aim_outpost==true"/>
         <ReactiveIfThenElse>
           <IsTargetEffective/>
-          <TrackEnemy/>
+          <TrackEnemy target_type=""/>
           <PreAimingOutpost robot_color="{robot_color}"
                             aim_per_point_sec="{aim_per_point_sec}"
                             blue_outpost_poses="{blue_outpost_poses}"
@@ -73,7 +86,7 @@
           <Script code="is_need_aim_base==true"/>
           <ReactiveIfThenElse>
             <IsTargetEffective/>
-            <TrackEnemy/>
+            <TrackEnemy target_type=""/>
             <PreAimingBase robot_color="{robot_color}"
                            aim_per_point_sec="{aim_per_point_sec}"
                            blue_base_poses="{blue_base_poses}"
@@ -86,7 +99,7 @@
             </RunForSeconds>
             <ReactiveIfThenElse>
               <IsTargetEffective/>
-              <TrackEnemy/>
+              <TrackEnemy target_type=""/>
               <YawSlowRound yaw_vel="2.0"
                             scan_range_circles="3"
                             pitch_inside_vel="2.0"
@@ -112,7 +125,7 @@
           <IsRefereeOnline/>
         </ForceSuccess>
         <RunOnce then_skip="true">
-          <VisionCalibrate robot_color="{robot_color}"/>
+          <VisionCalibrate/>
         </RunOnce>
         <AlwaysFailure/>
       </IfThenElse>
@@ -124,40 +137,32 @@
         <SequenceWithMemory>
           <StartStateControllers/>
           <StartMainControllers/>
-          <Sequence>
-            <SetControlModes chassis_mode="raw"
-                             gimbal_mode="traj"
-                             shooter_mode="stop"/>
+          <SetControlModes chassis_mode="raw"
+                           gimbal_mode="traj"
+                           shooter_mode="stop"/>
+          <KeepRunningUntilFailure>
             <Parallel failure_count="1"
                       success_count="-1">
-              <YawSlowRound yaw_vel="0.4"
-                            scan_range_circles="2"
-                            pitch_inside_vel="0.4"
-                            pitch_outside_vel="0.6"
-                            pitch_min="-0.05"
-                            pitch_max="0.259"
-                            breach_thresholds="0.1"/>
-              <ReactiveSequence>
-                <ReactiveIfThenElse>
-                  <IsRobotInArea area_name="road_area"/>
-                  <AlignToRoadAreaYaw road_area_align_yaw="{road_area_align_yaw}"
-                                      road_area_align_yaw_tolerance="{road_area_align_yaw_tolerance}"
-                                      road_area_align_angular_vel="{road_area_align_angular_vel}"
-                                      road_area_align_timeout="{road_area_align_timeout}"/>
-                  <AlwaysSuccess/>
-                </ReactiveIfThenElse>
-                <ReactiveIfThenElse>
-                  <IsSentryHpUrgent trigger_blood_return_hp="50"/>
-                  <GotoReturnBloodArea is_need_get_bullet="false"/>
-                  <PatrolTestArea/>
-                </ReactiveIfThenElse>
-              </ReactiveSequence>
+              <SubTree ID="updateState"
+                       _autoremap="true"/>
+              <ReactiveIfThenElse>
+                <IsTargetEffective/>
+                <TrackEnemy target_type="armor"/>
+                <YawSlowRound yaw_vel="0.4"
+                              scan_range_circles="2"
+                              pitch_inside_vel="0.4"
+                              pitch_outside_vel="0.6"
+                              pitch_min="-0.05"
+                              pitch_max="0.259"
+                              breach_thresholds="0.1"/>
+              </ReactiveIfThenElse>
+              <ChassisSlowGyro slow_gyro_vel_scale="0.3"/>
             </Parallel>
-          </Sequence>
+          </KeepRunningUntilFailure>
         </SequenceWithMemory>
         <SequenceWithMemory>
-          <StartMainControllers/>
           <StartStateControllers/>
+          <StartMainControllers/>
           <Parallel failure_count="1"
                     success_count="-1">
             <ManualSendChassisCmd/>
@@ -224,23 +229,20 @@
     </ReactiveSequence>
   </BehaviorTree>
 
+  <BehaviorTree ID="updateState">
+    <ReactiveSequence>
+      <UpdateEnemyInvincibleState enemy_invincible_table="{enemy_invincible_table}"/>
+      <UpdateAimPriority chassis_mode="{chassis_mode}"
+                         robot_color="{robot_color}"
+                         aim_priority="{aim_priority}"
+                         enemy_invincible_table="{enemy_invincible_table}"/>
+    </ReactiveSequence>
+  </BehaviorTree>
+
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="AlignToRoadAreaYaw"
-            editable="true">
-      <input_port name="road_area_align_yaw"
-                  default="{road_area_align_yaw}"
-                  type="double"/>
-      <input_port name="road_area_align_yaw_tolerance"
-                  default="{road_area_align_yaw_tolerance}"
-                  type="double"/>
-      <input_port name="road_area_align_angular_vel"
-                  default="{road_area_align_angular_vel}"
-                  type="double"/>
-      <input_port name="road_area_align_timeout"
-                  default="{road_area_align_timeout}"
-                  type="double"/>
-    </Action>
+    <Action ID="ChaseEnemy"
+            editable="true"/>
     <Action ID="ChassisSlowGyro"
             editable="true">
       <input_port name="slow_gyro_vel_scale"
@@ -272,6 +274,24 @@
     </Action>
     <Action ID="InverseGimbal"
             editable="true"/>
+    <Condition ID="IsAllowChase"
+               editable="true">
+      <input_port name="gimbal_mode"
+                  default="{gimbal_mode}"
+                  type="int"/>
+      <input_port name="chassis_mode"
+                  default="{chassis_mode}"
+                  type="int"/>
+      <input_port name="game_total_time"
+                  default="{game_total_time}"
+                  type="double"/>
+      <input_port name="chase_restricted_zones"
+                  default="{chase_restricted_zones}"
+                  type="std::vector&lt;chase_policy::ChaseRestrictedZoneConfig&gt;"/>
+      <input_port name="enable_chase"
+                  default="{enable_chase}"
+                  type="bool"/>
+    </Condition>
     <Condition ID="IsBulletsRemain"
                editable="true">
       <output_port name="is_need_get_bullet"
@@ -305,11 +325,6 @@
                editable="true"/>
     <Condition ID="IsRemoteControlTurnOn"
                editable="true"/>
-    <Condition ID="IsRobotInArea"
-               editable="true">
-      <input_port name="area_name"
-                  type="std::string"/>
-    </Condition>
     <Condition ID="IsSentryHpUrgent"
                editable="true">
       <input_port name="trigger_blood_return_hp"
@@ -350,8 +365,6 @@
                   default="{robot_color}"
                   type="std::string"/>
     </Action>
-    <Action ID="PatrolTestArea"
-            editable="true"/>
     <Action ID="PreAimingBase"
             editable="true">
       <input_port name="robot_color"
@@ -441,7 +454,10 @@
     <Action ID="StartStateControllers"
             editable="true"/>
     <Action ID="TrackEnemy"
-            editable="true"/>
+            editable="true">
+      <input_port name="target_type"
+                  type="std::string"/>
+    </Action>
     <Action ID="UpdateAimPriority"
             editable="true">
       <input_port name="chassis_mode"
@@ -453,13 +469,18 @@
       <output_port name="aim_priority"
                    default="{aim_priority}"
                    type="std::vector&lt;uint_8&gt;"/>
+      <input_port name="enemy_invincible_table"
+                  default="{enemy_invincible_table}"
+                  type="types::EnemyInvincibleTable"/>
+    </Action>
+    <Action ID="UpdateEnemyInvincibleState"
+            editable="true">
+      <output_port name="enemy_invincible_table"
+                   default="{enemy_invincible_table}"
+                   type="types::EnemyInvincibleTable"/>
     </Action>
     <Action ID="VisionCalibrate"
-            editable="true">
-      <input_port name="robot_color"
-                  default="{robot_color}"
-                  type="std::string"/>
-    </Action>
+            editable="true"/>
     <Action ID="YawSlowRound"
             editable="true">
       <input_port name="yaw_vel"

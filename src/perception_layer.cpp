@@ -27,7 +27,7 @@ namespace perception
     publishers_->map_sentry_data_pub_ = root_nh.advertise<rm_msgs::MapSentryData>("/map_sentry_data", 10);
     publishers_->marker_pub_ = root_nh.advertise<visualization_msgs::Marker>("/radar_marker", 1);
     publishers_->aim_priority_pub_ = bt_nh.advertise<rm_msgs::PriorityArray>(
-      "/armor_processor/priority/priority_arr", 1);
+      "/armor_processor_front/priority/priority_arr", 1);
     publishers_->sentry_state_pub_ = bt_nh.advertise<std_msgs::String>("/custom_info", 1);
     publishers_->sentry_cmd_pub_ = bt_nh.advertise<rm_msgs::SentryCmd>("/sentry_cmd", 1);
     publishers_->conduct_point_pub_ = bt_nh.advertise<geometry_msgs::PoseStamped>("/conduct_point_in_map", 1);

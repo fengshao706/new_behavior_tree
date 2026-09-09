@@ -93,6 +93,35 @@ namespace types
     int revive_hp;
   } ENEMY_INFO;
 
+  // 无敌/生命状态（与 invincible_detection 对齐，types.h 自包含，invincible_detection 经 alias 复用）
+  enum class EnemyInvincibleState
+  {
+    UNKNOWN,           // 无确认信息（雷达 HP 一帧都还没来，或 index 越界）
+    ALIVE,             // 已确认存活（连续 confirm_samples 帧 HP>0）
+    DEAD,              // 已确认阵亡（连续 confirm_samples 帧 HP<=0）
+    REVIVE_INVINCIBLE, // 复活无敌期（打了不扣血）
+    REGION_INVINCIBLE  // 区域无敌（敌方补给区 / 工程交换区）
+  };
+
+  // 单个机器人的可攻击性快照（= invincible_detection snapshot 返回值）
+  struct EnemyInvincibleInfo
+  {
+    EnemyInvincibleState state{EnemyInvincibleState::UNKNOWN}; // 去抖后的生命状态
+    ros::Time revive_invincible_until;                         // 复活无敌截止时刻（未复活时为零）
+    int hp{0};                                                 // 最近一帧 HP（已下限钳到 0）
+  };
+
+  // 机器人名称 → 状态 映射表，即最终经黑板发布的数据类型
+  struct EnemyInvincibleTable
+  {
+    EnemyInvincibleInfo hero;
+    EnemyInvincibleInfo engineer;
+    EnemyInvincibleInfo infantry_3;
+    EnemyInvincibleInfo infantry_4;
+    EnemyInvincibleInfo aerial; // 5号：无人机（雷达 `reserved` 字段）
+    EnemyInvincibleInfo sentry; // 6号：哨兵
+  };
+
 }
 
 #endif //NEW_BEHAVIOR_TREE_TYPES_H

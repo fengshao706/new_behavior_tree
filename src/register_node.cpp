@@ -10,7 +10,9 @@ namespace register_node
                      BT::BehaviorTreeFactory& factory,
                      tools::NavigationTools& navigation_tools, tools::MiniMapTools& mini_map_tools,
                      tools::ControllerTools& controller_tools, tools::GimbalTools& gimbal_tools, tools::PlannerTools &planner_tools,
-                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker)
+                     perception::TfAccessor& tf_accessor , perception::Publisher &publisher , invincible_detection::EnemyInvincibilityManager &enemy_hp_state_tracker,
+                     auto_aim::DxTrackSwitchCaller &dx_track_switch_caller, tools::AutoAimTools &auto_aim_tools ,
+                     posture::PostureManager &posture_manager)
   {
     factory.registerBuilder<chassis::ChassisSlowGyro>(
       "ChassisSlowGyro",
@@ -187,9 +189,9 @@ namespace register_node
 
     factory.registerBuilder<gimbal::TrackEnemy>(
       "TrackEnemy",
-      [&cmd_tools, &gimbal_tools](const std::string& name, const BT::NodeConfig& config)
+      [&cmd_tools, &gimbal_tools ,&auto_aim_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::TrackEnemy>(name, config, cmd_tools, gimbal_tools);
+        return std::make_unique<gimbal::TrackEnemy>(name, config, cmd_tools, gimbal_tools,auto_aim_tools);
       });
 
     // ==================== 1. 仅依赖树配置的同步节点 ====================
@@ -246,6 +248,20 @@ namespace register_node
       [&controller_tools](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<StopMainControllers>(name, config, controller_tools);
+      });
+
+    factory.registerBuilder<StartCalibrationController>(
+      "StartCalibrationController",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StartCalibrationController>(name, config, controller_tools);
+      });
+
+    factory.registerBuilder<StopCalibrationController>(
+      "StopCalibrationController",
+      [&controller_tools](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<StopCalibrationController>(name, config, controller_tools);
       });
 
     factory.registerBuilder<StartStateControllers>(
@@ -410,9 +426,9 @@ namespace register_node
 
     factory.registerBuilder<VisionCalibrate>(
       "VisionCalibrate",
-      [&subscriber , &bt_nh](const std::string& name, const BT::NodeConfig& config)
+      [&auto_aim_tools](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<VisionCalibrate>(name, config,bt_nh , subscriber);
+        return std::make_unique<VisionCalibrate>(name, config , auto_aim_tools);
       });
 
     factory.registerBuilder<OutputRightSwitchState>(
@@ -555,11 +571,11 @@ namespace register_node
         return std::make_unique<RunForSeconds>(name, config);
       });
 
-    factory.registerBuilder<gimbal::UpdateAimPriority>(
+    factory.registerBuilder<UpdateAimPriority>(
       "UpdateAimPriority",
-      [&navigation_tools,&tf_accessor,&subscriber,&publisher,&enemy_hp_state_tracker](const std::string& name, const BT::NodeConfig& config)
+      [&navigation_tools,&tf_accessor,&subscriber,&publisher](const std::string& name, const BT::NodeConfig& config)
       {
-        return std::make_unique<gimbal::UpdateAimPriority>(name, config,tf_accessor,subscriber,publisher,navigation_tools,enemy_hp_state_tracker);
+        return std::make_unique<UpdateAimPriority>(name, config,tf_accessor,subscriber,publisher,navigation_tools);
       });
 
     factory.registerBuilder<gimbal::PreAimingOutpost>(
@@ -581,6 +597,31 @@ namespace register_node
       [&navigation_tools,&mini_map_tools,&subscriber,&tf_accessor,&enemy_hp_state_tracker](const std::string& name, const BT::NodeConfig& config)
       {
         return std::make_unique<condition_node::IsAllowChase>(name, config,navigation_tools,mini_map_tools,subscriber,tf_accessor,enemy_hp_state_tracker);
+      });
+
+    factory.registerBuilder<UpdateEnemyInvincibleState>(
+      "UpdateEnemyHpState",
+      [&subscriber,&enemy_hp_state_tracker](const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<UpdateEnemyInvincibleState>(name, config,enemy_hp_state_tracker,subscriber);
+      });
+
+    factory.registerBuilder<UpdatePostureState>(
+      "UpdatePostureState",
+      [&posture_manager, &subscriber, &tf_accessor, &navigation_tools](
+      const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<UpdatePostureState>(
+          name, config, posture_manager, subscriber, tf_accessor, navigation_tools, *config.blackboard);
+      });
+
+    factory.registerBuilder<UpdateEnemyInvincibleState>(
+      "UpdateEnemyInvincibleState",
+      [&enemy_hp_state_tracker , &subscriber](
+      const std::string& name, const BT::NodeConfig& config)
+      {
+        return std::make_unique<UpdateEnemyInvincibleState>(
+          name, config, enemy_hp_state_tracker , subscriber);
       });
   }
 }
